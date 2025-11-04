@@ -1,0 +1,926 @@
+/* childcare-ccs-calculator.css */
+
+/* Import Red Hat Display font */
+@import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;600;700;800;900&display=swap');
+
+/* General container */
+.childcare-ccs-root {
+    max-width: 920px;
+    margin: 40px auto;
+    border: none;
+    padding: 35px;
+    border-radius: 16px;
+    font-family: 'Red Hat Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #ffffff;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+}
+
+/* Headings */
+.childcare-ccs-root h3 {
+    margin-bottom: 15px;
+    margin-top: 0;
+    color: #1a1a1a;
+    font-size: 2em;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: -0.5px;
+}
+
+.childcare-ccs-root h4 {
+    color: #2c3e50;
+    font-size: 1.2em;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.childcare-ccs-root h5 {
+    color: #0073aa;
+    font-size: 1.05em;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+/* Progress bar - MODERN SLIDER DESIGN */
+.childcare-ccs-root .progress-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    margin-top: 20px;
+    position: relative;
+    padding: 20px 0;
+}
+
+/* Progress line background */
+.childcare-ccs-root .progress-container::before {
+    content: '';
+    position: absolute;
+    top: 28%;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: #e1e8ed;
+    transform: translateY(-50%);
+    z-index: 0;
+    border-radius: 2px;
+}
+
+/* Progress line fill */
+.childcare-ccs-root .progress-container::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #0073aa 0%, #00a32a 100%);
+    transform: translateY(-50%);
+    z-index: 0;
+    border-radius: 2px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-step {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.3em;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 2;
+    color: #95a5a6;
+    border: 4px solid #e1e8ed;
+}
+
+.childcare-ccs-root .progress-step:hover {
+    transform: scale(1.08);
+}
+
+.childcare-ccs-root .progress-step.active {
+    background: linear-gradient(135deg, #0073aa 0%, #005f8a 100%);
+    color: #fff;
+    border-color: #0073aa;
+    transform: scale(1.15);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1.15); }
+    50% { transform: scale(1.18); }
+}
+
+.childcare-ccs-root .progress-step.completed {
+    background: linear-gradient(135deg, #00a32a 0%, #008a24 100%);
+    color: transparent;
+    border-color: #00a32a;
+    font-size: 0;
+}
+
+.childcare-ccs-root .progress-step.completed::after {
+    content: '✓';
+    position: absolute;
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #fff;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: checkmark 0.5s ease-out;
+}
+
+@keyframes checkmark {
+    0% { transform: translate(-50%, -50%) scale(0); }
+    50% { transform: translate(-50%, -50%) scale(1.2); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+.childcare-ccs-root .progress-step-wrapper {
+    position: relative;
+    text-align: center;
+    flex: 1;
+    z-index: 2;
+}
+
+.childcare-ccs-root .progress-step-wrapper > div:last-child {
+    margin-top: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #7f8c8d;
+    transition: all 0.3s;
+}
+
+.childcare-ccs-root .progress-step-wrapper:has(.progress-step.active) > div:last-child {
+    color: #0073aa;
+    font-weight: 700;
+    transform: scale(1.05);
+}
+
+.childcare-ccs-root .progress-step-wrapper:has(.progress-step.completed) > div:last-child {
+    color: #00a32a;
+    font-weight: 700;
+}
+
+/* Step content - CONSISTENT SPACING */
+.childcare-ccs-root .childcare-step {
+    margin-bottom: 20px;
+    margin-top: 0;
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.childcare-ccs-root .childcare-step label {
+    display: block;
+    margin-bottom: 8px;
+    margin-top: 0;
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 15px;
+}
+
+.childcare-ccs-root .childcare-step p {
+    margin-bottom: 10px;
+    margin-top: 0;
+}
+
+.childcare-ccs-root .childcare-step p strong {
+    color: #1a1a1a;
+    font-size: 15px;
+}
+
+/* Inputs and selects - ALL SAME WIDTH */
+.childcare-ccs-root .childcare-step input[type="text"],
+.childcare-ccs-root .childcare-step input[type="number"],
+.childcare-ccs-root .childcare-step input[type="date"],
+.childcare-ccs-root .childcare-step input[type="email"],
+.childcare-ccs-root .childcare-step input[type="tel"],
+.childcare-ccs-root .childcare-step select,
+.childcare-ccs-root .childcare-step textarea {
+    padding: 12px 16px;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 8px;
+    margin-bottom: 16px;
+    box-sizing: border-box;
+    font-size: 15px;
+    font-family: 'Red Hat Display', sans-serif;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+    height: 48px;
+}
+
+.childcare-ccs-root .childcare-step input[type="text"]:focus,
+.childcare-ccs-root .childcare-step input[type="number"]:focus,
+.childcare-ccs-root .childcare-step input[type="date"]:focus,
+.childcare-ccs-root .childcare-step input[type="email"]:focus,
+.childcare-ccs-root .childcare-step select:focus,
+.childcare-ccs-root .childcare-step textarea:focus {
+    outline: none;
+    border-color: #0073aa;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(0, 115, 170, 0.1);
+}
+
+/* Hour slider - SAME WIDTH AS INPUTS */
+.childcare-ccs-root .childcare-step input[type="range"] {
+    width: 100%;
+    max-width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(to right, #e1e8ed 0%, #e1e8ed 100%);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 16px 0;
+}
+
+.childcare-ccs-root .childcare-step input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #0073aa;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 115, 170, 0.3);
+    transition: all 0.3s;
+}
+
+.childcare-step input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    background: #005f8a;
+}
+
+.childcare-step input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #0073aa;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 6px rgba(0, 115, 170, 0.3);
+}
+
+/* Hours per day slider container */
+.child-details p:has(.child-hours-slider) {
+    display: block;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin: 16px 0;
+}
+
+.child-details p:has(.child-hours-slider) label {
+    display: block;
+    margin-bottom: 12px;
+}
+
+.child-details p:has(.child-hours-slider) span {
+    font-size: 14px;
+    color: #5a6c7d;
+    font-weight: 500;
+}
+
+.child-hours-output {
+    display: inline-block;
+    min-width: 80px;
+    padding: 12px 20px;
+    font-weight: 700;
+    color: #0073aa;
+    font-size: 20px;
+    background: #fff;
+    border: 2px solid #0073aa;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0, 115, 170, 0.15);
+    transition: all 0.3s ease;
+    margin-top: 12px;
+    height: 48px;
+    line-height: 24px;
+}
+
+.child-hours-output::after {
+    content: ' hrs';
+    font-size: 14px;
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+/* Buttons - ALL SAME SIZE */
+.button {
+    padding: 12px 24px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #f0f4f8;
+    color: #2c3e50;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 600;
+    font-size: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    height: 48px;
+    line-height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.button:hover {
+    background: #e1e8ed;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.button.button-primary {
+    background: linear-gradient(135deg, #0073aa 0%, #005f8a 100%);
+    color: #fff;
+    border-color: #0073aa;
+    box-shadow: 0 4px 12px rgba(0, 115, 170, 0.25);
+}
+
+.button.button-primary:hover {
+    background: linear-gradient(135deg, #005f8a 0%, #004d6d 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 115, 170, 0.35);
+}
+
+.button.button-primary:active {
+    transform: translateY(0);
+}
+
+/* Child count buttons */
+.child-count-btn {
+    margin-bottom: 8px;
+    min-width: 50px;
+}
+
+/* Enrolment option buttons */
+.enrolment-option {
+    display: inline-block;
+    margin-bottom: 10px;
+}
+
+/* Loader spinner */
+.childcare-spinner {
+    width: 50px;
+    height: 50px;
+    margin: 10px auto;
+    border: 5px solid #eee;
+    border-top-color: #0073aa;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Suburb suggestions */
+.suburb-suggestions {
+    position: absolute;
+    z-index: 100;
+    background: #fff;
+    border: 2px solid #e1e8ed;
+    width: 100%;
+    max-width: 420px;
+    max-height: 250px;
+    overflow-y: auto;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    margin-top: 4px;
+}
+
+.suburb-suggestion {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f0f4f8;
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.suburb-suggestion:last-child {
+    border-bottom: none;
+}
+
+.suburb-suggestion:hover {
+    background: linear-gradient(135deg, #0073aa 0%, #005f8a 100%);
+    color: #fff;
+    padding-left: 20px;
+}
+
+.suburb-suggestion .suburb-name {
+    flex: 1;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.suburb-suggestion .suburb-postcode {
+    font-size: 13px;
+    color: #7f8c8d;
+    font-weight: 600;
+    padding: 4px 10px;
+    background: #f0f4f8;
+    border-radius: 4px;
+    margin-left: 10px;
+}
+
+.suburb-suggestion:hover .suburb-name,
+.suburb-suggestion:hover .suburb-postcode {
+    color: #fff;
+}
+
+.suburb-suggestion:hover .suburb-postcode {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Summary layout */
+#step4 .summary-btn {
+    margin-right: 5px;
+}
+
+#step4 select {
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+#step4 .summary-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+#step4 .summary-column {
+    flex: 1;
+    min-width: 250px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #f9f9f9;
+    padding: 15px;
+}
+
+/* Weekly breakdown */
+#summary-weekly p {
+    margin-bottom: 15px;
+}
+
+/* Child details - CONSISTENT SPACING */
+.child-details {
+    border: 2px solid #e8f4f8;
+    padding: 24px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.child-details:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.child-details h4 {
+    color: #0073aa;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e8f4f8;
+}
+
+/* Week days as BUTTONS (not checkboxes) */
+.fortnight-days {
+    margin: 16px 0;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.fortnight-days strong {
+    display: block;
+    margin-bottom: 16px;
+    color: #2c3e50;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.fortnight-days label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    padding: 12px 20px;
+    background: #fff;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 15px;
+    font-weight: 600;
+    min-width: 80px;
+    height: 48px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    user-select: none;
+}
+
+.fortnight-days label:hover {
+    border-color: #0073aa;
+    background: #e8f4f8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 115, 170, 0.15);
+}
+
+.fortnight-days input[type="checkbox"] {
+    display: none;
+}
+
+.fortnight-days input[type="checkbox"]:checked + span,
+.fortnight-days label:has(input[type="checkbox"]:checked) {
+    background: linear-gradient(135deg, #0073aa 0%, #005f8a 100%);
+    color: #fff;
+    border-color: #0073aa;
+    box-shadow: 0 4px 12px rgba(0, 115, 170, 0.25);
+    transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #step4 .summary-container {
+        flex-direction: column;
+    }
+}
+
+.childcare-step{ margin-bottom:20px; }
+.select2-container .select2-selection--single { height:38px; }
+.select2-container--default .select2-selection--single .select2-selection__rendered { line-height:36px; }
+
+
+
+.childcare-step{margin-top:0;}
+.progress-step{width:30px; height:30px; background:#eee; border-radius:50%; margin:0 auto; line-height:30px; color:#333; font-weight:bold;}
+.progress-step.active{background:#0073aa;color:#fff;}
+.progress-step.completed{background:#0073aa;color:#fff;}
+.progress-step-wrapper{position:relative; text-align:center; flex:1;}
+.progress-desc{font-size:11px; margin-top:3px;}
+.childcare-spinner{width:50px;height:50px;margin:10px auto;border:5px solid #eee;border-top-color:#0073aa;border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+.suburb-suggestions{display:none;position:absolute;z-index:10;background:#fff;border:1px solid #ccc;width:100%;max-width:420px;}
+.button-primary{background-color:#0073aa;color:#fff;border-color:#0073aa;}
+.button-primary:hover{background-color:#005177;color:#fff;}
+
+/* Child detail cards */
+.child-detail-card {
+    margin-bottom: 20px;
+    padding: 20px;
+    border: 2px solid #e8f4f8;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.child-detail-card:hover {
+    box-shadow: 0 6px 20px rgba(0, 115, 170, 0.1);
+    border-color: #0073aa;
+    transform: translateY(-2px);
+}
+
+.child-detail-card h5 {
+    color: #0073aa;
+    font-size: 1.2em;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e8f4f8;
+}
+
+.child-detail-card p {
+    margin-bottom: 10px;
+    font-size: 15px;
+    color: #5a6c7d;
+    line-height: 1.6;
+}
+
+.child-detail-card p strong {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+/* Summary table rows */
+.c-summary-table__row {
+    padding: 18px 0;
+    border-bottom: 1px solid rgba(0, 115, 170, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.c-summary-table__row:hover {
+    background: rgba(0, 115, 170, 0.02);
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 8px;
+}
+
+.c-summary-table__row span.c-summary-table__row__label {
+    font-size: 16px;
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+.c-summary-table__row span.c-summary-table__row__value {
+    position: relative;
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    font-weight: 700;
+}
+
+.c-summary-table__row span {
+    font-size: 18px;
+}
+
+.c-summary-table__row__value span.currency {
+    font-size: 14px;
+    color: #7f8c8d;
+}
+
+.c-summary-table__row__value span.value {
+    color: #0073aa;
+    font-size: 24px;
+}
+
+.c-summary-table__row span.c-summary-table__row__value span.period-label {
+    font-size: 13px;
+    color: #7f8c8d;
+    font-weight: 400;
+    margin-left: 4px;
+}
+/* Weekly breakdown */
+.week_breakdown__column {
+    display: flex;
+    flex-flow: column;
+    gap: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 12px;
+    border: 2px solid #e8f4f8;
+    flex: 1;
+    min-width: 0;
+}
+
+.c-summary-weekly_breakdown__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.week_breakdown__column.one,
+.week_breakdown__column.two {
+    flex: 1;
+    min-width: 280px;
+}
+
+span.week-breakdown__week {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0073aa;
+    margin-bottom: 12px;
+    display: block;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e8f4f8;
+}
+
+span.week-breakdown__label {
+    font-size: 15px;
+    color: #5a6c7d;
+    font-weight: 500;
+    min-width: 120px;
+}
+
+.week-breakdown__values span.currency {
+    font-size: 13px;
+    color: #7f8c8d;
+}
+
+span.my__values__week {
+    display: flex;
+    flex-flow: column;
+    gap: 12px;
+}
+
+span.week-breakdown__fee__struct {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.my__values__week span.week-breakdown__values {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    font-weight: 700;
+}
+
+.my__values__week span.week-breakdown__values span.value {
+    font-size: 20px;
+    color: #0073aa;
+}
+
+.c-summary-table__row:last-child {
+    border: none;
+}
+
+/* Summary boxes */
+#step4 > div > div {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 2px solid #e8f4f8;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+#step4 > div > div:hover {
+    box-shadow: 0 6px 20px rgba(0, 115, 170, 0.1);
+    border-color: #0073aa;
+}
+
+/* Summary weekly container */
+#summary-weekly {
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Email form styling */
+#summary-email-form {
+    margin-top: 30px;
+    padding: 24px;
+    border: 2px solid #e8f4f8;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+#summary-email-form h4 {
+    color: #0073aa;
+    margin-bottom: 20px;
+    font-size: 1.3em;
+}
+
+#summary-email-form input,
+#summary-email-form textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    background: #fff;
+}
+
+#summary-email-form input:focus,
+#summary-email-form textarea:focus {
+    outline: none;
+    border-color: #0073aa;
+    box-shadow: 0 0 0 3px rgba(0, 115, 170, 0.1);
+}
+
+#summary-email-form button[type="submit"] {
+    padding: 14px 32px;
+    background: linear-gradient(135deg, #0073aa 0%, #005f8a 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 115, 170, 0.25);
+    margin-top: 10px;
+}
+
+#summary-email-form button[type="submit"]:hover {
+    background: linear-gradient(135deg, #005f8a 0%, #004d6d 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 115, 170, 0.35);
+}
+
+#send-summary-response {
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 500;
+}
+/* Responsive Design */
+@media screen and (max-width: 767px) {
+    .childcare-ccs-root {
+        padding: 24px;
+        margin: 20px auto;
+    }
+
+    .childcare-ccs-root h3 {
+        font-size: 1.8em;
+    }
+
+    .progress-step {
+        width: 40px;
+        height: 40px;
+        font-size: 0.9em;
+    }
+
+    .progress-step-wrapper > div:last-child {
+        font-size: 11px;
+    }
+
+    .c-summary-weekly_breakdown__row {
+        flex-flow: column;
+        gap: 20px;
+    }
+
+    .week_breakdown__column {
+        gap: 15px;
+        padding: 16px;
+    }
+
+    .c-summary-table__row {
+        flex-flow: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .c-summary-table__row span.c-summary-table__row__value {
+        justify-content: flex-start;
+    }
+
+    .button {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .child-details {
+        padding: 16px;
+    }
+
+    .fortnight-days label {
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    #step4 > div {
+        flex-direction: column;
+    }
+
+    .childcare-step input[type="text"],
+    .childcare-step input[type="number"],
+    .childcare-step input[type="date"],
+    .childcare-step input[type="email"],
+    .childcare-step select {
+        max-width: 100%;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .childcare-ccs-root {
+        padding: 16px;
+    }
+
+    .childcare-ccs-root h3 {
+        font-size: 1.5em;
+    }
+
+    .progress-container {
+        padding: 10px 0;
+    }
+
+    .child-count-btn {
+        width: calc(20% - 8px);
+        min-width: auto;
+    }
+}

@@ -1,0 +1,308 @@
+/* Childcare Calculator - Clean Base Styles */
+/* All visual styling controlled via admin settings - only essential structural CSS here */
+
+/* Essential base layout */
+
+/* Progress bar structure */
+.childcare-ccs-root .progress-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    margin-top: 20px;
+    position: relative;
+}
+
+.childcare-ccs-root .progress-step {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.suburb-suggestion {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 15px;
+}
+div#extra-field-wrapper {
+    margin-bottom: 20px;
+}
+
+/* Form structure */
+.childcare-step {
+    margin-bottom: 30px;
+}
+
+.childcare-step label {
+    display: block;
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+/* Button structure */
+.childcare-ccs-root .button {
+    display: inline-block;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+/* Child count buttons structure */
+.childcare-ccs-root .child-count-btn {
+    display: inline-block;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+/* Fortnight day buttons structure */
+.childcare-ccs-root .fortnight-day-btn,
+.childcare-ccs-root .fortnight-days .day-button {
+    display: inline-block;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+/* Slider structure */
+.childcare-ccs-root .slider-container {
+    position: relative;
+    margin: 20px 0;
+}
+
+.childcare-ccs-root .slider-container input[type='range'] {
+    position: relative;
+    z-index: 2;
+    background: transparent;
+}
+
+/* Tooltip structure */
+.childcare-ccs-root .tooltip-container {
+    position: relative;
+    display: inline-block;
+}
+
+.childcare-ccs-root .tooltip-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background: #84bd00;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 16px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: help;
+    margin: 0px 0px 2px 2px;
+    vertical-align: middle;
+}
+
+.childcare-ccs-root .tooltip-content {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    z-index: 1000;
+    top: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    text-align: left;
+    padding: 15px;
+    border-radius: 6px;
+    width: 350px;
+    font-size: 14px;
+    line-height: 1.4;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.childcare-ccs-root .tooltip-content::after {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent #333 transparent;
+}
+
+.childcare-ccs-root .tooltip-container:hover .tooltip-content {
+    visibility: visible;
+    opacity: 1;
+}
+
+.childcare-ccs-root .tooltip-content ul {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.childcare-ccs-root .tooltip-content li {
+    margin-bottom: 5px;
+}
+
+.show_total{
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.summary-row-td span {
+    font-size: 12px !important;
+}
+#child-buttons button.button.child-count-btn {
+    min-width: unset !important;
+    width: 50px !important;
+    margin: 0px !important;
+}
+td.income-info-item {
+    padding: 15px 0px !important;
+    width: 50%;
+    border-bottom: 1px solid #e0e0e0 !important;
+}
+#childcare-ccs-calculator .household-income-info-table p.income-info-item-p {
+    font-size: 12px !important;
+    line-height: 16px !important;
+    margin: 0px 0px 10px 0px !important;
+}
+#childcare-ccs-calculator .household-income-info-table p.income-info-item-value {
+    font-size: 16px !important;
+    line-height: 20px !important;
+    margin: 0px !important;
+    font-weight: 600;
+}
+
+/* Essential responsive structure */
+@media screen and (max-width: 768px) {
+    .childcare-ccs-root {
+        margin: 20px auto;
+        max-width: 100%;
+    }
+    
+    .childcare-ccs-root .progress-container {
+        padding: 0px !important;
+    }
+    
+    .childcare-ccs-root .button {
+        width: 100%;
+    }
+    
+    /* Navigation buttons - Back and Next in same line with 50% width each */
+    .childcare-ccs-root .next-steps {
+        display: flex !important;
+        gap: 10px !important;
+        flex-wrap: nowrap !important;
+    }
+    
+    .childcare-ccs-root .next-steps .nav-back,
+    .childcare-ccs-root .next-steps .nav-next {
+        flex: 1 !important;
+        width: 50% !important;
+        margin: 0 !important;
+    }
+    
+    /* All label fields 100% width on mobile - Step 2 household income fields */
+    .childcare-ccs-root .childcare-step > div[style*="display:flex"] {
+        flex-direction: column !important;
+        gap: 0 !important;
+    }
+    
+    .childcare-ccs-root .childcare-step label[style*="width:50%"] {
+        width: 100% !important;
+    }
+    
+    /* Step 4 summary fields */
+    .childcare-ccs-root #step4 .show_total {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+        align-items: flex-start !important;
+    }
+    
+    .childcare-ccs-root #step4 .show_total .summary-btn {
+        width: 50% !important;
+        margin: 0px !important;
+    }
+    
+    .childcare-ccs-root .tooltip-content {
+        width: 300px;
+        left: -140px;
+        transform: none;
+    }
+    
+    .childcare-ccs-root #step4 > div {
+        flex-direction: column;
+        margin-bottom: 10px;
+    }
+    
+    div#enrolment-options {
+        gap: 5px;
+        display: flex;
+        flex-flow: column;
+    }
+    
+    /* Child details summary cards - stack on mobile */
+    #child-details-summary {
+        flex-direction: column !important;
+    }
+    
+    /* Household income info grid - single column on mobile */
+    #household-income-info > div > div {
+        grid-template-columns: 1fr !important;
+    }
+
+    .house-hold-income-info, .tax-income{
+        margin-bottom: 0px !important;
+    }
+    
+    .empty_space{
+        display: none !important;
+    }
+    #childcare-ccs-calculator .button.nav-button.nav-back {
+        margin: 0px !important;
+    }
+    #childcare-ccs-calculator .income-info-item p:last-child{
+        margin-bottom: 0px !important;
+    }
+    .show_total_btns {
+        display: flex;
+        flex-flow: row;
+        width: 100% !important;
+        justify-content: space-between;
+        background: #f8f9fa;
+    }
+    div#summary-weekly {
+        padding-top: 20px !important;
+    }
+    #childcare-ccs-calculator .ccs-info-box-top {
+        flex-direction: row !important;
+        gap: 10px !important;
+    }
+    #childcare-ccs-calculator .ccs-info-box-top .info-box-text {
+        font-size: 14px !important;
+        line-height: 20px !important;
+    }
+    div#child-select-wrapper {
+        margin: 20px 0px 0px 0px !important;
+        justify-content: space-between;
+    }
+    div#child-buttons {
+        display: flex;
+        gap: 5px;
+        width: 100%;
+    }
+    #child-buttons button.button.child-count-btn {
+        width: 100% !important;
+    }  
+}

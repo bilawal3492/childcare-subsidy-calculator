@@ -1,0 +1,90 @@
+/* Child Care Subsidy Calculator - Admin Panel Modern Styles */
+
+.ccs-admin-wrap {
+  font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+  padding: 32px 0 0 0;
+}
+
+.ccs-admin-card, .ccs-admin-table {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: 1px solid #e5e7eb;
+  margin-bottom: 32px;
+  padding: 32px;
+}
+
+.ccs-admin-card h2, .ccs-admin-table h2 {
+  color: #0073aa;
+  font-size: 1.4rem;
+  margin-bottom: 18px;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 8px;
+}
+
+.ccs-admin-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+
+.ccs-admin-table th, .ccs-admin-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  text-align: left;
+}
+
+.ccs-admin-table th {
+  background: #f6f8fa;
+  color: #333;
+  font-weight: 600;
+}
+
+.ccs-admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+.ccs-admin-btn, .ccs-admin-wrap .button-primary {
+  background: linear-gradient(90deg, #0073aa 0%, #005177 100%);
+  color: #fff !important;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 28px;
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.ccs-admin-btn:hover, .ccs-admin-wrap .button-primary:hover {
+  background: linear-gradient(90deg, #005177 0%, #0073aa 100%);
+  box-shadow: 0 2px 8px rgba(0,115,170,0.08);
+}
+
+.ccs-admin-section-title {
+  font-size: 1.8rem;
+  color: #23282d;
+  margin-bottom: 24px;
+  font-weight: 700;
+}
+
+.ccs-admin-description {
+  color: #555;
+  font-size: 1.1rem;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 900px) {
+  .ccs-admin-card, .ccs-admin-table {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 600px) {
+  .ccs-admin-card, .ccs-admin-table {
+    padding: 8px;
+  }
+  .ccs-admin-section-title {
+    font-size: 1.2rem;
+  }
+}
