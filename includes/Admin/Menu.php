@@ -160,8 +160,8 @@ class Menu
                 <div class="ccs-settings-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
                     
                     <!-- Income Thresholds Card -->
-                    <div class="ccs-settings-card" style="background:#fff; padding:25px; border:1px solid #ddd; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-                        <h2 style="margin-top:0; padding-bottom:15px; border-bottom:2px solid #0073aa; color:#0073aa; font-size:18px;">
+                    <div class="ccs-settings-card" style="background:#fff; padding:25px; border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.08);">
+                        <h2 style="margin-top:0; padding-bottom:15px; border-bottom:3px solid #0073aa; color:#0073aa; font-size:18px; display:flex; align-items:center;">
                             <span class="dashicons dashicons-money-alt" style="font-size:20px; width:20px; height:20px; margin-right:8px;"></span>
                             Income Thresholds
                         </h2>
@@ -222,8 +222,8 @@ class Menu
                     </div>
 
                     <!-- Hourly Caps Card -->
-                    <div class="ccs-settings-card" style="background:#fff; padding:25px; border:1px solid #ddd; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-                        <h2 style="margin-top:0; padding-bottom:15px; border-bottom:2px solid #0073aa; color:#0073aa; font-size:18px;">
+                    <div class="ccs-settings-card" style="background:#fff; padding:25px; border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.08);">
+                        <h2 style="margin-top:0; padding-bottom:15px; border-bottom:3px solid #0073aa; color:#0073aa; font-size:18px; display:flex; align-items:center;">
                             <span class="dashicons dashicons-clock" style="font-size:20px; width:20px; height:20px; margin-right:8px;"></span>
                             Hourly Rate Caps
                         </h2>
@@ -255,9 +255,11 @@ class Menu
                             </div>
                         <?php endforeach; ?>
                 </div>
+                </div>
+                
                 <!-- Additional Settings Card -->
-                <div class="ccs-settings-card" style="background:#fff; padding:25px; border:1px solid #ddd; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05); margin-bottom:20px;">
-                    <h2 style="margin-top:0; padding-bottom:15px; border-bottom:2px solid #0073aa; color:#0073aa; font-size:18px;">
+                <div class="ccs-settings-card" style="background:#fff; padding:25px; border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.08); margin-bottom:20px;">
+                    <h2 style="margin-top:0; padding-bottom:15px; border-bottom:3px solid #0073aa; color:#0073aa; font-size:18px; display:flex; align-items:center;">
                         <span class="dashicons dashicons-info" style="font-size:20px; width:20px; height:20px; margin-right:8px;"></span>
                         Additional Information
                     </h2>
@@ -287,8 +289,8 @@ class Menu
                 </div>
 
                 <!-- Calculator Form Settings Card -->
-                <div class="ccs-settings-card" style="background:#fff; padding:25px; border:1px solid #ddd; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05); margin-bottom:20px;">
-                    <h2 style="margin-top:0; padding-bottom:15px; border-bottom:2px solid #0073aa; color:#0073aa; font-size:18px;">
+                <div class="ccs-settings-card" style="background:#fff; padding:25px; border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.08); margin-bottom:20px;">
+                    <h2 style="margin-top:0; padding-bottom:15px; border-bottom:3px solid #0073aa; color:#0073aa; font-size:18px; display:flex; align-items:center;">
                         <span class="dashicons dashicons-admin-generic" style="font-size:20px; width:20px; height:20px; margin-right:8px;"></span>
                         Calculator Form Settings
                     </h2>
@@ -324,53 +326,54 @@ class Menu
                         </div>
                     </div>
 
-                    <div style="margin-top:20px;">
-                        <h3 style="font-size:14px; font-weight:600; margin-bottom:15px; color:#333;">
+                    <div style="margin-top:25px;">
+                        <h3 style="font-size:15px; font-weight:600; margin-bottom:15px; color:#0073aa; display:flex; align-items:center;">
+                            <span class="dashicons dashicons-schedule" style="font-size:18px; width:18px; height:18px; margin-right:8px;"></span>
                             Activity Hours to CCS Hours Mapping
                         </h3>
-                        <div style="background:#f9f9f9; padding:15px; border-radius:4px; border:1px solid #e0e0e0;">
+                        <div style="background:#f9f9f9; padding:20px; border-radius:6px; border:1px solid #e0e0e0;">
                             <table style="width:100%; border-collapse:collapse;">
                                 <thead>
-                                    <tr style="border-bottom:2px solid #ddd;">
-                                        <th style="text-align:left; padding:10px; font-weight:600; color:#333;">Activity Hours per Fortnight</th>
-                                        <th style="text-align:left; padding:10px; font-weight:600; color:#333;">CCS Hours per Fortnight</th>
+                                    <tr style="background:#0073aa; color:#fff;">
+                                        <th style="text-align:left; padding:12px; font-weight:600; border-radius:4px 0 0 0;">Activity Hours per Fortnight</th>
+                                        <th style="text-align:left; padding:12px; font-weight:600; border-radius:0 4px 0 0;">CCS Hours per Fortnight</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr style="border-bottom:1px solid #e0e0e0;">
-                                        <td style="padding:10px;">8 hours to 16 hours</td>
-                                        <td style="padding:10px;">
+                                    <tr style="background:#fff; border-bottom:1px solid #e0e0e0;">
+                                        <td style="padding:12px; font-weight:500;">8 hours to 16 hours</td>
+                                        <td style="padding:12px;">
                                             <input type="number" 
                                                    name="childcare_ccs_policy[ccs_hours_8_16]" 
                                                    value="<?php echo esc_attr($policy['ccs_hours_8_16'] ?? 36); ?>"
-                                                   style="width:100px; padding:8px; border:1px solid #ddd; border-radius:4px;">
-                                            <span style="margin-left:5px; color:#666;">hours</span>
+                                                   style="width:100px; padding:8px 12px; border:1px solid #ddd; border-radius:4px; font-size:14px;">
+                                            <span style="margin-left:8px; color:#666; font-weight:500;">hours</span>
                                         </td>
                                     </tr>
-                                    <tr style="border-bottom:1px solid #e0e0e0;">
-                                        <td style="padding:10px;">17 hours to 48 hours</td>
-                                        <td style="padding:10px;">
+                                    <tr style="background:#fff; border-bottom:1px solid #e0e0e0;">
+                                        <td style="padding:12px; font-weight:500;">17 hours to 48 hours</td>
+                                        <td style="padding:12px;">
                                             <input type="number" 
                                                    name="childcare_ccs_policy[ccs_hours_17_48]" 
                                                    value="<?php echo esc_attr($policy['ccs_hours_17_48'] ?? 72); ?>"
-                                                   style="width:100px; padding:8px; border:1px solid #ddd; border-radius:4px;">
-                                            <span style="margin-left:5px; color:#666;">hours</span>
+                                                   style="width:100px; padding:8px 12px; border:1px solid #ddd; border-radius:4px; font-size:14px;">
+                                            <span style="margin-left:8px; color:#666; font-weight:500;">hours</span>
                                         </td>
                                     </tr>
-                                    <tr>
-                                        <td style="padding:10px;">More than 48 hours</td>
-                                        <td style="padding:10px;">
+                                    <tr style="background:#fff;">
+                                        <td style="padding:12px; font-weight:500;">More than 48 hours</td>
+                                        <td style="padding:12px;">
                                             <input type="number" 
                                                    name="childcare_ccs_policy[ccs_hours_48_plus]" 
                                                    value="<?php echo esc_attr($policy['ccs_hours_48_plus'] ?? 100); ?>"
-                                                   style="width:100px; padding:8px; border:1px solid #ddd; border-radius:4px;">
-                                            <span style="margin-left:5px; color:#666;">hours</span>
+                                                   style="width:100px; padding:8px 12px; border:1px solid #ddd; border-radius:4px; font-size:14px;">
+                                            <span style="margin-left:8px; color:#666; font-weight:500;">hours</span>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
-                        <p class="description" style="margin-top:10px; color:#666;">Configure how activity hours map to subsidised CCS hours per fortnight</p>
+                        <p class="description" style="margin-top:10px; color:#666; font-style:italic;">Configure how activity hours map to subsidised CCS hours per fortnight</p>
                     </div>
 
                     <div style="margin-top:20px;">
@@ -402,16 +405,38 @@ class Menu
                     </div>
                 </div>
 
+                <!-- Centres Management Card -->
+                <div class="ccs-settings-card" style="background:#fff; padding:25px; border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.08); margin-bottom:20px;">
+                    <h2 style="margin-top:0; padding-bottom:15px; border-bottom:3px solid #0073aa; color:#0073aa; font-size:18px; display:flex; align-items:center;">
+                        <span class="dashicons dashicons-building" style="font-size:20px; width:20px; height:20px; margin-right:8px;"></span>
+                        Childcare Centres List
+                    </h2>
+                    
+                    <div style="margin-top:20px;">
+                        <label style="display:block; font-weight:600; margin-bottom:8px; color:#333;">
+                            Centres (one per line)
+                        </label>
+                        <textarea name="ccs_centres_list" 
+                                  rows="10" 
+                                  placeholder="Enter centre names, one per line&#10;Example:&#10;ABC Learning Centre - Sydney&#10;Little Stars Childcare - Melbourne&#10;Sunshine Kids - Brisbane"
+                                  style="width:100%; padding:12px; border:1px solid #ddd; border-radius:4px; font-size:14px; font-family:monospace; resize:vertical;"><?php echo esc_textarea(get_option('ccs_centres_list', '')); ?></textarea>
+                        <p class="description" style="margin-top:8px; color:#666;">
+                            <span class="dashicons dashicons-info" style="color:#0073aa;"></span>
+                            Enter each childcare centre name on a new line. These will appear in the dropdown when users select "Existing family" option.
+                        </p>
+                    </div>
+                </div>
+
                 <!-- Info Box -->
-                <div style="background:#e7f5fe; border-left:4px solid #0073aa; padding:15px 20px; margin-bottom:20px; border-radius:4px;">
-                    <p style="margin:0; color:#333;">
-                        <span class="dashicons dashicons-info" style="color:#0073aa; margin-right:5px;"></span>
-                        <strong>Important:</strong> These settings control the calculator's subsidy calculations. Ensure values match current Australian Government CCS policy. 
-                        Visit <a href="https://www.servicesaustralia.gov.au/child-care-subsidy" target="_blank">Services Australia</a> for official rates.
+                <div style="background:linear-gradient(135deg, #e7f5fe 0%, #f0f9ff 100%); border-left:5px solid #0073aa; padding:20px 25px; margin-bottom:30px; border-radius:8px; box-shadow:0 2px 4px rgba(0,115,170,0.1);">
+                    <p style="margin:0; color:#333; font-size:14px; line-height:1.6;">
+                        <span class="dashicons dashicons-info" style="color:#0073aa; margin-right:8px; font-size:20px; vertical-align:middle;"></span>
+                        <strong style="color:#0073aa;">Important:</strong> These settings control the calculator's subsidy calculations. Ensure values match current Australian Government CCS policy. 
+                        Visit <a href="https://www.servicesaustralia.gov.au/child-care-subsidy" target="_blank" style="color:#0073aa; text-decoration:underline; font-weight:600;">Services Australia</a> for official rates.
                     </p>
                 </div>
 
-                <?php submit_button('Save Settings', 'primary large', 'submit', true, ['style' => 'padding:10px 30px; font-size:16px; height:auto;']); ?>
+                <?php submit_button('Save Settings', 'primary large', 'submit', true, ['style' => 'padding:12px 40px; font-size:16px; height:auto; border-radius:6px; box-shadow:0 2px 4px rgba(0,115,170,0.3);']); ?>
             </form>
 
             <!-- Rules & Instructions Section -->
@@ -424,9 +449,9 @@ class Menu
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
                     
                     <!-- How CCS is Calculated -->
-                    <div style="background:#fff; padding:25px; border:1px solid #ddd; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-                        <h3 style="margin-top:0; color:#0073aa; font-size:16px; border-bottom:1px solid #e0e0e0; padding-bottom:10px;">
-                            📊 How Child Care Subsidy is Calculated
+                    <div style="background:#fff; padding:25px; border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.08);">
+                        <h3 style="margin-top:0; color:#0073aa; font-size:16px; border-bottom:2px solid #0073aa; padding-bottom:12px; display:flex; align-items:center;">
+                            <span style="font-size:20px; margin-right:8px;">📊</span> How Child Care Subsidy is Calculated
                         </h3>
                         <ol style="margin:15px 0; padding-left:20px; line-height:1.8; color:#333;">
                             <li><strong>Income Assessment:</strong> Combined family income determines subsidy percentage (90% to 0%)</li>
@@ -438,9 +463,9 @@ class Menu
                     </div>
 
                     <!-- Income Thresholds Explained -->
-                    <div style="background:#fff; padding:25px; border:1px solid #ddd; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-                        <h3 style="margin-top:0; color:#0073aa; font-size:16px; border-bottom:1px solid #e0e0e0; padding-bottom:10px;">
-                            💰 Income Thresholds Explained
+                    <div style="background:#fff; padding:25px; border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.08);">
+                        <h3 style="margin-top:0; color:#0073aa; font-size:16px; border-bottom:2px solid #0073aa; padding-bottom:12px; display:flex; align-items:center;">
+                            <span style="font-size:20px; margin-right:8px;">💰</span> Income Thresholds Explained
                         </h3>
                         <ul style="margin:15px 0; padding-left:20px; line-height:1.8; color:#333;">
                             <li><strong>Base Threshold:</strong> Income up to this amount receives maximum 90% subsidy</li>
@@ -451,9 +476,9 @@ class Menu
                     </div>
 
                     <!-- Hourly Caps Guide -->
-                    <div style="background:#fff; padding:25px; border:1px solid #ddd; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-                        <h3 style="margin-top:0; color:#0073aa; font-size:16px; border-bottom:1px solid #e0e0e0; padding-bottom:10px;">
-                            ⏰ Hourly Rate Caps Guide
+                    <div style="background:#fff; padding:25px; border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.08);">
+                        <h3 style="margin-top:0; color:#0073aa; font-size:16px; border-bottom:2px solid #0073aa; padding-bottom:12px; display:flex; align-items:center;">
+                            <span style="font-size:20px; margin-right:8px;">⏰</span> Hourly Rate Caps Guide
                         </h3>
                         <div style="margin:15px 0; line-height:1.8; color:#333;">
                             <p style="margin:0 0 10px 0;"><strong>Centre Based Day Care:</strong> Long day care, preschool, kindergarten</p>
@@ -465,9 +490,9 @@ class Menu
                     </div>
 
                     <!-- Update Instructions -->
-                    <div style="background:#fff; padding:25px; border:1px solid #ddd; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-                        <h3 style="margin-top:0; color:#0073aa; font-size:16px; border-bottom:1px solid #e0e0e0; padding-bottom:10px;">
-                            🔄 When to Update Settings
+                    <div style="background:#fff; padding:25px; border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.08);">
+                        <h3 style="margin-top:0; color:#0073aa; font-size:16px; border-bottom:2px solid #0073aa; padding-bottom:12px; display:flex; align-items:center;">
+                            <span style="font-size:20px; margin-right:8px;">🔄</span> When to Update Settings
                         </h3>
                         <ul style="margin:15px 0; padding-left:20px; line-height:1.8; color:#333;">
                             <li><strong>Government Policy Changes:</strong> Usually announced in Federal Budget (May)</li>
@@ -742,6 +767,9 @@ class Menu
                 // Card & Summary Settings - MISSING FROM ADMIN
                 'ccs_card_bg_color', 'ccs_card_border_color', 'ccs_card_border_radius',
                 'ccs_summary_value_color', 'ccs_summary_label_color', 'ccs_accent_color', 'ccs_border_color',
+                
+                // Loader/Spinner Settings
+                'ccs_spinner_color',
                 
                 // Step 1 Settings - MISSING FROM ADMIN
                 'ccs_step1_location_font_size', 'ccs_step1_location_padding', 'ccs_step1_location_width', 'ccs_step1_location_bg_color',
@@ -2655,6 +2683,19 @@ class Menu
                                    value="<?php echo esc_attr(get_option('ccs_border_color', '#e1e8ed')); ?>" 
                                    class="ccs-color-picker">
                             <p class="description">General border color for dividers and separators</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="ccs_spinner_color">Spinner/Loader Color</label>
+                        </th>
+                        <td>
+                            <input type="text" 
+                                   id="ccs_spinner_color" 
+                                   name="ccs_spinner_color" 
+                                   value="<?php echo esc_attr(get_option('ccs_spinner_color', '#3498db')); ?>" 
+                                   class="ccs-color-picker">
+                            <p class="description">Color of the loading spinner in suburb search dropdown</p>
                         </td>
                     </tr>
                 </table>

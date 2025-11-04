@@ -30,6 +30,7 @@ class Settings
     {
         // Calculator settings
         register_setting('childcare_ccs_group', 'childcare_ccs_policy', [$this, 'childcare_ccs_policy_sanitize']);
+        register_setting('childcare_ccs_group', 'ccs_centres_list', [$this, 'sanitize_centres_list']);
         
         // HubSpot settings (separate group)
         register_setting('childcare_ccs_hubspot_group', 'ccs_form_type', 'sanitize_text_field');
@@ -148,6 +149,9 @@ class Settings
         register_setting('childcare_ccs_styling_group', 'ccs_summary_label_color', [$this, 'sanitize_color_with_alpha']);
         register_setting('childcare_ccs_styling_group', 'ccs_accent_color', [$this, 'sanitize_color_with_alpha']);
         register_setting('childcare_ccs_styling_group', 'ccs_border_color', [$this, 'sanitize_color_with_alpha']);
+        
+        // Loader/Spinner settings
+        register_setting('childcare_ccs_styling_group', 'ccs_spinner_color', [$this, 'sanitize_color_with_alpha']);
         
         // Summary page specific colors
         register_setting('childcare_ccs_styling_group', 'ccs_summary_heading_color', [$this, 'sanitize_color_with_alpha']);
@@ -324,6 +328,20 @@ class Settings
         $out['last_updated']    = sanitize_text_field($out['last_updated']);
         $out['disclaimer_text'] = sanitize_text_field($out['disclaimer_text']);
         return $out;
+    }
+
+    public function sanitize_centres_list($input)
+    {
+        if (empty($input)) {
+            return '';
+        }
+        
+        // Split by newlines and sanitize each centre name
+        $centres = explode("\n", $input);
+        $sanitized = array_map('sanitize_text_field', $centres);
+        $sanitized = array_filter($sanitized); // Remove empty lines
+        
+        return implode("\n", $sanitized);
     }
 }
 

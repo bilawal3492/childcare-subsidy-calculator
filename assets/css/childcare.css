@@ -165,22 +165,6 @@ div#extra-field-wrapper {
     width: 50px !important;
     margin: 0px !important;
 }
-td.income-info-item {
-    padding: 15px 0px !important;
-    width: 50%;
-    border-bottom: 1px solid #e0e0e0 !important;
-}
-#childcare-ccs-calculator .household-income-info-table p.income-info-item-p {
-    font-size: 12px !important;
-    line-height: 16px !important;
-    margin: 0px 0px 10px 0px !important;
-}
-#childcare-ccs-calculator .household-income-info-table p.income-info-item-value {
-    font-size: 16px !important;
-    line-height: 20px !important;
-    margin: 0px !important;
-    font-weight: 600;
-}
 
 /* Essential responsive structure */
 @media screen and (max-width: 768px) {

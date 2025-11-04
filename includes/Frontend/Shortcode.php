@@ -28,8 +28,50 @@ class Shortcode
         $subsidy_bg_color = get_option('ccs_subsidy_bg_color', 'rgba(107, 70, 193, 0.1)');
         $out_of_pocket_bg_color = get_option('ccs_out_of_pocket_bg_color', 'rgba(0, 188, 212, 0.1)');
         
+        // Get spinner color from admin settings
+        $spinner_color = get_option('ccs_spinner_color', '#3498db');
+        
+        // Get centres list from admin settings
+        $centres_list = get_option('ccs_centres_list', '');
+        $centres = array_filter(explode("\n", $centres_list));
+        
         ob_start();
         ?>
+<style>
+@keyframes csc-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Centres dropdown styling */
+.centres-dropdown {
+    scrollbar-width: thin;
+    scrollbar-color: #ccc #f0f0f0;
+}
+
+.centres-dropdown::-webkit-scrollbar {
+    width: 8px;
+}
+
+.centres-dropdown::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 4px;
+}
+
+.centres-dropdown::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+.centres-dropdown::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+
+.centre-option:last-child {
+    border-bottom: none !important;
+}
+</style>
+
 <div id="childcare-ccs-calculator" class="childcare-ccs-root" style="max-width:1080px; margin:0 auto; border:1px solid #ddd; padding:20px; border-radius:8px;">
     <h3>Childcare Subsidy Calculator</h3>
 
@@ -66,7 +108,13 @@ class Shortcode
             <label>Where are you located? (Suburb / Postal Code)<br>
                 <input type="text" id="suburb" placeholder="Enter suburb or postal code" autocomplete="off" style="width:100%; line-height: 20px; border-style: solid; margin-top: 10px !important;">
             </label>
-            <div id="suburb-suggestions" class="suburb-suggestions" style="display:none;position:absolute;z-index:10;background:#fff;border:1px solid #ccc;width:100%;max-height:300px;overflow-y:auto;"></div>
+            <div id="suburb-suggestions" class="suburb-suggestions" style="display:none;position:absolute;z-index:10;background:#fff;border:1px solid #ccc;width:100%;max-height:300px;overflow-y:auto;">
+                <!-- Loader for suburb search -->
+                <div id="suburb-loader" class="suburb-loader" style="display:none; padding:20px; text-align:center;">
+                    <div class="suburb-loader-spinner" style="width:30px; height:30px; border:3px solid #f3f3f3; border-top:3px solid <?php echo esc_attr($spinner_color); ?>; border-radius:50%; animation:csc-spin 1s linear infinite; margin:0 auto;"></div>
+                    <p style="margin-top:10px; color:#666; font-size:14px;">Searching suburbs...</p>
+                </div>
+            </div>
         </div>
         <p class="atsi" style="margin-bottom: 20px;">
             <label>Is your child Aboriginal or Torres Strait Islander?<br>
@@ -89,6 +137,28 @@ class Shortcode
         <div id="extra-field-wrapper" style="display:none; margin-top:10px;">
             <label id="extra-label" style="margin-bottom: 10px;"></label>
             <input type="text" id="extra-field" style="width:100%; line-height: 20px; border-style: solid;">
+        </div>
+
+        <!-- Centres Dropdown (for existing family option) -->
+        <div id="centres-dropdown-wrapper" style="display:none; margin-top:10px; position:relative;">
+            <label style="display:block; margin-bottom:10px; font-weight:500;">Select Your Centre</label>
+            <input type="text" 
+                   id="centre-search" 
+                   placeholder="Search for your centre..." 
+                   autocomplete="off"
+                   style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px; font-size:14px;">
+            <div id="centres-dropdown" class="centres-dropdown" style="display:none; position:absolute; z-index:10; background:#fff; border:1px solid #ccc; width:100%; max-height:250px; overflow-y:auto; border-radius:4px; margin-top:2px; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                <?php if (!empty($centres)): ?>
+                    <?php foreach ($centres as $centre): ?>
+                        <div class="centre-option" data-centre="<?php echo esc_attr(trim($centre)); ?>" style="padding:12px; font-size: 16px; line-height: 20px; cursor:pointer; border-bottom:1px solid #f0f0f0; transition:background 0.2s;">
+                            <?php echo esc_html(trim($centre)); ?>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div style="padding:12px; font-size: 16px; line-height: 20px; color:#999; text-align:center;">No centres available</div>
+                <?php endif; ?>
+            </div>
+            <input type="hidden" id="selected-centre" value="">
         </div>
 
 
@@ -321,13 +391,14 @@ class Shortcode
 
     <!-- Step 4 Summary -->
     <div class="childcare-step" id="step4" style="display:none;">
-        <div id="childcare-loader" style="text-align:center; padding:20px; display:none;">
-            <strong>Calculating...</strong><br>
-            <div class="childcare-spinner" style="width:50px;height:50px;margin:10px auto;border:5px solid #eee;border-top-color:<?php echo esc_attr(get_option('ccs_accent_color', '#0073aa')); ?>;border-radius:50%;animation:spin 1s linear infinite;"></div>
+        <div id="childcare-loader" style="text-align:center; padding:40px 20px; display:none; background:#f9f9f9; border-radius:8px; margin-bottom:30px;">
+            <div class="childcare-spinner" style="width:50px;height:50px;margin:0 auto 20px auto;border:5px solid #f3f3f3;border-top-color:<?php echo esc_attr($spinner_color); ?>;border-radius:50%;animation:csc-spin 1s linear infinite;"></div>
+            <p style="margin:0; font-size:16px; color:#666; font-weight:500;">Calculating your childcare subsidy...</p>
+            <p style="margin:10px 0 0 0; font-size:14px; color:#999;">Please wait a moment</p>
         </div>
 
-
-        <div id="child-details-summary" style="display: flex; gap: 20px; flex-wrap: wrap; margin: 30px 0px 10px 0px;"></div>
+        <div id="summary-content" style="display:none;">
+            <div id="child-details-summary" style="display: flex; gap: 20px; flex-wrap: wrap; margin: 30px 0px 10px 0px;"></div>
 
         <!-- Household Income Information -->
         <div id="household-income-info"></div>
@@ -522,7 +593,7 @@ class Shortcode
             </div>
         </div>
 
-
+        </div><!-- End summary-content -->
 
     </div>
 
@@ -677,15 +748,60 @@ jQuery(document).ready(function($){
 
 
         if (enrolmentSelection === 'existing') {
-            $('#extra-label').text('Please enter the name of your centre:');
-            $('#extra-field-wrapper').show();
+            // Show centres dropdown instead of text field
+            $('#extra-field-wrapper').hide();
+            $('#centres-dropdown-wrapper').show();
+            $('#centre-search').val('');
+            $('#selected-centre').val('');
         } else if (enrolmentSelection === 'other') {
             $('#extra-label').text('Please enter your current care provider:');
             $('#extra-field-wrapper').show();
+            $('#centres-dropdown-wrapper').hide();
         } else {
             $('#extra-field-wrapper').hide();
+            $('#centres-dropdown-wrapper').hide();
             $('#extra-field').val('');
+            $('#selected-centre').val('');
         }
+    });
+
+    // Centre search functionality
+    $('#centre-search').on('focus', function(){
+        $('#centres-dropdown').show();
+    });
+
+    $('#centre-search').on('input', function(){
+        const searchTerm = $(this).val().toLowerCase();
+        $('.centre-option').each(function(){
+            const centreName = $(this).text().toLowerCase();
+            if (centreName.includes(searchTerm)) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    });
+
+    // Centre selection
+    $(document).on('click', '.centre-option', function(){
+        const centreName = $(this).data('centre');
+        $('#centre-search').val(centreName);
+        $('#selected-centre').val(centreName);
+        $('#centres-dropdown').hide();
+    });
+
+    // Hide dropdown when clicking outside
+    $(document).on('click', function(e){
+        if (!$(e.target).closest('#centres-dropdown-wrapper').length) {
+            $('#centres-dropdown').hide();
+        }
+    });
+
+    // Hover effect for centre options
+    $(document).on('mouseenter', '.centre-option', function(){
+        $(this).css('background', '#f0f0f0');
+    }).on('mouseleave', '.centre-option', function(){
+        $(this).css('background', '#fff');
     });
 
 
@@ -693,18 +809,23 @@ jQuery(document).ready(function($){
     let suburbSearchTimeout;
     $('#suburb').on('input', function(){
         const val = $(this).val().trim();
-        const $suggest = $('#suburb-suggestions').empty();
+        const $suggest = $('#suburb-suggestions');
+        const $loader = $('#suburb-loader');
         
         if(val.length < 2) {
             $suggest.hide();
+            $loader.hide();
             return;
         }
         
         // Clear previous timeout
         clearTimeout(suburbSearchTimeout);
         
-        // Show loading
-        $suggest.html('<div style="padding:12px; color:#999;">Searching...</div>').show();
+        // Show dropdown and loader
+        $suggest.show();
+        $loader.show();
+        // Hide any previous results
+        $('.suburb-suggestion').remove();
         
         // Debounce AJAX request
         suburbSearchTimeout = setTimeout(function() {
@@ -716,7 +837,11 @@ jQuery(document).ready(function($){
                     q: val
                 },
                 success: function(response) {
-                    $suggest.empty();
+                    // Hide loader
+                    $loader.hide();
+                    
+                    // Remove any previous results
+                    $('.suburb-suggestion').remove();
                     
                     if(response.success && response.data.length > 0) {
                         response.data.forEach(function(item) {
@@ -729,13 +854,14 @@ jQuery(document).ready(function($){
                                     .html(`<span class="suburb-name">${item.suburb}</span><span class="suburb-postcode">${item.postcode}</span>`)
                             );
                         });
-                        $suggest.show();
                     } else {
-                        $suggest.html('<div style="padding:12px; color:#999;">No suburbs found</div>').show();
+                        $suggest.append('<div class="no-results" style="padding:12px; color:#999;">No suburbs found</div>');
                     }
                 },
                 error: function() {
-                    $suggest.html('<div style="padding:12px; color:#d00;">Search failed</div>').show();
+                    $loader.hide();
+                    $('.suburb-suggestion').remove();
+                    $suggest.append('<div class="error-message" style="padding:12px; color:#d00;">Search failed. Please try again.</div>');
                 }
             });
         }, 300); // 300ms debounce
@@ -968,7 +1094,7 @@ jQuery(document).ready(function($){
     $('#next1').off('click').on('click', function(){
         // Clear all previous errors
         $('.error-message').remove();
-        $('#suburb, #atsi, #extra-field').css('border-color', '');
+        $('#suburb, #atsi, #extra-field, #centre-search').css('border-color', '');
         
         let hasError = false;
         
@@ -987,7 +1113,14 @@ jQuery(document).ready(function($){
             hasError = true;
         }
 
-        if ((enrolmentSelection === 'existing' || enrolmentSelection === 'other') && $('#extra-field').val().trim() === '') {
+        // Validate centre selection for existing family
+        if (enrolmentSelection === 'existing' && $('#selected-centre').val().trim() === '') {
+            showError('#centre-search', 'Please select your centre from the list');
+            hasError = true;
+        }
+
+        // Validate text field for other option
+        if (enrolmentSelection === 'other' && $('#extra-field').val().trim() === '') {
             showError('#extra-field', 'Please provide the required information');
             hasError = true;
         }
@@ -995,8 +1128,12 @@ jQuery(document).ready(function($){
         if (hasError) return;
 
 
-        // Save extra answer for later use
-        extraAnswer = $('#extra-field').val().trim();
+        // Save extra answer for later use (centre or other provider)
+        if (enrolmentSelection === 'existing') {
+            extraAnswer = $('#selected-centre').val().trim();
+        } else {
+            extraAnswer = $('#extra-field').val().trim();
+        }
 
 
         $('.childcare-step').hide();
@@ -1184,10 +1321,21 @@ jQuery(document).ready(function($){
         if(hasError) return;
         
         $('.childcare-step').hide(); 
-        $('#step4').show(); 
+        $('#step4').show();
+        $('#summary-content').hide();
         $('#childcare-loader').show(); 
         setActiveStep(4);
-        setTimeout(calculateCCS, 200);
+        
+        // Show loader for 2-3 seconds then calculate and show summary
+        setTimeout(function() {
+            calculateCCS();
+            // Hide loader and show summary after calculation
+            setTimeout(function() {
+                $('#childcare-loader').fadeOut(300, function() {
+                    $('#summary-content').fadeIn(400);
+                });
+            }, 500);
+        }, 2500); // 2.5 seconds delay
     });
 
 
@@ -1377,7 +1525,7 @@ jQuery(document).ready(function($){
 
 
         renderSummary('fortnight','all');
-        $('#childcare-loader').hide();
+        // Loader is now hidden by the setTimeout in next3 click handler
     }
 
 
@@ -1558,66 +1706,65 @@ jQuery(document).ready(function($){
         // Household Income Information Section
         $('#household-income-info').html(`
             <div class="household-income-info-container" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                <h4 style="margin: 0 0 15px 0; color: ${summaryColors.heading}; font-size: 18px;">Household Income Information</h4>
                 <table class="household-income-info-table" style="width: 100%; border-collapse: collapse;">
                     <tbody>
                         ${knowsCCS === 'no' ? `
                         <tr>
-                            <td class="income-info-item">
-                                <p class="income-info-item-p">Family Adjusted Taxable Income</p>
-                                <p class="income-info-item-value">AU$ ${familyIncome !== '-' ? formatCurrency(parseFloat(familyIncome)) : '-'}</p>
+                            <td class="income-info-item" style="padding: 15px 0px !important; width: 50% !important; border: 0px !important;">
+                                <p class="income-info-item-p" style="font-size: 12px; line-height: 16px; margin: 0px 0px 10px 0px !important;">Family Adjusted Taxable Income</p>
+                                <p class="income-info-item-value" style="font-size: 16px; line-height: 20px; margin: 0px !important; font-weight: 600;">AU$ ${familyIncome !== '-' ? formatCurrency(parseFloat(familyIncome)) : '-'}</p>
                             </td>
-                            <td class="income-info-item">
-                                <p class="income-info-item-p">Hours of Recognised Activities</p>
-                                <p class="income-info-item-value">${activityHours}</p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="income-info-item">
-                                <p class="income-info-item-p">Hours of Child Care Subsidy</p>
-                                <p class="income-info-item-value">${ccsHours}</p>
-                            </td>
-                            <td class="income-info-item">
-                                <p class="income-info-item-p">CCS Withholding Percentage</p>
-                                <p class="income-info-item-value">${withholdingPct}</p>
+                            <td class="income-info-item" style="padding: 15px 0px !important; width: 50% !important; border: 0px !important;">
+                                <p class="income-info-item-p" style="font-size: 12px; line-height: 16px; margin: 0px 0px 10px 0px !important;">Hours of Recognised Activities</p>
+                                <p class="income-info-item-value" style="font-size: 16px; line-height: 20px; margin: 0px !important; font-weight: 600;">${activityHours}</p>
                             </td>
                         </tr>
                         <tr>
-                            <td class="income-info-item">
-                                <p class="income-info-item-p">Standard CCS Percentage</p>
-                                <p class="income-info-item-value">${standardCCS}</p>
+                            <td class="income-info-item" style="padding: 15px 0px !important; width: 50% !important; border: 0px !important;">
+                                <p class="income-info-item-p" style="font-size: 12px; line-height: 16px; margin: 0px 0px 10px 0px !important;">Hours of Child Care Subsidy</p>
+                                <p class="income-info-item-value" style="font-size: 16px; line-height: 20px; margin: 0px !important; font-weight: 600;">${ccsHours}</p>
                             </td>
-                            <td class="income-info-item">
-                                <p class="income-info-item-p">Higher CCS Percentage</p>
-                                <p class="income-info-item-value">${higherCCS}</p>
+                            <td class="income-info-item" style="padding: 15px 0px !important; width: 50% !important; border: 0px !important;">
+                                <p class="income-info-item-p" style="font-size: 12px; line-height: 16px; margin: 0px 0px 10px 0px !important;">CCS Withholding Percentage</p>
+                                <p class="income-info-item-value" style="font-size: 16px; line-height: 20px; margin: 0px !important; font-weight: 600;">${withholdingPct}</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="income-info-item" style="padding: 15px 0px !important; width: 50% !important; border: 0px !important;">
+                                <p class="income-info-item-p" style="font-size: 12px; line-height: 16px; margin: 0px 0px 10px 0px !important;">Standard CCS Percentage</p>
+                                <p class="income-info-item-value" style="font-size: 16px; line-height: 20px; margin: 0px !important; font-weight: 600;">${standardCCS}</p>
+                            </td>
+                            <td class="income-info-item" style="padding: 15px 0px !important; width: 50% !important; border: 0px !important;">
+                                <p class="income-info-item-p" style="font-size: 12px; line-height: 16px; margin: 0px 0px 10px 0px !important;">Higher CCS Percentage</p>
+                                <p class="income-info-item-value" style="font-size: 16px; line-height: 20px; margin: 0px !important; font-weight: 600;">${higherCCS}</p>
                             </td>
                         </tr>` : `
                         <tr>
-                            <td class="income-info-item">
-                                <p class="income-info-item-p">Hours of Recognised Activities</p>
-                                <p class="income-info-item-value">${activityHours}</p>
+                            <td class="income-info-item" style="padding: 15px 0px !important; width: 50% !important; border: 0px !important;">
+                                <p class="income-info-item-p" style="font-size: 12px; line-height: 16px; margin: 0px 0px 10px 0px !important;">Hours of Recognised Activities</p>
+                                <p class="income-info-item-value" style="font-size: 16px; line-height: 20px; margin: 0px !important; font-weight: 600;">${activityHours}</p>
                             </td>
-                            <td class="income-info-item">
-                                <p class="income-info-item-p">Hours of Child Care Subsidy</p>
-                                <p class="income-info-item-value">${ccsHours}</p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="income-info-item">
-                                <p class="income-info-item-p">CCS Withholding Percentage</p>
-                                <p class="income-info-item-value">${withholdingPct}</p>
-                            </td>
-                            <td class="income-info-item">
-                                <p class="income-info-item-p">Standard CCS Percentage</p>
-                                <p class="income-info-item-value">${standardCCS}</p>
+                            <td class="income-info-item" style="padding: 15px 0px !important; width: 50% !important; border: 0px !important;">
+                                <p class="income-info-item-p" style="font-size: 12px; line-height: 16px; margin: 0px 0px 10px 0px !important;">Hours of Child Care Subsidy</p>
+                                <p class="income-info-item-value" style="font-size: 16px; line-height: 20px; margin: 0px !important; font-weight: 600;">${ccsHours}</p>
                             </td>
                         </tr>
                         <tr>
-                            <td class="income-info-item">
-                                <p class="income-info-item-p">Higher CCS Percentage</p>
-                                <p class="income-info-item-value">${higherCCS}</p>
+                            <td class="income-info-item" style="padding: 15px 0px !important; width: 50% !important; border: 0px !important;">
+                                <p class="income-info-item-p" style="font-size: 12px; line-height: 16px; margin: 0px 0px 10px 0px !important;">CCS Withholding Percentage</p>
+                                <p class="income-info-item-value" style="font-size: 16px; line-height: 20px; margin: 0px !important; font-weight: 600;">${withholdingPct}</p>
                             </td>
-                            <td class="income-info-item empty"></td>
+                            <td class="income-info-item" style="padding: 15px 0px !important; width: 50% !important; border: 0px !important;">
+                                <p class="income-info-item-p" style="font-size: 12px; line-height: 16px; margin: 0px 0px 10px 0px !important;">Standard CCS Percentage</p>
+                                <p class="income-info-item-value" style="font-size: 16px; line-height: 20px; margin: 0px !important; font-weight: 600;">${standardCCS}</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="income-info-item" style="padding: 15px 0px !important; width: 50% !important; border: 0px !important;">
+                                <p class="income-info-item-p" style="font-size: 12px; line-height: 16px; margin: 0px 0px 10px 0px !important;">Higher CCS Percentage</p>
+                                <p class="income-info-item-value" style="font-size: 16px; line-height: 20px; margin: 0px !important; font-weight: 600;">${higherCCS}</p>
+                            </td>
+                            <td class="income-info-item empty" style="padding: 15px 0px !important; width: 50% !important; border: 0px !important;"></td>
                         </tr>`}
                     </tbody>
                 </table>
