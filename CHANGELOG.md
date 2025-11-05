@@ -2,6 +2,23 @@
 
 All notable changes to The Child Care Subsidy Calculator plugin will be documented in this file.
 
+## [2.0.4] - 2025-11-05
+
+### Enhanced Summary Display
+- **Childcare Subsidy Holding Fields** - Added comprehensive subsidy holding information in summary section
+- **Improved Summary Layout** - Enhanced summary display with better organization and readability
+- **Loading Improvements** - Added loader functionality for better user experience during calculations
+
+### UI/UX Enhancements
+- **Enhanced Admin Interface** - Improved admin menu structure and navigation
+- **Better Visual Feedback** - Added loading states and progress indicators
+- **Refined CSS Styling** - Updated styles for cleaner, more modern appearance
+
+### Technical Improvements
+- **Code Optimization** - Improved code structure in Shortcode.php for better maintainability
+- **Settings Enhancement** - Enhanced settings management in admin panel
+- **Bug Fixes** - Resolved various minor issues for improved stability
+
 ## [2.0.3] - 2025-10-28
 
 ### Email Template Improvements

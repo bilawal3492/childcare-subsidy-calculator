@@ -2,7 +2,7 @@
 /**
  * Plugin Name: The Child Care Subsidy Calculator
  * Description: Calculate Australian Child Care Subsidy (CCS) with multi-child support, age-based caps, and professional email delivery.
- * Version: 2.0.3
+ * Version: 2.0.4
  * Author: i9 Education
  * Author URI: https://i9.edu.au/
  * License: GPLv2 or later

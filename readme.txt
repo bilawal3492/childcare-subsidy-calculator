@@ -3,7 +3,7 @@ Contributors: i9education
 Tags: childcare, subsidy, calculator, australia, ccs
 Requires at least: 5.0
 Tested up to: 6.4
-Stable tag: 2.0.3
+Stable tag: 2.0.4
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -134,6 +134,23 @@ The plugin is translation-ready with text domain support. You can translate it u
 
 == Changelog ==
 
+= 2.0.4 - 2025-11-05 =
+
+**Enhanced Summary Display**
+* Added comprehensive subsidy holding information in summary section
+* Improved summary layout with better organization and readability
+* Added loader functionality for better user experience during calculations
+
+**UI/UX Enhancements**
+* Enhanced admin interface with improved menu structure and navigation
+* Added loading states and progress indicators for better visual feedback
+* Refined CSS styling for cleaner, more modern appearance
+
+**Technical Improvements**
+* Optimized code structure in Shortcode.php for better maintainability
+* Enhanced settings management in admin panel
+* Resolved various minor issues for improved stability
+
 = 2.0.3 - 2025-10-28 =
 
 **Email Template Improvements**
@@ -245,6 +262,9 @@ The plugin is translation-ready with text domain support. You can translate it u
 * Real-time calculations
 
 == Upgrade Notice ==
+
+= 2.0.4 =
+Enhanced summary display with subsidy holding information, improved loading states, and better admin interface. Safe to upgrade.
 
 = 2.0.3 =
 UI/UX improvements with cleaner email templates and enhanced summary display. Removed unnecessary buttons for better user experience. Safe to upgrade.
