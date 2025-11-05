@@ -1395,7 +1395,8 @@ jQuery(document).ready(function($){
         let withholdingPct = 0;
         
         // Always get withholding percentage from the single field
-        withholdingPct = parseFloat($('#ccs_withholding_percentage').val()) / 100 || 0.05;
+        const withholdingValue = parseFloat($('#ccs_withholding_percentage').val());
+        withholdingPct = isNaN(withholdingValue) ? 0.05 : withholdingValue / 100;
         
         if (knowsCCS === 'yes') {
             // User knows their CCS percentage
@@ -1481,6 +1482,7 @@ jQuery(document).ready(function($){
             const week1Sub = week1SubBeforeWithholding - week1Withholding;
             const week2Sub = week2SubBeforeWithholding - week2Withholding;
             const fortnightSub = week1Sub + week2Sub;
+            const fortnightSubBeforeWithholding = week1SubBeforeWithholding + week2SubBeforeWithholding;
             
             // Step 4.8 - Work out out-of-pocket cost (gap fee)
             const week1OutOfPocket = Math.max(0, week1Fee - week1Sub);
@@ -1494,7 +1496,8 @@ jQuery(document).ready(function($){
             childrenData.push({
                 dob, hoursPerDay, feePerDay, daysWeek1, daysWeek2, 
                 week1Fee, week2Fee, fortnightFee,
-                week1Sub, week2Sub, fortnightSub, 
+                week1Sub, week2Sub, fortnightSub, fortnightSubBeforeWithholding,
+                week1SubBeforeWithholding, week2SubBeforeWithholding,
                 outPocket,
                 week1Withholding, week2Withholding,
                 week1AfterEOY, week2AfterEOY,
@@ -1544,25 +1547,33 @@ jQuery(document).ready(function($){
         const label = periodLabelMap[period] || '';
 
 
-        let totalFee=0, totalSub=0, totalOut=0;
+        let totalFee=0, totalSub=0, totalOut=0, totalWithholding=0, totalSubPaid=0;
         let weeklyHTML = '';
         let detailsHTML = '';
 
 
         if(child === 'all'){
             let week1Total=0, week2Total=0, week1SubTotal=0, week2SubTotal=0;
+            let week1SubBeforeWithholding=0, week2SubBeforeWithholding=0;
+            let week1WithholdingTotal=0, week2WithholdingTotal=0;
 
 
             childrenData.forEach((c,i) => {
                 totalFee += c.fortnightFee * mult;
-                totalSub += c.fortnightSub * mult;
+                totalSub += c.fortnightSubBeforeWithholding * mult;
                 totalOut += c.outPocket * mult;
+                totalWithholding += (c.week1Withholding + c.week2Withholding) * mult;
+                totalSubPaid += c.fortnightSub * mult;
 
 
                 week1Total += c.week1Fee;
                 week2Total += c.week2Fee;
                 week1SubTotal += c.week1Sub;
                 week2SubTotal += c.week2Sub;
+                week1SubBeforeWithholding += c.week1SubBeforeWithholding;
+                week2SubBeforeWithholding += c.week2SubBeforeWithholding;
+                week1WithholdingTotal += c.week1Withholding;
+                week2WithholdingTotal += c.week2Withholding;
 
 
                 // Per-child info card
@@ -1594,7 +1605,15 @@ jQuery(document).ready(function($){
                                 </div>
                                 <div style="display: flex; flex-flow: column; gap: 5px; align-items: center; padding: 20px; background: ${summaryColors.subsidyBg};">
                                     <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">Est. subsidy</span>
-                                    <span style="font-weight:700; color:${summaryColors.subsidy}; font-size:20px; line-height:20px;">$${formatCurrency(week1SubTotal)}</span>
+                                    <span style="font-weight:700; color:${summaryColors.subsidy}; font-size:20px; line-height:20px;">$${formatCurrency(week1SubBeforeWithholding)}</span>
+                                </div>
+                                <div style="display: flex; flex-flow: column; gap: 5px; align-items: center; padding: 20px; background: #fff3cd;">
+                                    <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">CCS Withholding</span>
+                                    <span style="font-weight:700; color:#856404; font-size:20px; line-height:20px;">$${formatCurrency(week1WithholdingTotal)}</span>
+                                </div>
+                                <div style="display: flex; flex-flow: column; gap: 5px; align-items: center; padding: 20px; background: #d4edda;">
+                                    <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">CCS Paid to Provider</span>
+                                    <span style="font-weight:700; color:#155724; font-size:20px; line-height:20px;">$${formatCurrency(week1SubTotal)}</span>
                                 </div>
                                 <div style="display: flex; flex-flow: column; gap: 5px; align-items: center; padding: 20px; background: ${summaryColors.outOfPocketBg};">
                                     <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">Out-of-pocket</span>
@@ -1611,7 +1630,15 @@ jQuery(document).ready(function($){
                                 </div>
                                 <div style="display: flex; flex-flow: column; gap: 5px; align-items: center; padding: 20px; background: ${summaryColors.subsidyBg};">
                                     <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">Est. subsidy</span>
-                                    <span style="font-weight:700; color:${summaryColors.subsidy}; font-size:20px; line-height:20px;">$${formatCurrency(week2SubTotal)}</span>
+                                    <span style="font-weight:700; color:${summaryColors.subsidy}; font-size:20px; line-height:20px;">$${formatCurrency(week2SubBeforeWithholding)}</span>
+                                </div>
+                                <div style="display: flex; flex-flow: column; gap: 5px; align-items: center; padding: 20px; background: #fff3cd;">
+                                    <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">CCS Withholding</span>
+                                    <span style="font-weight:700; color:#856404; font-size:20px; line-height:20px;">$${formatCurrency(week2WithholdingTotal)}</span>
+                                </div>
+                                <div style="display: flex; flex-flow: column; gap: 5px; align-items: center; padding: 20px; background: #d4edda;">
+                                    <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">CCS Paid to Provider</span>
+                                    <span style="font-weight:700; color:#155724; font-size:20px; line-height:20px;">$${formatCurrency(week2SubTotal)}</span>
                                 </div>
                                 <div style="display: flex; flex-flow: column; gap: 5px; align-items: center; padding: 20px; background: ${summaryColors.outOfPocketBg};">
                                     <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">Out-of-pocket</span>
@@ -1625,8 +1652,10 @@ jQuery(document).ready(function($){
         } else {
             const c = childrenData[parseInt(child)];
             totalFee = c.fortnightFee * mult;
-            totalSub = c.fortnightSub * mult;
+            totalSub = c.fortnightSubBeforeWithholding * mult;
             totalOut = c.outPocket * mult;
+            totalWithholding = (c.week1Withholding + c.week2Withholding) * mult;
+            totalSubPaid = c.fortnightSub * mult;
 
 
             $('#summary-title').text(`Child ${parseInt(child)+1}` );
@@ -1657,7 +1686,15 @@ jQuery(document).ready(function($){
                                 </div>
                                 <div style="display: flex; flex-flow: column; gap: 5px; align-items: center; padding: 20px; background: ${summaryColors.subsidyBg};">
                                     <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">Est. subsidy</span>
-                                    <span style="font-weight:700; color:${summaryColors.subsidy}; font-size:20px; line-height:20px;">$${formatCurrency(c.week1Sub)}</span>
+                                    <span style="font-weight:700; color:${summaryColors.subsidy}; font-size:20px; line-height:20px;">$${formatCurrency(c.week1SubBeforeWithholding)}</span>
+                                </div>
+                                <div style="display: flex; flex-flow: column; gap: 5px; align-items: center; padding: 20px; background: #fff3cd;">
+                                    <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">CCS Withholding</span>
+                                    <span style="font-weight:700; color:#856404; font-size:20px; line-height:20px;">$${formatCurrency(c.week1Withholding)}</span>
+                                </div>
+                                <div style="display: flex; flex-flow: column; gap: 5px; align-items: center; padding: 20px; background: #d4edda;">
+                                    <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">CCS Paid to Provider</span>
+                                    <span style="font-weight:700; color:#155724; font-size:20px; line-height:20px;">$${formatCurrency(c.week1Sub)}</span>
                                 </div>
                                 <div style="display: flex; flex-flow: column; gap: 5px; align-items: center; padding: 20px; background: ${summaryColors.outOfPocketBg};">
                                     <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">Out-of-pocket</span>
@@ -1674,7 +1711,15 @@ jQuery(document).ready(function($){
                                 </div>
                                 <div style="display: flex; flex-flow: column; gap: 5px; align-items: center; padding: 20px; background: ${summaryColors.subsidyBg};">
                                     <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">Est. subsidy</span>
-                                    <span style="font-weight:700; color:${summaryColors.subsidy}; font-size:20px; line-height:20px;">$${formatCurrency(c.week2Sub)}</span>
+                                    <span style="font-weight:700; color:${summaryColors.subsidy}; font-size:20px; line-height:20px;">$${formatCurrency(c.week2SubBeforeWithholding)}</span>
+                                </div>
+                                <div style="display: flex; flex-flow: column; gap: 5px; align-items: center; padding: 20px; background: #fff3cd;">
+                                    <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">CCS Withholding</span>
+                                    <span style="font-weight:700; color:#856404; font-size:20px; line-height:20px;">$${formatCurrency(c.week2Withholding)}</span>
+                                </div>
+                                <div style="display: flex; flex-flow: column; gap: 5px; align-items: center; padding: 20px; background: #d4edda;">
+                                    <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">CCS Paid to Provider</span>
+                                    <span style="font-weight:700; color:#155724; font-size:20px; line-height:20px;">$${formatCurrency(c.week2Sub)}</span>
                                 </div>
                                 <div style="display: flex; flex-flow: column; gap: 5px; align-items: center; padding: 20px; background: ${summaryColors.outOfPocketBg};">
                                     <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">Out-of-pocket</span>
@@ -1797,6 +1842,34 @@ jQuery(document).ready(function($){
                                 </td>
                                 <td class="summary-row-td" style="display: flex; flex: 1; flex-flow: column; gap: 5px; padding: 16px 20px; background: #f0ecf9; font-weight: 600; text-align: right; color: ${summaryColors.subsidy}; font-size: 20px; line-height: 24px;">
                                     $${formatCurrency(totalSub)} <span style="font-size: 16px; font-weight: 400; color: #666;">${label}</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 0px; border-top: 0;">
+                        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+                            <tr class="summary-row-tr" style="display: flex; flex-wrap: wrap; gap: 5px;">
+                                <td class="summary-row-td" style="display: flex; flex: 1; flex-flow: column; gap: 5px; padding: 16px 20px; background: #fff3cd; font-weight: 600; font-size: 16px; justify-content: center;">
+                                    Child Care Subsidy Withholding
+                                </td>
+                                <td class="summary-row-td" style="display: flex; flex: 1; flex-flow: column; gap: 5px; padding: 16px 20px; background: #fff3cd; font-weight: 600; text-align: right; color: #856404; font-size: 20px; line-height: 24px;">
+                                    $${formatCurrency(totalWithholding)} <span style="font-size: 16px; font-weight: 400; color: #666;">${label}</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 0px; border-top: 0;">
+                        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+                            <tr class="summary-row-tr" style="display: flex; flex-wrap: wrap; gap: 5px;">
+                                <td class="summary-row-td" style="display: flex; flex: 1; flex-flow: column; gap: 5px; padding: 16px 20px; background: #d4edda; font-weight: 600; font-size: 16px; justify-content: center;">
+                                    Child Care Subsidy Paid to Service Provider
+                                </td>
+                                <td class="summary-row-td" style="display: flex; flex: 1; flex-flow: column; gap: 5px; padding: 16px 20px; background: #d4edda; font-weight: 600; text-align: right; color: #155724; font-size: 20px; line-height: 24px;">
+                                    $${formatCurrency(totalSubPaid)} <span style="font-size: 16px; font-weight: 400; color: #666;">${label}</span>
                                 </td>
                             </tr>
                         </table>
