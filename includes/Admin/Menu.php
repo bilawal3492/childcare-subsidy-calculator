@@ -840,6 +840,10 @@ class Menu
                 
                 // Custom Form
                 'ccs_privacy_policy_url', 'ccs_privacy_policy_text', 'ccs_contact_checkbox_text',
+
+                // CTA Buttons
+                'ccs_cta_section_enabled', 'ccs_book_tour_text', 'ccs_book_tour_url',
+                'ccs_contact_us_text', 'ccs_contact_us_url',
                 
                 // Enrolment Options
                 'ccs_enrolment_bg_color', 'ccs_enrolment_text_color', 'ccs_enrolment_border_color',
@@ -4072,6 +4076,83 @@ class Menu
                                    value="<?php echo esc_attr(get_option('ccs_contact_checkbox_text', 'I would like to be contacted to find out more about potential savings.')); ?>" 
                                    style="width: 100%; max-width: 500px;">
                             <p class="description">Text for the optional contact checkbox</p>
+                        </td>
+                    </tr>
+                </table>
+
+                <div style="background:#e8f5e9; padding:15px; border-radius:8px; margin:20px 0;">
+                    <h4 style="margin-top:0; color:#2e7d32;">🎯 Call-to-Action Buttons</h4>
+                    <p style="margin-bottom:0;">Configure the "Book a Tour" and "Contact Us" buttons displayed below the info box on the summary page. Both sections share the same container.</p>
+                </div>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="ccs_cta_section_enabled">Enable CTA Buttons</label>
+                        </th>
+                        <td>
+                            <label>
+                                <input type="checkbox" 
+                                       id="ccs_cta_section_enabled" 
+                                       name="ccs_cta_section_enabled" 
+                                       value="1" 
+                                       <?php checked(get_option('ccs_cta_section_enabled', 1), 1); ?>>
+                                Show CTA buttons below the info box
+                            </label>
+                            <p class="description">Toggle to show/hide the call-to-action buttons (buttons appear below the info box text in the same container)</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="ccs_book_tour_text">Book a Tour Button Text</label>
+                        </th>
+                        <td>
+                            <input type="text" 
+                                   id="ccs_book_tour_text" 
+                                   name="ccs_book_tour_text" 
+                                   value="<?php echo esc_attr(get_option('ccs_book_tour_text', 'Book a Tour')); ?>" 
+                                   style="width: 300px;">
+                            <p class="description">Text for the "Book a Tour" button</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="ccs_book_tour_url">Book a Tour URL / Popup ID</label>
+                        </th>
+                        <td>
+                            <input type="text" 
+                                   id="ccs_book_tour_url" 
+                                   name="ccs_book_tour_url" 
+                                   value="<?php echo esc_attr(get_option('ccs_book_tour_url', '#')); ?>" 
+                                   style="width: 100%; max-width: 500px;" 
+                                   placeholder="#elementor-action:action=popup:open&settings=eyJpZCI6IjEyMyJ9">
+                            <p class="description">Enter a URL or Elementor popup action (e.g., #elementor-action:action=popup:open&settings=eyJpZCI6IjEyMyJ9)</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="ccs_contact_us_text">Contact Us Button Text</label>
+                        </th>
+                        <td>
+                            <input type="text" 
+                                   id="ccs_contact_us_text" 
+                                   name="ccs_contact_us_text" 
+                                   value="<?php echo esc_attr(get_option('ccs_contact_us_text', 'Contact Us')); ?>" 
+                                   style="width: 300px;">
+                            <p class="description">Text for the "Contact Us" button</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="ccs_contact_us_url">Contact Us URL / Popup ID</label>
+                        </th>
+                        <td>
+                            <input type="text" 
+                                   id="ccs_contact_us_url" 
+                                   name="ccs_contact_us_url" 
+                                   value="<?php echo esc_attr(get_option('ccs_contact_us_url', '#')); ?>" 
+                                   style="width: 100%; max-width: 500px;" 
+                                   placeholder="#elementor-action:action=popup:open&settings=eyJpZCI6IjEyMyJ9">
+                            <p class="description">Enter a URL or Elementor popup action (e.g., #elementor-action:action=popup:open&settings=eyJpZCI6IjEyMyJ9)</p>
                         </td>
                     </tr>
                 </table>

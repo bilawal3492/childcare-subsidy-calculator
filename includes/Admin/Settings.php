@@ -191,6 +191,13 @@ class Settings
         register_setting('childcare_ccs_styling_group', 'ccs_privacy_policy_url', 'esc_url_raw');
         register_setting('childcare_ccs_styling_group', 'ccs_privacy_policy_text', 'sanitize_text_field');
         register_setting('childcare_ccs_styling_group', 'ccs_contact_checkbox_text', 'sanitize_text_field');
+        
+        // CTA Buttons (Book a Tour & Contact Us)
+        register_setting('childcare_ccs_styling_group', 'ccs_cta_section_enabled', 'absint');
+        register_setting('childcare_ccs_styling_group', 'ccs_book_tour_text', 'sanitize_text_field');
+        register_setting('childcare_ccs_styling_group', 'ccs_book_tour_url', 'sanitize_text_field');
+        register_setting('childcare_ccs_styling_group', 'ccs_contact_us_text', 'sanitize_text_field');
+        register_setting('childcare_ccs_styling_group', 'ccs_contact_us_url', 'sanitize_text_field');
     }
     
     public function sanitize_color_with_alpha($color)

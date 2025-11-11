@@ -73,16 +73,10 @@ div#extra-field-wrapper {
     box-sizing: border-box;
 }
 
-/* Slider structure */
+/* Slider structure - Admin panel controls all styling via Assets.php */
 .childcare-ccs-root .slider-container {
     position: relative;
     margin: 20px 0;
-}
-
-.childcare-ccs-root .slider-container input[type='range'] {
-    position: relative;
-    z-index: 2;
-    background: transparent;
 }
 
 /* Tooltip structure */
@@ -288,5 +282,10 @@ div#extra-field-wrapper {
     }
     #child-buttons button.button.child-count-btn {
         width: 100% !important;
-    }  
+    }
+    
+    /* Form fields - stack on mobile */
+    #custom-summary-form > div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+    }
 }

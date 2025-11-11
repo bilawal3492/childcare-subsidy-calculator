@@ -43,6 +43,19 @@ class Shortcode
     100% { transform: rotate(360deg); }
 }
 
+/* Orange button hover effects */
+.ccs-action-button:hover,
+.ccs-submit-button:hover {
+    background: #e68a1a !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(247, 148, 29, 0.3);
+}
+
+.ccs-action-button:active,
+.ccs-submit-button:active {
+    transform: translateY(0);
+}
+
 /* Centres dropdown styling */
 .centres-dropdown {
     scrollbar-width: thin;
@@ -290,6 +303,29 @@ class Shortcode
                     </div>
                 </label>
             </div>
+            
+            <!-- ATI Question for Standard CCS = 33.54% -->
+            <div id="ati_question_known" style="display:none; margin-bottom:15px;">
+                <label style="width:100%;">Family Adjusted Taxable Income (ATI)
+                    <br>
+                    <select style="line-height: 20px; border-style: solid; margin-top: 10px !important; width: 100%;" id="ati_range_known">
+                        <option value="">Select</option>
+                        <option value="less">Less than $367,563</option>
+                        <option value="more">$367,563 or more</option>
+                    </select>
+                </label>
+            </div>
+            
+            <!-- Eligibility Status for Standard CCS <= 33.53% -->
+            <div id="eligibility_status_known" style="display:none; margin-bottom:15px;">
+                <div style="display:flex; gap:15px;">
+                    <label style="width:50%;">Higher Child Care Subsidy Eligibility
+                        <br>
+                        <input style="line-height: 20px; border-style: solid; margin-top: 10px !important; width: 100%; background-color: #f0f0f0; color: #d9534f; font-weight: 600;" type="text" id="hccs_eligibility_known" value="Not eligible for Higher CCS!" readonly>
+                    </label>
+                    <div style="width:50%;"></div>
+                </div>
+            </div>
         </div>
 
         <!-- Fields shown when user DOESN'T know their CCS percentage (No) -->
@@ -363,6 +399,17 @@ class Shortcode
                     </div>
                 </label>
                 <div class="empty_space" style="width:50%;"></div>
+            </div>
+            
+            <!-- Eligibility Status for calculated mode -->
+            <div id="eligibility_status_calc" style="display:none; margin-bottom:15px;">
+                <div style="display:flex; gap:15px;">
+                    <label style="width:50%;">Higher Child Care Subsidy Eligibility
+                        <br>
+                        <input style="line-height: 20px; border-style: solid; margin-top: 10px !important; width: 100%; background-color: #f0f0f0; color: #d9534f; font-weight: 600;" type="text" id="hccs_eligibility_calc" value="Not eligible for Higher CCS!" readonly>
+                    </label>
+                    <div style="width:50%;"></div>
+                </div>
             </div>
         </div>
 
@@ -440,59 +487,83 @@ class Shortcode
         </div>
 
 
-        <?php if(get_option('ccs_info_box_enabled', 1)): ?>
-        <!-- Info Box -->
-        <div class="ccs-info-box-top" style="margin-top:30px; display:flex; gap:15px; align-items:center;">
-            <div style="flex-shrink:0;">
-                <?php 
-                $info_icon_image = get_option('ccs_info_box_icon_image', '');
-                if ($info_icon_image): ?>
-                    <img src="<?php echo esc_url($info_icon_image); ?>" 
-                         alt="Info" 
-                         style="width:60px; height:60px; object-fit:contain;">
-                <?php else: ?>
-                    <svg style="width:60px; height:60px; fill:<?php echo esc_attr(get_option('ccs_info_box_icon_color', '#f7b731')); ?>;" viewBox="0 0 200 200">
-                        <!-- Lightbulb Icon -->
-                        <circle cx="100" cy="100" r="95" fill="currentColor"/>
-                        <g fill="#4a4a4a">
-                            <!-- Bulb -->
-                            <path d="M100,45 C85,45 73,57 73,72 C73,82 78,91 85,96 L85,115 L115,115 L115,96 C122,91 127,82 127,72 C127,57 115,45 100,45 Z"/>
-                            <!-- Base lines -->
-                            <rect x="85" y="120" width="30" height="8" rx="2"/>
-                            <rect x="85" y="132" width="30" height="8" rx="2"/>
-                            <rect x="90" y="144" width="20" height="8" rx="2"/>
-                        </g>
-                    </svg>
-                <?php endif; ?>
+        <!-- Info Box and CTA Buttons Container -->
+        <?php if(get_option('ccs_info_box_enabled', 1) || get_option('ccs_cta_section_enabled', 1)): ?>
+        <div style="margin-top:30px; padding:30px; background:#f9f9f9; border-radius:8px;">
+            
+            <?php if(get_option('ccs_info_box_enabled', 1)): ?>
+            <!-- Info Box -->
+            <div class="ccs-info-box-top" style="display:flex; gap:15px; align-items:center;">
+                <div style="flex-shrink:0;">
+                    <?php 
+                    $info_icon_image = get_option('ccs_info_box_icon_image', '');
+                    if ($info_icon_image): ?>
+                        <img src="<?php echo esc_url($info_icon_image); ?>" 
+                             alt="Info" 
+                             style="width:60px; height:60px; object-fit:contain;">
+                    <?php else: ?>
+                        <svg style="width:60px; height:60px; fill:<?php echo esc_attr(get_option('ccs_info_box_icon_color', '#f7b731')); ?>;" viewBox="0 0 200 200">
+                            <!-- Lightbulb Icon -->
+                            <circle cx="100" cy="100" r="95" fill="currentColor"/>
+                            <g fill="#4a4a4a">
+                                <!-- Bulb -->
+                                <path d="M100,45 C85,45 73,57 73,72 C73,82 78,91 85,96 L85,115 L115,115 L115,96 C122,91 127,82 127,72 C127,57 115,45 100,45 Z"/>
+                                <!-- Base lines -->
+                                <rect x="85" y="120" width="30" height="8" rx="2"/>
+                                <rect x="85" y="132" width="30" height="8" rx="2"/>
+                                <rect x="90" y="144" width="20" height="8" rx="2"/>
+                            </g>
+                        </svg>
+                    <?php endif; ?>
+                </div>
+                <div class="info-box-text" style="flex:1; color:<?php echo esc_attr(get_option('ccs_info_box_text_color', '#333333')); ?>; font-size:16px; line-height:1.6;">
+                    <?php echo wp_kses_post(get_option('ccs_info_box_text', 'From January 2026, all families who are eligible for CCS can attend a minimum of 3 days per week (or 72 hours per fortnight) of subsidised care, regardless of their activity level.')); ?>
+                </div>
             </div>
-            <div class="info-box-text" style="flex:1; color:<?php echo esc_attr(get_option('ccs_info_box_text_color', '#333333')); ?>; font-size:16px; line-height:1.6;">
-                <?php echo wp_kses_post(get_option('ccs_info_box_text', 'From January 2026, all families who are eligible for CCS can attend a minimum of 3 days per week (or 72 hours per fortnight) of subsidised care, regardless of their activity level.')); ?>
+            <?php endif; ?>
+
+            <!-- Call to Action Buttons -->
+            <?php if(get_option('ccs_cta_section_enabled', 1)): ?>
+            <div style="margin-top:20px; text-align:center;">
+                <div style="display:flex; gap:15px; justify-content:center; flex-wrap:wrap;">
+                    <?php 
+                    $book_tour_url = get_option('ccs_book_tour_url', '#');
+                    $book_tour_text = get_option('ccs_book_tour_text', 'Book a Tour');
+                    $contact_us_url = get_option('ccs_contact_us_url', '#');
+                    $contact_us_text = get_option('ccs_contact_us_text', 'Contact Us');
+                    ?>
+                    <a href="<?php echo esc_url($book_tour_url); ?>" id="book-tour-btn" class="button button-primary" style="padding:12px 30px; font-size:16px; font-weight:600; text-decoration:none; display:inline-block;">
+                        <?php echo esc_html($book_tour_text); ?>
+                    </a>
+                    <a href="<?php echo esc_url($contact_us_url); ?>" id="contact-us-btn" class="button" style="padding:12px 30px; font-size:16px; font-weight:600; text-decoration:none; display:inline-block;">
+                        <?php echo esc_html($contact_us_text); ?>
+                    </a>
+                </div>
             </div>
+            <?php endif; ?>
+            
         </div>
         <?php endif; ?>
 
-        <div id="summary-email-form" style="margin-top:30px; border-radius:6px; overflow:hidden;">
-            <!-- Toggle Header -->
-            <div id="email-toggle-header" style="padding:10px 20px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; background:<?php echo esc_attr(get_option('ccs_email_toggle_bg_color', '#d9d9d9')); ?>; color:<?php echo esc_attr(get_option('ccs_email_toggle_text_color', '#333333')); ?>;">
-                <div style="display:flex; align-items:center; gap:15px;">
-                    <?php 
-                    $email_icon_image = get_option('ccs_email_toggle_icon_image', '');
-                    if ($email_icon_image): ?>
-                        <img src="<?php echo esc_url($email_icon_image); ?>" 
-                             alt="Email" 
-                             style="width:24px; height:24px; object-fit:contain;">
-                    <?php else: ?>
-                        <svg class="i-email c-accordion__trigger__text__icon" style="width:24px; height:24px; fill:<?php echo esc_attr(get_option('ccs_email_toggle_icon_color', '#f7941d')); ?>;"><use xlink:href="/svg/symbol-defs-ccs-calc.svg#icon-email"></use></svg>
-                    <?php endif; ?>
-                    <div>
-                        <h4 style="margin:0; font-size:18px; font-weight:600;"><?php echo esc_html(get_option('ccs_email_toggle_title', 'Email me my results')); ?></h4>
-                    </div>
+        <div id="summary-email-form" style="padding: 20px; margin-top:30px; border-radius:6px; background:<?php echo esc_attr(get_option('ccs_email_toggle_bg_color', '#d9d9d9')); ?>;">
+            <!-- Email Form Header -->
+            <div id="email-toggle-header" style="display:flex; align-items:center; gap:15px; color:<?php echo esc_attr(get_option('ccs_email_toggle_text_color', '#333333')); ?>;">
+                <?php 
+                $email_icon_image = get_option('ccs_email_toggle_icon_image', '');
+                if ($email_icon_image): ?>
+                    <img src="<?php echo esc_url($email_icon_image); ?>" 
+                         alt="Email" 
+                         style="width:24px; height:24px; object-fit:contain;">
+                <?php else: ?>
+                    <svg class="i-email c-accordion__trigger__text__icon" style="width:24px; height:24px; fill:<?php echo esc_attr(get_option('ccs_email_toggle_icon_color', '#f7941d')); ?>;"><use xlink:href="/svg/symbol-defs-ccs-calc.svg#icon-email"></use></svg>
+                <?php endif; ?>
+                <div>
+                    <h4 style="margin:0; font-size:18px; font-weight:600;"><?php echo esc_html(get_option('ccs_email_toggle_title', 'Email me my results')); ?></h4>
                 </div>
-                <span id="email-toggle-icon" style="font-size:16px; transition:transform 0.3s ease; color:<?php echo esc_attr(get_option('ccs_email_toggle_text_color', '#333333')); ?>;">▼</span>
             </div>
             
-            <!-- Form Content (Hidden by default) -->
-            <div id="email-form-content" style="display:none; padding:20px; background:<?php echo esc_attr(get_option('ccs_email_form_bg_color', '#f9f9f9')); ?>;">
+            <!-- Form Content (Shown by default) -->
+            <div id="email-form-content" style="margin-top: 15px;">
                 <?php if(get_option('ccs_email_toggle_subtitle')): ?>
                 <p style="margin-bottom:15px; color:#666;"><?php echo esc_html(get_option('ccs_email_toggle_subtitle', '')); ?></p>
                 <?php endif; ?>
@@ -592,6 +663,7 @@ class Shortcode
                 <div id="send-summary-response" style="margin-top:10px;"></div>
             </div>
         </div>
+
 
         </div><!-- End summary-content -->
 
@@ -753,11 +825,8 @@ jQuery(document).ready(function($){
             $('#centres-dropdown-wrapper').show();
             $('#centre-search').val('');
             $('#selected-centre').val('');
-        } else if (enrolmentSelection === 'other') {
-            $('#extra-label').text('Please enter your current care provider:');
-            $('#extra-field-wrapper').show();
-            $('#centres-dropdown-wrapper').hide();
         } else {
+            // For 'other' and 'none' options, hide all extra fields
             $('#extra-field-wrapper').hide();
             $('#centres-dropdown-wrapper').hide();
             $('#extra-field').val('');
@@ -905,13 +974,18 @@ jQuery(document).ready(function($){
     }
 
     // Clear errors on input
-    $('#suburb, #atsi, #know_ccs_percentage, #family_ati, #standard_ccs_percentage, #higher_ccs_percentage, #ccs_withholding_percentage, #activity, #extra-field').on('input change', function() {
+    $('#suburb, #atsi, #know_ccs_percentage, #family_ati, #standard_ccs_percentage, #higher_ccs_percentage, #ccs_withholding_percentage, #activity, #extra-field, #centre-search').on('input change', function() {
         clearError(this);
     });
     
     // Clear errors on dynamically created child fields
     $(document).on('input change', '.child-dob, .child-fee', function() {
         clearError(this);
+    });
+    
+    // Clear errors on enrolment option selection
+    $(document).on('click', '.enrolment-option', function() {
+        clearError('#enrolment-options');
     });
 
     // Handle CCS Percentage selection
@@ -934,21 +1008,64 @@ jQuery(document).ready(function($){
         }
     });
 
-    // Higher CCS lookup table based on Standard CCS
-    const higherCCSLookup = {
-        33: 50.00, 34: 50.00, 35: 50.00,
-        36: 50.76, 37: 52.43, 38: 54.09, 39: 55.76, 40: 57.43,
-        41: 59.09, 42: 60.76, 43: 62.43, 44: 64.09, 45: 65.76,
-        46: 67.43, 47: 69.09, 48: 70.76, 49: 72.43, 50: 74.09,
-        51: 75.76, 52: 77.43, 53: 79.09, 54: 80.00, 55: 80.00,
-        56: 80.00, 57: 80.00, 58: 80.00, 59: 80.00, 60: 80.00,
-        61: 80.00, 62: 80.00, 63: 80.00, 64: 80.00, 65: 80.00,
-        66: 80.00, 67: 80.00, 68: 80.00, 69: 80.00, 70: 81.00,
-        71: 82.66, 72: 84.33, 73: 86.00, 74: 87.66, 75: 89.33,
-        76: 91.00, 77: 92.66, 78: 94.33, 79: 95.00, 80: 95.00,
-        81: 95.00, 82: 95.00, 83: 95.00, 84: 95.00, 85: 95.00,
-        86: 95.00, 87: 95.00, 88: 95.00, 89: 95.00, 90: 95.00
-    };
+    // Function to calculate Higher CCS based on Standard CCS percentage
+    function calculateHigherCCS(standardCCS) {
+        // If Standard CCS is equal or greater than 78.40%, the higher CCS will be 95%
+        if (standardCCS >= 78.40) {
+            return 95.00;
+        }
+        
+        // If Standard CCS is between 78.39% (HCCS 94.98%) to 69.41% (HCCS 80.01%)
+        // Linear interpolation from 69.41% = 80.01% to 78.39% = 94.98%
+        if (standardCCS >= 69.41 && standardCCS <= 78.39) {
+            const rangeStandard = 78.39 - 69.41; // 8.98%
+            const rangeHigher = 94.98 - 80.01;   // 14.97%
+            const diff = standardCCS - 69.41;
+            const increment = (diff / rangeStandard) * rangeHigher;
+            return 80.01 + increment;
+        }
+        
+        // If Standard CCS is exactly 69.40%, the higher CCS is 80.00%
+        if (standardCCS === 69.40) {
+            return 80.00;
+        }
+        
+        // If Standard CCS between 69.39% to 53.55% the higher CCS is 80.00%
+        if (standardCCS >= 53.55 && standardCCS <= 69.39) {
+            return 80.00;
+        }
+        
+        // If Standard CCS is exactly 53.54%, the higher CCS is 79.99%
+        if (standardCCS === 53.54) {
+            return 79.99;
+        }
+        
+        // If Standard CCS between 53.53% to 35.55% 
+        // Linear interpolation from 35.55% = 50.01% to 53.53% = 79.98%
+        if (standardCCS >= 35.55 && standardCCS <= 53.53) {
+            const rangeStandard = 53.53 - 35.55; // 17.98%
+            const rangeHigher = 79.98 - 50.01;   // 29.97%
+            const diff = standardCCS - 35.55;
+            const increment = (diff / rangeStandard) * rangeHigher;
+            return 50.01 + increment;
+        }
+        
+        // If Standard CCS between 35.54% (HCCS 50.00%) to 33.55% (HCCS 50.00%) the higher CCS is 50.00%
+        if (standardCCS >= 33.55 && standardCCS <= 35.54) {
+            return 50.00;
+        }
+        
+        // If Standard CCS is 33.54, ask question "Family Adjusted Taxable Income (ATI)"
+        // This will be handled separately in the UI logic
+        
+        // If Standard CCS is equal or less than 33.53%
+        // Not eligible for Higher CCS - return same as Standard CCS
+        if (standardCCS <= 33.53) {
+            return standardCCS; // Will be marked as "Not eligible"
+        }
+        
+        return 0;
+    }
 
     // Auto-calculate Higher CCS when Standard CCS is entered (Yes mode)
     $('#standard_ccs_percentage').on('input', function() {
@@ -959,6 +1076,10 @@ jQuery(document).ready(function($){
         // Clear any previous error
         clearError('#standard_ccs_percentage');
         
+        // Hide all special fields by default
+        $('#ati_question_known').hide();
+        $('#eligibility_status_known').hide();
+        
         if (!isNaN(standardCCS)) {
             // Validation: Check if > 90%
             if (standardCCS > 90) {
@@ -967,18 +1088,29 @@ jQuery(document).ready(function($){
                 return;
             }
             
-            // Validation: Check if < 33%
-            if (standardCCS < 33 && standardCCS > 0) {
-                $higherField.val('0.00');
-                // Optionally show info message
+            // Special case: If Standard CCS is 33.54, show ATI question
+            if (standardCCS === 33.54) {
+                $('#ati_question_known').show();
+                $('#ati_range_known').val(''); // Reset selection
+                $higherField.val(''); // Clear until user selects ATI range
                 return;
             }
             
-            // Lookup Higher CCS from table
-            if (standardCCS >= 33 && standardCCS <= 90) {
-                const roundedStandard = Math.round(standardCCS);
-                const higherCCS = higherCCSLookup[roundedStandard] || 0;
+            // Special case: If Standard CCS is <= 33.53%, not eligible for Higher CCS
+            if (standardCCS <= 33.53 && standardCCS > 0) {
+                $higherField.val(standardCCS.toFixed(2));
+                $higherField.attr('readonly', true);
+                $higherField.css('background-color', '#f0f0f0');
+                $('#eligibility_status_known').show();
+                return;
+            }
+            
+            // Calculate Higher CCS using the new function
+            if (standardCCS > 0 && standardCCS <= 90) {
+                const higherCCS = calculateHigherCCS(standardCCS);
                 $higherField.val(higherCCS.toFixed(2));
+                $higherField.attr('readonly', true);
+                $higherField.css('background-color', '#f0f0f0');
             } else if (standardCCS === 0) {
                 $higherField.val('0.00');
             } else {
@@ -986,6 +1118,25 @@ jQuery(document).ready(function($){
             }
         } else {
             $higherField.val('');
+        }
+    });
+    
+    // Handle ATI range selection for Standard CCS = 33.54%
+    $('#ati_range_known').on('change', function() {
+        const atiRange = $(this).val();
+        const standardCCS = parseFloat($('#standard_ccs_percentage').val());
+        const $higherField = $('#higher_ccs_percentage');
+        
+        if (standardCCS === 33.54) {
+            if (atiRange === 'less') {
+                // Less than $367,563 - eligible for 50% Higher CCS
+                $higherField.val('50.00');
+                $('#eligibility_status_known').hide();
+            } else if (atiRange === 'more') {
+                // $367,563 or more - not eligible, Higher CCS = Standard CCS
+                $higherField.val(standardCCS.toFixed(2));
+                $('#eligibility_status_known').show();
+            }
         }
     });
 
@@ -1058,37 +1209,38 @@ jQuery(document).ready(function($){
             standardCCS = 33;
         }
         
-        // Higher CCS calculation using lookup table
+        // Higher CCS calculation using new calculation function
         let higherCCS = 0;
+        
+        // Hide eligibility status by default
+        $('#eligibility_status_calc').hide();
         
         // Special case: Low income families get 95% higher CCS
         if (income <= lowIncomeThreshold) {
             higherCCS = 95;
-        } else if (standardCCS < 33) {
-            higherCCS = 0; // Not eligible if standard is less than 33%
+        } else if (standardCCS <= 33.53) {
+            // Not eligible for Higher CCS - same as Standard CCS
+            higherCCS = standardCCS;
+            $('#eligibility_status_calc').show();
+        } else if (standardCCS === 33.54) {
+            // Special case: Need to check ATI
+            // If income is less than $367,563, Higher CCS is 50%
+            // If income is $367,563 or more, not eligible (Higher CCS = Standard CCS)
+            if (income < 367563) {
+                higherCCS = 50.00;
+            } else {
+                higherCCS = standardCCS; // Not eligible
+                $('#eligibility_status_calc').show();
+            }
         } else {
-            const roundedStandard = Math.round(standardCCS);
-            higherCCS = higherCCSLookup[roundedStandard] || 0;
+            // Use the new calculation function
+            higherCCS = calculateHigherCCS(standardCCS);
         }
         
         // Update the readonly fields
         $('#standard_ccs_percentage_calc').val(standardCCS.toFixed(2));
         $('#higher_ccs_percentage_calc').val(higherCCS.toFixed(2));
     }
-
-    // Email form toggle functionality
-    $('#email-toggle-header').on('click', function() {
-        const $content = $('#email-form-content');
-        const $icon = $('#email-toggle-icon');
-        
-        if ($content.is(':visible')) {
-            $content.slideUp(300);
-            $icon.css('transform', 'rotate(0deg)');
-        } else {
-            $content.slideDown(300);
-            $icon.css('transform', 'rotate(180deg)');
-        }
-    });
 
     // Navigation handlers
     $('#next1').off('click').on('click', function(){
@@ -1118,21 +1270,15 @@ jQuery(document).ready(function($){
             showError('#centre-search', 'Please select your centre from the list');
             hasError = true;
         }
-
-        // Validate text field for other option
-        if (enrolmentSelection === 'other' && $('#extra-field').val().trim() === '') {
-            showError('#extra-field', 'Please provide the required information');
-            hasError = true;
-        }
         
         if (hasError) return;
 
 
-        // Save extra answer for later use (centre or other provider)
+        // Save extra answer for later use (centre only for existing family)
         if (enrolmentSelection === 'existing') {
             extraAnswer = $('#selected-centre').val().trim();
         } else {
-            extraAnswer = $('#extra-field').val().trim();
+            extraAnswer = ''; // No extra answer for 'other' and 'none' options
         }
 
 
@@ -1234,12 +1380,12 @@ jQuery(document).ready(function($){
                     <div style="margin-bottom: 15px;">
                         <label><strong>Hours per day:</strong></label>
                         <div class="slider-container" style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
-                            <span style="font-size: 14px; color: #666;">4hrs</span>
+                            <span style="font-size: 14px; color: #666;">9hrs</span>
                             <div style="flex: 1; position: relative;">
-                                <input type="range" class="child-hours-slider" min="4" max="12" value="8" step="0.25" style="width: 100%;">
+                                <input type="range" class="child-hours-slider" min="9" max="12" value="10" step="0.5" style="width: 100%;">
                             </div>
                             <span style="font-size: 14px; color: #666;">12hrs</span>
-                            <span class="calc-hours" style="font-weight: 600; color: <?php echo esc_attr(get_option('ccs_accent_color', '#0073aa')); ?>; min-width: 60px;">8 hours</span>
+                            <span class="calc-hours" style="font-weight: 600; color: <?php echo esc_attr(get_option('ccs_accent_color', '#0073aa')); ?>; min-width: 70px; text-align: right;">10</span><span>Hours</span>
                         </div>
                     </div>
                     
@@ -1272,14 +1418,23 @@ jQuery(document).ready(function($){
             const value = $(this).val();
             $(this).siblings('.child-hours-output').text(value + ' hours');
             
-            // Update slider completed line
-            const min = $(this).attr('min');
-            const max = $(this).attr('max');
+            // Update slider completed line - set CSS variable on parent div
+            const min = parseFloat($(this).attr('min'));
+            const max = parseFloat($(this).attr('max'));
             const percentage = ((value - min) / (max - min)) * 100;
             $(this).parent().css('--slider-progress', percentage + '%');
             
             // Update live calculation
             updateChildCalculation($(this).closest('.child-details'));
+        });
+        
+        // Initialize slider progress on load
+        $('.child-hours-slider').each(function() {
+            const value = parseFloat($(this).val());
+            const min = parseFloat($(this).attr('min'));
+            const max = parseFloat($(this).attr('max'));
+            const percentage = ((value - min) / (max - min)) * 100;
+            $(this).parent().css('--slider-progress', percentage + '%');
         });
         
         // Add event handlers for fee input
@@ -1340,7 +1495,15 @@ jQuery(document).ready(function($){
 
 
     $(document).on('input change', '.child-hours-slider', function(){
-        $(this).siblings('.child-hours-output').text($(this).val() + ' hours');
+        const value = $(this).val();
+        $(this).siblings('.child-hours-output').text(value + ' hours');
+        
+        // Update slider progress - set CSS variable on parent div
+        const min = parseFloat($(this).attr('min'));
+        const max = parseFloat($(this).attr('max'));
+        const percentage = ((value - min) / (max - min)) * 100;
+        $(this).parent().css('--slider-progress', percentage + '%');
+        
         updateChildCalculation($(this).closest('.child-details'));
     });
 
@@ -1581,7 +1744,7 @@ jQuery(document).ready(function($){
                     <div class="child-detail-card" style="flex: 1; padding:20px; border:1px solid #f5f5f5; border-radius:5px; background:#fff;">
                         <h5 style="margin-bottom: 15px; color: ${summaryColors.heading};">Child ${i+1}</h5>
                         <p style="font-size: 16px; line-height: 20px;"><strong>Location:</strong> ${c.suburb || '-'}</p>
-                        <p style="font-size: 16px; line-height: 20px;"><strong>CCS Percentage:</strong> ${(c.ccs_pct*100).toFixed(0)}%</p>
+                        <p style="font-size: 16px; line-height: 20px;"><strong>CCS Percentage:</strong> ${(c.ccs_pct*100).toFixed(2)}%</p>
                         <p style="font-size: 16px; line-height: 20px;"><strong>Days per Fortnight:</strong> Week 1: ${c.daysWeek1}, Week 2: ${c.daysWeek2}</p>
                         <p style="font-size: 16px; line-height: 20px;"><strong>Session (hours/day):</strong> ${c.hoursPerDay}</p>
                         <p style="font-size: 16px; line-height: 20px;"><strong>Daily Fee:</strong> $${formatCurrency(c.feePerDay)}</p>
@@ -1666,7 +1829,7 @@ jQuery(document).ready(function($){
                 <div class="child-detail-card" style="flex: 1; padding:20px; border:1px solid #f5f5f5; border-radius:5px; background:#fff;">
                     <h5 style="margin-bottom: 15px; color: ${summaryColors.heading};">Child ${parseInt(child)+1}</h5>
                     <p style="font-size: 16px; line-height: 20px;"><strong>Location:</strong> ${c.suburb || '-'}</p>
-                    <p style="font-size: 16px; line-height: 20px;"><strong>CCS Percentage:</strong> ${(c.ccs_pct*100).toFixed(0)}%</p>
+                    <p style="font-size: 16px; line-height: 20px;"><strong>CCS Percentage:</strong> ${(c.ccs_pct*100).toFixed(2)}%</p>
                     <p style="font-size: 16px; line-height: 20px;"><strong>Days per Fortnight:</strong> Week 1: ${c.daysWeek1}, Week 2: ${c.daysWeek2}</p>
                     <p style="font-size: 16px; line-height: 20px;"><strong>Session (hours/day):</strong> ${c.hoursPerDay}</p>
                     <p style="font-size: 16px; line-height: 20px;"><strong>Daily Fee:</strong> $${formatCurrency(c.feePerDay)}</p>
