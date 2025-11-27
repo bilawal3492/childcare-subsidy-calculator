@@ -795,8 +795,15 @@ jQuery(document).ready(function($){
             }
         });
         
-        // Update progress line width
-        const progressPercentage = ((step - 1) / (totalSteps - 1)) * 100;
+        // Update progress line width so the active line ends exactly at
+        // the center of the current step (no under/overshoot).
+        let progressPercentage = 0;
+
+        if (step > 1) {
+            progressPercentage = ((2 * step - 1) / (2 * totalSteps)) * 100;
+        }
+        if (step >= totalSteps) progressPercentage = 100;
+
         $('.progress-line-active').css('width', progressPercentage + '%');
     }
     setActiveStep(1);
