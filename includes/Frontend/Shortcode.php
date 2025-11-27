@@ -278,7 +278,7 @@ class Shortcode
                     </div>
                     <br>
                     <div style="position:relative; margin-top: 10px;">
-                        <input style="line-height: 20px; border-style: solid; width:100%; padding-right:30px;" type="number" id="standard_ccs_percentage" min="0" max="100" step="0.01" placeholder="Enter a value">
+                        <input style="line-height: 20px; border-style: solid; width:100%; padding-right:30px;" type="number" id="standard_ccs_percentage" min="0" max="100" step="0.01" placeholder="First child (oldest child in care)">
                         <span style="position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#666; pointer-events:none;">%</span>
                     </div>
                 </label>
@@ -298,7 +298,7 @@ class Shortcode
                     </div>
                     <br>
                     <div style="position:relative; margin-top: 10px;">
-                        <input style="line-height: 20px; border-style: solid; width:100%; padding-right:30px; background-color: #f0f0f0;" type="number" id="higher_ccs_percentage" min="0" max="100" step="0.01" placeholder="0.00" readonly>
+                        <input style="line-height: 20px; border-style: solid; width:100%; padding-right:30px; background-color: #f0f0f0;" type="number" id="higher_ccs_percentage" min="0" max="100" step="0.01" placeholder="Additional children (if applicable)" readonly>
                         <span style="position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#666; pointer-events:none;">%</span>
                     </div>
                 </label>
