@@ -1074,6 +1074,46 @@ jQuery(document).ready(function($){
         return 0;
     }
 
+    function calculateHigherCCSFromATI(income, standardCCS) {
+        const ati = parseFloat(income);
+        const standard = parseFloat(standardCCS) || 0;
+        let higher = standard;
+        let eligible = false;
+
+        if (isNaN(ati) || ati < 0) {
+            return { higher: standard, eligible: false };
+        }
+
+        if (ati >= 367563) {
+            higher = standard;
+            eligible = false;
+        } else if (ati <= 143273) {
+            higher = 95;
+            eligible = true;
+        } else if (ati < 188273) {
+            higher = 95 - ((ati - 143273) / 3000);
+            eligible = true;
+        } else if (ati < 267563) {
+            higher = 80;
+            eligible = true;
+        } else if (ati < 357563) {
+            higher = 80 - ((ati - 267563) / 3000);
+            eligible = true;
+        } else {
+            higher = 50;
+            eligible = true;
+        }
+
+        higher = Math.max(0, Math.min(95, higher));
+
+        if (higher <= standard) {
+            higher = standard;
+            eligible = false;
+        }
+
+        return { higher, eligible };
+    }
+
     // Auto-calculate Higher CCS when Standard CCS is entered (Yes mode)
     $('#standard_ccs_percentage').on('input', function() {
         const standardCCS = parseFloat($(this).val());
@@ -1176,7 +1216,7 @@ jQuery(document).ready(function($){
     // Function to calculate CCS percentages based on income
     function calculateCCSPercentages(income) {
         const base = parseFloat(policy.income_base_threshold) || 0;
-        const zero = parseFloat(policy.income_zero_threshold) || 0;
+        const zero = parseFloat(policy.income_zero_threshold) || 535279;
         const step = parseFloat(policy.income_step) || 1;
         const max_pct = parseFloat(policy.max_pct) || 0;
         const lowIncomeThreshold = parseFloat(policy.low_income_threshold) || 85279;
@@ -1186,27 +1226,26 @@ jQuery(document).ready(function($){
         // Special case: Low income families (threshold from admin settings)
         if (income <= lowIncomeThreshold) {
             standardCCS = 90; // 90% for low income families
-        } else if (income <= base) {
-            // Income between $85,279 and base threshold
-            standardCCS = max_pct * 100; // Convert to percentage
         } else if (income >= zero) {
             // Income at or above zero threshold
             standardCCS = 0;
         } else {
-            // Income between base and zero threshold - calculate based on steps
-            standardCCS = Math.max(0, (max_pct - Math.floor((income - base) / step) * 0.01) * 100);
+            // Income between thresholds - calculate CCS from income
+            const excess = income - lowIncomeThreshold;
+            const reduction = excess / 5000; // 1 percentage point per $5,000
+            standardCCS = 90 - reduction;
         }
         
-        // Cap standard CCS at 90% (maximum possible)
-        standardCCS = Math.min(90, standardCCS);
+        // Cap standard CCS at 90% (maximum possible) and not below 0
+        standardCCS = Math.max(0, Math.min(90, standardCCS));
         
         // Floor at 33% if income is within eligible range
         // If calculated value would be less than 33%, set to 33% (minimum for higher CCS eligibility)
         // But if income is too high (above the threshold for 33%), then it can go below 33% or to 0%
         
         // Calculate the income threshold where CCS would be 33%
-        // Formula: income = base + ((max_pct - 0.33) * 100) * step
-        const income33Threshold = base + ((max_pct - 0.33) * 100) * step;
+        // With a 1% per $5,000 taper from 90%: income = lowIncomeThreshold + (90 - 33) * 5000
+        const income33Threshold = lowIncomeThreshold + (90 - 33) * 5000;
         
         // If income is above the 33% threshold, CCS can be less than 33% or 0%
         if (income > income33Threshold) {
@@ -1221,27 +1260,11 @@ jQuery(document).ready(function($){
         
         // Hide eligibility status by default
         $('#eligibility_status_calc').hide();
-        
-        // Special case: Low income families get 95% higher CCS
-        if (income <= lowIncomeThreshold) {
-            higherCCS = 95;
-        } else if (standardCCS <= 33.53) {
-            // Not eligible for Higher CCS - same as Standard CCS
-            higherCCS = standardCCS;
+
+        const hccsResult = calculateHigherCCSFromATI(income, standardCCS);
+        higherCCS = hccsResult.higher;
+        if (!hccsResult.eligible) {
             $('#eligibility_status_calc').show();
-        } else if (standardCCS === 33.54) {
-            // Special case: Need to check ATI
-            // If income is less than $367,563, Higher CCS is 50%
-            // If income is $367,563 or more, not eligible (Higher CCS = Standard CCS)
-            if (income < 367563) {
-                higherCCS = 50.00;
-            } else {
-                higherCCS = standardCCS; // Not eligible
-                $('#eligibility_status_calc').show();
-            }
-        } else {
-            // Use the new calculation function
-            higherCCS = calculateHigherCCS(standardCCS);
         }
         
         // Update the readonly fields
@@ -1574,20 +1597,10 @@ jQuery(document).ready(function($){
             higherCCSPct = parseFloat($('#higher_ccs_percentage').val()) / 100 || 0;
         } else {
             // Calculate CCS percentage from income and activity hours
-            const base = parseFloat(policy.income_base_threshold) || 0;
-            const zero = parseFloat(policy.income_zero_threshold) || 0;
-            const step = parseFloat(policy.income_step) || 1;
-            const max_pct = parseFloat(policy.max_pct) || 0;
-            
-            if (income <= base) {
-                standardCCSPct = max_pct;
-            } else if (income >= zero) {
-                standardCCSPct = 0;
-            } else {
-                standardCCSPct = Math.max(0, max_pct - Math.floor((income - base) / step) * 0.01);
-            }
+            calculateCCSPercentages(income);
             
             // Use calculated values from readonly fields
+            standardCCSPct = parseFloat($('#standard_ccs_percentage_calc').val()) / 100 || 0;
             higherCCSPct = parseFloat($('#higher_ccs_percentage_calc').val()) / 100 || 0.95;
         }
         
