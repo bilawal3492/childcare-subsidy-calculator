@@ -602,8 +602,7 @@ class Shortcode
                                        required>
                             </div>
                             <div style="flex:1; min-width:250px;">
-                                <input style="width:100%; padding:12px; border:1px solid #ccc; border-radius:4px; font-size:14px;" 
-                                       type="tel" 
+                                <input type="tel" 
                                        id="custom_phone" 
                                        name="phone" 
                                        placeholder="Phone">
@@ -677,15 +676,85 @@ class Shortcode
 </div>
 
 
-<!-- HubSpot Forms Script -->
-<?php 
-$hubspot_region = get_option('ccs_hubspot_region', 'na1');
-$hubspot_script_url = "https://js.hsforms.net/forms/embed/v2.js";
-if ($hubspot_region === 'eu1') {
-    $hubspot_script_url = "https://js-eu1.hsforms.net/forms/embed/v2.js";
+<!-- International Phone Input Library (intl-tel-input) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/css/intlTelInput.css">
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/intlTelInput.min.js"></script>
+
+<style>
+
+/* Clean intl-tel-input styling - matching form fields */
+.iti { 
+    width: 100%; 
+    display: block;
+    border: 1px solid #e1e8ed; 
 }
+.iti input,
+.iti input[type="tel"] { 
+    width: 100%; 
+    height: 46px;
+    padding: 12px 12px 12px 60px !important;
+    font-size: 14px; 
+    box-sizing: border-box;
+    background: #fff;
+    border: 0px !important;
+}
+/* Flag container - clean look */
+.iti__flag-container { 
+    padding: 0;
+}
+.iti__selected-flag {
+    padding: 0 8px 0 12px;
+    background-color: #f8f9fa;
+    border-right: 1px solid #e1e8ed;
+    height: 100%;
+}
+.iti__selected-flag:hover {
+    background-color: #f0f0f0;
+}
+.iti--separate-dial-code .iti__selected-flag {
+    background-color: #f8f9fa;
+}
+.iti__selected-dial-code {
+    display: none;
+}
+.iti__arrow {
+    margin-left: 6px;
+    border-top-color: #666;
+}
+/* Dropdown - full width, clean */
+.iti__country-list { 
+    z-index: 9999;
+    width: 100% !important;
+    min-width: 250px;
+    border: 1px solid #e1e8ed;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    max-height: 250px;
+    background: #fff;
+}
+.iti__country {
+    padding: 10px 12px;
+    font-size: 14px;
+}
+.iti__country:hover {
+    background-color: #f5f5f5;
+}
+.iti__country.iti__highlight {
+    background-color: #e8f4fc;
+}
+.iti__divider {
+    border-bottom: 1px solid #e1e8ed;
+}
+</style>
+
+
+<!-- HubSpot Integration - Using Forms API v3 Direct Submission -->
+<?php 
+$hubspot_portal_id = get_option('ccs_hubspot_portal_id', '');
+$hubspot_form_id = get_option('ccs_hubspot_form_id', '');
+$hubspot_region = get_option('ccs_hubspot_region', 'na1');
+$hubspot_hidden_field = get_option('ccs_hubspot_hidden_field', 'ccs_summary');
 ?>
-<script charset="utf-8" type="text/javascript" src="<?php echo esc_url($hubspot_script_url); ?>"></script>
 
 
 <script>
@@ -2095,119 +2164,482 @@ jQuery(document).ready(function($){
 
 
     // HubSpot Form Integration
-    function loadHubSpotForm() {
-        if (typeof hbspt !== 'undefined') {
-            const hubspotConfig = {
-                region: "<?php echo esc_js(get_option('ccs_hubspot_region', 'na1')); ?>",
-                portalId: "<?php echo esc_js(get_option('ccs_hubspot_portal_id', '')); ?>",
-                formId: "<?php echo esc_js(get_option('ccs_hubspot_form_id', '')); ?>",
-                target: '#hubspot-form-container',
-                onFormReady: function($form) {
-                    console.log('HubSpot form loaded successfully');
-                    console.log('HubSpot Config:', hubspotConfig);
-                    
-                    // Prepare summary text for HubSpot hidden field
-                    const summaryText = 
-                        'OVERALL SUMMARY:\n' +
-                        $('#summary-overall').text().trim() + '\n\n' +
-                        'FORTNIGHTLY BREAKDOWN:\n' +
-                        $('#summary-weekly').text().trim() + '\n\n' +
-                        'CHILD DETAILS:\n' +
-                        $('#child-details-summary').text().trim();
-                    
-                    // Populate hidden field with summary
-                    const hiddenFieldName = '<?php echo esc_js(get_option('ccs_hubspot_hidden_field', 'calculate_property')); ?>';
-                    const hiddenField = $form.find('input[name="' + hiddenFieldName + '"]');
-                    if (hiddenField.length > 0) {
-                        hiddenField.val(summaryText);
-                        console.log('Summary populated in HubSpot hidden field: ' + hiddenFieldName);
-                    } else {
-                        console.warn('Hidden field "' + hiddenFieldName + '" not found in form. Please check your HubSpot form settings.');
+    // Strip any prefix like "0-1/" from the hidden field name if user entered it
+    let hubspotHiddenFieldName = '<?php echo esc_js(get_option('ccs_hubspot_hidden_field', 'calculate_summary')); ?>';
+    hubspotHiddenFieldName = hubspotHiddenFieldName.replace(/^\d+-\d+\//, ''); // Remove prefix like "0-1/"
+    
+    let hubspotFormElement = null;
+    
+    // Function to generate current summary text for HubSpot
+    function generateSummaryText() {
+        let lines = [];
+        
+        // ============================================
+        // OVERALL SUMMARY
+        // ============================================
+        lines.push('═══════════════════════════════════════');
+        lines.push('OVERALL SUMMARY');
+        lines.push('═══════════════════════════════════════');
+        
+        // Extract each row from summary-overall table
+        $('#summary-overall .summary-row-tr').each(function() {
+            const cells = $(this).find('.summary-row-td');
+            if (cells.length >= 2) {
+                const label = $(cells[0]).text().replace(/\s+/g, ' ').trim();
+                const value = $(cells[1]).text().replace(/\s+/g, ' ').trim();
+                if (label && value) {
+                    lines.push(label + ': ' + value);
+                }
+            }
+        });
+        
+        // ============================================
+        // HOUSEHOLD INCOME INFORMATION
+        // ============================================
+        lines.push('');
+        lines.push('───────────────────────────────────────');
+        lines.push('HOUSEHOLD INCOME INFORMATION');
+        lines.push('───────────────────────────────────────');
+        
+        // Extract from household income table - each td.income-info-item has label (.income-info-item-p) and value (.income-info-item-value)
+        $('#household-income-info .income-info-item').each(function() {
+            if ($(this).hasClass('empty')) return; // Skip empty cells
+            const label = $(this).find('.income-info-item-p').text().replace(/\s+/g, ' ').trim();
+            const value = $(this).find('.income-info-item-value').text().replace(/\s+/g, ' ').trim();
+            if (label && value) {
+                lines.push(label + ': ' + value);
+            }
+        });
+        
+        // ============================================
+        // FORTNIGHTLY BREAKDOWN
+        // ============================================
+        lines.push('');
+        lines.push('───────────────────────────────────────');
+        lines.push('FORTNIGHTLY BREAKDOWN');
+        lines.push('───────────────────────────────────────');
+        
+        // Extract Week 1 and Week 2 data
+        $('#summary-weekly td').each(function(index) {
+            const weekDiv = $(this).find('> div');
+            if (weekDiv.length === 0) return;
+            
+            const weekTitle = weekDiv.find('h4').text().replace(/\s+/g, ' ').trim();
+            if (!weekTitle) return;
+            
+            lines.push('');
+            lines.push(weekTitle + ':');
+            
+            // Each data row is a div with two spans (label and value)
+            weekDiv.find('> div').each(function() {
+                const spans = $(this).find('span');
+                if (spans.length >= 2) {
+                    const label = $(spans[0]).text().replace(/\s+/g, ' ').trim();
+                    const value = $(spans[1]).text().replace(/\s+/g, ' ').trim();
+                    if (label && value) {
+                        lines.push('  • ' + label + ': ' + value);
                     }
-                },
-                onFormSubmit: function($form) {
-                    console.log('HubSpot form submitted');
-                    
-                    // Get form data
-                    const formData = $form.serializeArray();
-                    const userData = {};
-                    formData.forEach(field => {
-                        userData[field.name] = field.value;
-                    });
-                    
-                    // Prepare summary HTML for email
-                    const summaryHTML = `
-                        <div style="font-family: Arial, sans-serif; max-width: 100%; margin: 0;">
-                            <h2 style="color: #333; font-size: 20px; margin: 0 0 20px 0; font-weight: 600;">Your details</h2>
-                            <div style="background: #ffffff; padding: 0; margin: 0 0 25px 0;">
-                                ${$('#summary-overall').html()}
-                            </div>
-                            <div style="margin: 25px 0;">
-                                <h3 style="color: #333; font-size: 18px; margin: 0 0 15px 0; font-weight: 600;">Household Income Information</h3>
-                                ${$('#household-income-info').html()}
-                            </div>
-                            <div style="margin: 25px 0;">
-                                <h3 style="color: #333; font-size: 18px; margin: 0 0 15px 0; font-weight: 600;">Fortnightly Breakdown</h3>
-                                ${$('#summary-weekly').html()}
-                            </div>
-                            <div style="margin: 25px 0;">
-                                <h3 style="color: #333; font-size: 18px; margin: 0 0 15px 0; font-weight: 600;">Child Details</h3>
-                                ${$('#child-details-summary').html()}
-                            </div>
-                        </div>
-                    `;
-                    
-                    // Get enrollment option text using shared function
-                    const enrolmentText = getEnrollmentOptionText();
-                    
-                    // Send to WordPress to save submission and send email
-                    $.post('<?php echo admin_url('admin-ajax.php'); ?>', {
-                        action: 'send_summary_email',
-                        user_name: userData.firstname + ' ' + (userData.lastname || ''),
-                        user_email: userData.email,
-                        user_phone: userData.phone || '',
-                        summary_html: summaryHTML,
-                        location: $('#suburb').val() || '',
-                        atsi_status: $('#atsi').val() || '',
-                        enrolment_option: enrolmentText
-                    }, function(response) {
-                        console.log('WordPress response:', response);
-                        if(response.success){
-                            $('#send-summary-response').html('<div style="color:green; padding:10px; background:#d4edda; border-radius:4px; margin-top:15px;">✓ Summary sent successfully to your email!</div>');
-                        } else {
-                            $('#send-summary-response').html('<div style="color:red; padding:10px; background:#f8d7da; border-radius:4px; margin-top:15px;">✗ Error: ' + (response.data || 'Please try again') + '</div>');
+                }
+            });
+        });
+        
+        // ============================================
+        // CHILD DETAILS
+        // ============================================
+        lines.push('');
+        lines.push('───────────────────────────────────────');
+        lines.push('CHILD DETAILS');
+        lines.push('───────────────────────────────────────');
+        
+        // Extract each child card
+        $('#child-details-summary .child-detail-card').each(function() {
+            const childTitle = $(this).find('h5').text().replace(/\s+/g, ' ').trim();
+            lines.push('');
+            lines.push(childTitle + ':');
+            
+            // Each p element contains a label (in strong) and value
+            $(this).find('p').each(function() {
+                const strongText = $(this).find('strong').text().replace(/\s+/g, ' ').trim();
+                const fullText = $(this).text().replace(/\s+/g, ' ').trim();
+                // Remove the strong text from full text to get the value
+                const value = fullText.replace(strongText, '').trim();
+                if (strongText && value) {
+                    lines.push('  • ' + strongText + ' ' + value);
+                }
+            });
+        });
+        
+        // ============================================
+        // FOOTER
+        // ============================================
+        lines.push('');
+        lines.push('═══════════════════════════════════════');
+        lines.push('Generated: ' + new Date().toLocaleString());
+        
+        return lines.join('\n');
+    }
+    
+    // Function to update HubSpot hidden field with current summary
+    function updateHubSpotHiddenField() {
+        if (!hubspotFormElement) {
+            console.log('HubSpot form element not ready yet');
+            return;
+        }
+        
+        const summaryText = generateSummaryText();
+        
+        // Try multiple selectors for HubSpot hidden field
+        // HubSpot uses different naming conventions including prefixes like "0-1/"
+        const selectors = [
+            // Standard name
+            'input[name="' + hubspotHiddenFieldName + '"]',
+            // HubSpot prefixed names (0-1/, 0-2/, etc.)
+            'input[name$="/' + hubspotHiddenFieldName + '"]',
+            'input[name*="' + hubspotHiddenFieldName + '"]',
+            // TICKET prefix for ticket forms
+            'input[name="TICKET.' + hubspotHiddenFieldName + '"]',
+            // Data attribute based
+            'input[data-hsfc-id="HiddenField"][name*="' + hubspotHiddenFieldName + '"]',
+            'input[type="hidden"][name*="' + hubspotHiddenFieldName + '"]',
+            // ID based
+            'input[id*="' + hubspotHiddenFieldName + '"]',
+            // Textarea variants
+            'textarea[name="' + hubspotHiddenFieldName + '"]',
+            'textarea[name*="' + hubspotHiddenFieldName + '"]'
+        ];
+        
+        let hiddenField = null;
+        const $form = $(hubspotFormElement);
+        
+        // First try in the form element
+        for (let i = 0; i < selectors.length; i++) {
+            hiddenField = $form.find(selectors[i]);
+            if (hiddenField.length > 0) {
+                console.log('Found HubSpot hidden field with selector:', selectors[i]);
+                break;
+            }
+        }
+        
+        // Also search in the container directly (more reliable)
+        if (!hiddenField || hiddenField.length === 0) {
+            for (let i = 0; i < selectors.length; i++) {
+                hiddenField = $('#hubspot-form-container').find(selectors[i]);
+                if (hiddenField.length > 0) {
+                    console.log('Found HubSpot hidden field in container with selector:', selectors[i]);
+                    break;
+                }
+            }
+        }
+        
+        // Also try within iframe if HubSpot uses iframe embed
+        if ((!hiddenField || hiddenField.length === 0)) {
+            const iframe = $('#hubspot-form-container iframe');
+            if (iframe.length > 0) {
+                try {
+                    const iframeDoc = iframe.contents();
+                    for (let i = 0; i < selectors.length; i++) {
+                        hiddenField = iframeDoc.find(selectors[i]);
+                        if (hiddenField.length > 0) {
+                            console.log('Found HubSpot hidden field in iframe with selector:', selectors[i]);
+                            break;
                         }
-                    }).fail(function(xhr, status, error) {
-                        console.error('AJAX error:', error);
-                        $('#send-summary-response').html('<div style="color:red; padding:10px; background:#f8d7da; border-radius:4px; margin-top:15px;">✗ Connection error. Please try again.</div>');
-                    });
+                    }
+                } catch(e) {
+                    console.log('Cannot access iframe content (cross-origin)');
+                }
+            }
+        }
+        
+        if (hiddenField && hiddenField.length > 0) {
+            hiddenField.val(summaryText);
+            // Also set the attribute for forms that read from attribute
+            hiddenField.attr('value', summaryText);
+            
+            // Trigger input and change events to notify HubSpot of the value change
+            // HubSpot's React-based forms listen for these events
+            const nativeInputEvent = new Event('input', { bubbles: true });
+            const nativeChangeEvent = new Event('change', { bubbles: true });
+            hiddenField[0].dispatchEvent(nativeInputEvent);
+            hiddenField[0].dispatchEvent(nativeChangeEvent);
+            
+            // Also trigger jQuery events as fallback
+            hiddenField.trigger('input').trigger('change').trigger('blur');
+            
+            console.log('✓ Summary populated in HubSpot hidden field');
+            console.log('  Field name:', hiddenField.attr('name'));
+            console.log('  Summary length:', summaryText.length, 'characters');
+        } else {
+            console.warn('⚠ Hidden field "' + hubspotHiddenFieldName + '" not found in form.');
+            console.warn('  Please verify the hidden field internal name in HubSpot matches: ' + hubspotHiddenFieldName);
+            
+            // Log all available inputs for debugging
+            const allInputs = $('#hubspot-form-container').find('input, textarea');
+            console.warn('  Available form inputs (' + allInputs.length + '):');
+            allInputs.each(function() { 
+                console.warn('    -', this.name || this.id || '(no name/id)', '| type:', this.type);
+            });
+        }
+    }
+    
+    function loadHubSpotForm() {
+        const portalId = "<?php echo esc_js(get_option('ccs_hubspot_portal_id', '')); ?>";
+        const formId = "<?php echo esc_js(get_option('ccs_hubspot_form_id', '')); ?>";
+        const region = "<?php echo esc_js(get_option('ccs_hubspot_region', 'na1')); ?>";
+        
+        // Validate configuration
+        if (!portalId || !formId) {
+            console.error('HubSpot configuration error: Portal ID or Form ID is missing');
+            $('#hubspot-form-container').html('<div style="color:red; padding:15px; background:#f8d7da; border-radius:4px;"><strong>Configuration Error:</strong> Please configure HubSpot Portal ID and Form ID in admin settings.</div>');
+            return;
+        }
+        
+        console.log('Loading HubSpot form via Direct API Submission method');
+        console.log('Portal ID:', portalId);
+        console.log('Form ID:', formId);
+        console.log('Region:', region);
+        console.log('Hidden field name:', hubspotHiddenFieldName);
+        
+        // Create a custom form that submits directly to HubSpot's Forms API v3
+        // This bypasses all iframe/cross-origin issues
+        const hubspotFormHTML = `
+            <form id="hubspot-direct-form" class="hubspot-api-form">
+                <div style="display:flex; flex-wrap:wrap; gap:15px; margin-bottom:15px;">
+                    <div style="flex:1; min-width:200px;">
+                        <label style="display:block; margin-bottom:5px; font-weight:500; color:#333;">First Name</label>
+                        <input style="width:100%; padding:12px; border:1px solid #ccc; border-radius:4px; font-size:14px; box-sizing:border-box;" 
+                               type="text" 
+                               id="hs_firstname" 
+                               name="firstname" 
+                               placeholder="First name"
+                               required>
+                    </div>
+                    <div style="flex:1; min-width:200px;">
+                        <label style="display:block; margin-bottom:5px; font-weight:500; color:#333;">Last Name</label>
+                        <input style="width:100%; padding:12px; border:1px solid #ccc; border-radius:4px; font-size:14px; box-sizing:border-box;" 
+                               type="text" 
+                               id="hs_lastname" 
+                               name="lastname" 
+                               placeholder="Last name"
+                               required>
+                    </div>
+                </div>
+                
+                <div style="display:flex; flex-wrap:wrap; gap:15px; margin-bottom:15px;">
+                    <div style="flex:1; min-width:200px;">
+                        <label style="display:block; margin-bottom:5px; font-weight:500; color:#333;">Email <span style="color:red;">*</span></label>
+                        <input style="width:100%; padding:12px; border:1px solid #ccc; border-radius:4px; font-size:14px; box-sizing:border-box;" 
+                               type="email" 
+                               id="hs_email" 
+                               name="email" 
+                               placeholder="Email"
+                               required>
+                    </div>
+                    <div style="flex:1; min-width:200px;">
+                        <label style="display:block; margin-bottom:5px; font-weight:500; color:#333;">Phone Number</label>
+                        <input type="tel" 
+                               id="hs_phone" 
+                               name="phone" 
+                               placeholder="Phone number">
+                    </div>
+                </div>
+                
+                <div style="text-align:right; margin-top:20px;">
+                    <button type="submit" 
+                            id="hs-submit-btn"
+                            class="button button-primary nav-button nav-next" 
+                            style="padding:12px 40px; font-size:16px; font-weight:600; cursor:pointer;">
+                        Submit
+                    </button>
+                </div>
+            </form>
+        `;
+        
+        $('#hubspot-form-container').html(hubspotFormHTML);
+        console.log('✓ HubSpot API form rendered');
+        
+        // Initialize intl-tel-input for HubSpot phone field
+        let hsPhoneInput = null;
+        if (typeof intlTelInput !== 'undefined') {
+            hsPhoneInput = intlTelInput(document.querySelector('#hs_phone'), {
+                initialCountry: 'au',
+                geoIpLookup: function(callback) {
+                    fetch('https://ipapi.co/json/')
+                        .then(res => res.json())
+                        .then(data => callback(data.country_code.toLowerCase()))
+                        .catch(() => callback('au'));
                 },
-                onFormSubmitted: function() {
-                    console.log('Form successfully submitted to HubSpot');
+                utilsScript: 'https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js',
+                separateDialCode: false,
+                preferredCountries: ['au', 'nz', 'us', 'gb', 'in', 'sg'],
+                nationalMode: false,
+                autoPlaceholder: 'aggressive',
+                placeholderNumberType: 'MOBILE'
+            });
+            console.log('✓ International phone input initialized for HubSpot form');
+        }
+        
+        // Handle form submission directly to HubSpot Forms API v3
+        $('#hubspot-direct-form').on('submit', function(e) {
+            e.preventDefault();
+            
+            const $btn = $('#hs-submit-btn');
+            $btn.prop('disabled', true).text('Submitting...');
+            
+            // Get form values
+            const firstname = $('#hs_firstname').val().trim();
+            const lastname = $('#hs_lastname').val().trim();
+            const email = $('#hs_email').val().trim();
+            // Get full international phone number with country code
+            let phone = '';
+            if (hsPhoneInput) {
+                phone = hsPhoneInput.getNumber();
+            } else {
+                phone = $('#hs_phone').val().trim();
+            }
+            
+            // Get country from intl-tel-input
+            let country = '';
+            if (hsPhoneInput) {
+                const countryData = hsPhoneInput.getSelectedCountryData();
+                country = countryData.name || '';
+            }
+            
+            // Generate summary text for the hidden field
+            const summaryText = generateSummaryText();
+            
+            console.log('Submitting to HubSpot Forms API v3...');
+            console.log('Email:', email);
+            console.log('Phone:', phone);
+            console.log('Country:', country);
+            console.log('Summary length:', summaryText.length, 'characters');
+            
+            // Build the fields array for HubSpot API
+            const fields = [
+                { name: 'firstname', value: firstname },
+                { name: 'lastname', value: lastname },
+                { name: 'email', value: email }
+            ];
+            
+            // Add phone if provided (full international format)
+            if (phone) {
+                fields.push({ name: 'phone', value: phone });
+            }
+            
+            // Add country if detected from phone input
+            if (country) {
+                fields.push({ name: 'country', value: country });
+            }
+            
+            // Add the summary to the hidden field
+            fields.push({ name: hubspotHiddenFieldName, value: summaryText });
+            
+            console.log('Fields being submitted:', fields.map(f => f.name + ': ' + (f.value.length > 50 ? f.value.substring(0,50) + '...' : f.value)));
+            
+            // HubSpot Forms API v3 endpoint
+            const apiUrl = 'https://api.hsforms.com/submissions/v3/integration/submit/' + portalId + '/' + formId;
+            
+            // Prepare the submission data
+            const submissionData = {
+                fields: fields,
+                context: {
+                    pageUri: window.location.href,
+                    pageName: document.title
                 }
             };
             
-            // Log configuration before creating form
-            console.log('Attempting to load HubSpot form with config:', hubspotConfig);
-            
-            // Validate configuration
-            if (!hubspotConfig.portalId || !hubspotConfig.formId) {
-                console.error('HubSpot configuration error: Portal ID or Form ID is missing');
-                $('#hubspot-form-container').html('<div style="color:red; padding:15px; background:#f8d7da; border-radius:4px;"><strong>Configuration Error:</strong> Please configure HubSpot Portal ID and Form ID in admin settings.</div>');
-                return;
+            // Get HubSpot tracking cookie if available
+            const hutk = getCookie('hubspotutk');
+            if (hutk) {
+                submissionData.context.hutk = hutk;
             }
             
-            // Create form with error handling
-            try {
-                hbspt.forms.create(hubspotConfig);
-            } catch (error) {
-                console.error('HubSpot form creation error:', error);
-                $('#hubspot-form-container').html('<div style="color:red; padding:15px; background:#f8d7da; border-radius:4px;"><strong>Error:</strong> Could not load HubSpot form. Please check browser console for details.</div>');
-            }
-        } else {
-            // Fallback if HubSpot script not loaded
-            console.error('HubSpot script (hbspt) not loaded');
-            $('#hubspot-form-container').html('<div style="color:red; padding:15px; background:#f8d7da; border-radius:4px;"><strong>Script Error:</strong> HubSpot script could not be loaded. Please check your internet connection.</div>');
+            // Submit to HubSpot
+            $.ajax({
+                url: apiUrl,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(submissionData),
+                success: function(response) {
+                    console.log('✓ HubSpot API submission successful!', response);
+                    
+                    // Show success message
+                    $('#hubspot-form-container').html(`
+                        <div style="text-align:center; padding:40px 20px;">
+                            <div style="font-size:48px; color:#28a745; margin-bottom:15px;">✓</div>
+                            <h3 style="color:#333; margin:0 0 10px 0;">Form submitted</h3>
+                            <p style="color:#666; margin:0;">Thank you, we'll be in touch soon.</p>
+                        </div>
+                    `);
+                    
+                    // Also send to WordPress for email/database
+                    sendToWordPress(firstname, lastname, email, phone, country);
+                },
+                error: function(xhr, status, error) {
+                    console.error('✗ HubSpot API error:', status, error);
+                    console.error('Response:', xhr.responseText);
+                    
+                    let errorMsg = 'Submission failed. ';
+                    try {
+                        const errorResponse = JSON.parse(xhr.responseText);
+                        if (errorResponse.errors && errorResponse.errors.length > 0) {
+                            errorMsg += errorResponse.errors.map(e => e.message).join(', ');
+                        } else if (errorResponse.message) {
+                            errorMsg += errorResponse.message;
+                        }
+                    } catch(e) {
+                        errorMsg += 'Please try again.';
+                    }
+                    
+                    $('#send-summary-response').html('<div style="color:red; padding:10px; background:#f8d7da; border-radius:4px; margin-top:15px;">✗ ' + errorMsg + '</div>');
+                    $btn.prop('disabled', false).text('Submit');
+                }
+            });
+        });
+        
+        // Helper function to get cookie value
+        function getCookie(name) {
+            const value = '; ' + document.cookie;
+            const parts = value.split('; ' + name + '=');
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+        
+        // Helper function to send data to WordPress
+        function sendToWordPress(firstname, lastname, email, phone, country) {
+            const summaryHTML = `
+                <div style="font-family: Arial, sans-serif; max-width: 100%; margin: 0;">
+                    <h2 style="color: #333; font-size: 20px; margin: 0 0 20px 0; font-weight: 600;">Your details</h2>
+                    <div style="background: #ffffff; padding: 0; margin: 0 0 25px 0;">
+                        ${$('#summary-overall').html()}
+                    </div>
+                    <div style="margin: 25px 0;">
+                        <h3 style="color: #333; font-size: 18px; margin: 0 0 15px 0; font-weight: 600;">Household Income Information</h3>
+                        ${$('#household-income-info').html()}
+                    </div>
+                    <div style="margin: 25px 0;">
+                        <h3 style="color: #333; font-size: 18px; margin: 0 0 15px 0; font-weight: 600;">Fortnightly Breakdown</h3>
+                        ${$('#summary-weekly').html()}
+                    </div>
+                    <div style="margin: 25px 0;">
+                        <h3 style="color: #333; font-size: 18px; margin: 0 0 15px 0; font-weight: 600;">Child Details</h3>
+                        ${$('#child-details-summary').html()}
+                    </div>
+                </div>
+            `;
+            
+            $.post('<?php echo admin_url('admin-ajax.php'); ?>', {
+                action: 'send_summary_email',
+                user_name: firstname + ' ' + lastname,
+                user_email: email,
+                user_phone: phone,
+                user_country: country || '',
+                summary_html: summaryHTML,
+                location: $('#suburb').val() || '',
+                atsi_status: $('#atsi').val() || '',
+                enrolment_option: getEnrollmentOptionText()
+            }, function(response) {
+                console.log('WordPress response:', response);
+            });
         }
     }
     
@@ -2226,12 +2658,42 @@ jQuery(document).ready(function($){
             $('#custom-form-container').hide();
             if ($('#hubspot-form-container').is(':empty')) {
                 loadHubSpotForm();
+            } else {
+                // Form already loaded, just update the hidden field
+                // Wait for summary content to be rendered (after loader)
+                setTimeout(updateHubSpotHiddenField, 100);
             }
         }
     }
     
+    // Custom form phone input instance
+    let customPhoneInput = null;
+    
     // Custom form handler
     function initCustomForm() {
+        // Initialize intl-tel-input for custom form phone field
+        if (typeof intlTelInput !== 'undefined' && !customPhoneInput) {
+            const phoneElement = document.querySelector('#custom_phone');
+            if (phoneElement) {
+                customPhoneInput = intlTelInput(phoneElement, {
+                    initialCountry: 'au',
+                    geoIpLookup: function(callback) {
+                        fetch('https://ipapi.co/json/')
+                            .then(res => res.json())
+                            .then(data => callback(data.country_code.toLowerCase()))
+                            .catch(() => callback('au'));
+                    },
+                    utilsScript: 'https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js',
+                    separateDialCode: false,
+                    preferredCountries: ['au', 'nz', 'us', 'gb', 'in', 'sg'],
+                    nationalMode: false,
+                    autoPlaceholder: 'aggressive',
+                    placeholderNumberType: 'MOBILE'
+                });
+                console.log('✓ International phone input initialized for custom form');
+            }
+        }
+        
         $('#custom-summary-form').off('submit').on('submit', function(e) {
             e.preventDefault();
             
@@ -2239,7 +2701,18 @@ jQuery(document).ready(function($){
             const firstname = $('#custom_firstname').val();
             const lastname = $('#custom_lastname').val();
             const email = $('#custom_email').val();
-            const phone = $('#custom_phone').val();
+            
+            // Get full international phone number with country code
+            let phone = '';
+            let country = '';
+            if (customPhoneInput) {
+                phone = customPhoneInput.getNumber();
+                const countryData = customPhoneInput.getSelectedCountryData();
+                country = countryData.name || '';
+            } else {
+                phone = $('#custom_phone').val();
+            }
+            
             const fullName = firstname + (lastname ? ' ' + lastname : '');
             
             // Prepare summary HTML
@@ -2273,6 +2746,7 @@ jQuery(document).ready(function($){
                 user_name: fullName,
                 user_email: email,
                 user_phone: phone,
+                user_country: country,
                 summary_html: summaryHTML,
                 location: $('#suburb').val() || '',
                 atsi_status: $('#atsi').val() || '',
@@ -2295,8 +2769,12 @@ jQuery(document).ready(function($){
     }
     
     // Initialize form when step 4 is shown
+    // Note: Summary content is rendered after 2.5s loader + 500ms fade = 3s
+    // We need to initialize form after summary is visible
     $(document).on('click', '#next3', function() {
-        setTimeout(initForm, 500);
+        // Initialize form after summary content is fully rendered
+        // The loader runs for 2.5s, then summary fades in over 400ms
+        setTimeout(initForm, 3500);
     });
 
 

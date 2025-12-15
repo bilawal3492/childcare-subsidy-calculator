@@ -651,9 +651,13 @@ class Menu
                             <input type="text" 
                                    id="ccs_hubspot_hidden_field"
                                    name="ccs_hubspot_hidden_field" 
-                                   value="<?php echo esc_attr(get_option('ccs_hubspot_hidden_field', 'calculate_property')); ?>" 
+                                   value="<?php echo esc_attr(get_option('ccs_hubspot_hidden_field', 'calculate_summary')); ?>" 
                                    class="regular-text">
-                            <p class="description">Internal name of the hidden field in your HubSpot form for storing calculator summary (e.g., calculate_property)</p>
+                            <p class="description">
+                                Internal name of the hidden field in your HubSpot form (e.g., <code>calculate_summary</code>).<br>
+                                <strong>Note:</strong> Enter only the internal name WITHOUT any prefix like "0-1/". 
+                                HubSpot adds prefixes automatically.
+                            </p>
                         </td>
                     </tr>
                 </table>
@@ -675,20 +679,48 @@ class Menu
                         <li>Click <strong>Share</strong></li>
                         <li>The Form ID is in the embed code: <code>formId: "abc123-def456"</code></li>
                     </ol>
+                </div>
 
-                    <h3>Hidden Field Setup</h3>
+                <h2 style="color:#d63638;">⚠️ IMPORTANT: Hidden Field Setup (Required for Summary Data)</h2>
+                <div style="background:#fff3cd; padding:15px; border-left:4px solid #ffc107; margin:20px 0;">
+                    <p style="margin-top:0;"><strong>This plugin submits data directly to HubSpot's Forms API.</strong> Your HubSpot form MUST have the following fields configured:</p>
+                    
+                    <h3>Step 1: Create a Contact Property</h3>
                     <ol>
-                        <li>In HubSpot, go to <strong>Settings > Properties > Contact Properties</strong></li>
-                        <li>Create a new property (if not exists):
+                        <li>In HubSpot, go to <strong>Settings → Properties → Contact Properties</strong></li>
+                        <li>Click <strong>Create Property</strong></li>
+                        <li>Fill in:
                             <ul>
-                                <li>Name: Calculator Summary</li>
-                                <li>Internal name: <code>calculate_property</code></li>
-                                <li>Field type: Multi-line text</li>
+                                <li><strong>Label:</strong> Calculate Summary (or any name you like)</li>
+                                <li><strong>Internal name:</strong> <code>calculate_summary</code> (this MUST match the Hidden Field Name above)</li>
+                                <li><strong>Field type:</strong> <span style="color:#d63638; font-weight:bold;">Multi-line text</span> (VERY IMPORTANT - single line will truncate data!)</li>
                             </ul>
                         </li>
-                        <li>Edit your form and add this field</li>
-                        <li>Make it hidden</li>
-                        <li>Enter the internal name above</li>
+                        <li>Save the property</li>
+                    </ol>
+
+                    <h3>Step 2: Add Fields to Your Form</h3>
+                    <ol>
+                        <li>Go to <strong>Marketing → Lead Capture → Forms</strong></li>
+                        <li>Edit your form</li>
+                        <li>Ensure these fields exist with EXACT internal names:
+                            <ul>
+                                <li><code>firstname</code> - First Name</li>
+                                <li><code>lastname</code> - Last Name</li>
+                                <li><code>email</code> - Email</li>
+                                <li><code>phone</code> - Phone Number</li>
+                                <li><code>calculate_summary</code> - Your multi-line text field for calculator data</li>
+                            </ul>
+                        </li>
+                        <li><strong>Publish</strong> the form (unpublished forms won't accept API submissions)</li>
+                    </ol>
+
+                    <h3>Step 3: Verify Internal Names</h3>
+                    <p>To check a field's internal name in HubSpot:</p>
+                    <ol>
+                        <li>Click on the field in the form editor</li>
+                        <li>Look for "Internal name" in the field properties panel</li>
+                        <li>The internal name must match EXACTLY (case-sensitive)</li>
                     </ol>
                 </div>
                 </div>
