@@ -37,7 +37,6 @@ class Settings
         register_setting('childcare_ccs_hubspot_group', 'ccs_hubspot_portal_id', 'sanitize_text_field');
         register_setting('childcare_ccs_hubspot_group', 'ccs_hubspot_form_id', 'sanitize_text_field');
         register_setting('childcare_ccs_hubspot_group', 'ccs_hubspot_region', 'sanitize_text_field');
-        register_setting('childcare_ccs_hubspot_group', 'ccs_hubspot_hidden_field', 'sanitize_text_field');
         
         // Email template settings
         register_setting('childcare_ccs_email_group', 'ccs_email_header_image', 'esc_url_raw');

@@ -643,23 +643,7 @@ class Menu
                             <p class="description">Select your HubSpot account region</p>
                         </td>
                     </tr>
-                    <tr>
-                        <th scope="row">
-                            <label for="ccs_hubspot_hidden_field">Hidden Field Name</label>
-                        </th>
-                        <td>
-                            <input type="text" 
-                                   id="ccs_hubspot_hidden_field"
-                                   name="ccs_hubspot_hidden_field" 
-                                   value="<?php echo esc_attr(get_option('ccs_hubspot_hidden_field', 'calculate_summary')); ?>" 
-                                   class="regular-text">
-                            <p class="description">
-                                Internal name of the hidden field in your HubSpot form (e.g., <code>calculate_summary</code>).<br>
-                                <strong>Note:</strong> Enter only the internal name WITHOUT any prefix like "0-1/". 
-                                HubSpot adds prefixes automatically.
-                            </p>
-                        </td>
-                    </tr>
+
                 </table>
 
                 <h2>How to Find Your HubSpot IDs</h2>
@@ -681,37 +665,57 @@ class Menu
                     </ol>
                 </div>
 
-                <h2 style="color:#d63638;">⚠️ IMPORTANT: Hidden Field Setup (Required for Summary Data)</h2>
-                <div style="background:#fff3cd; padding:15px; border-left:4px solid #ffc107; margin:20px 0;">
-                    <p style="margin-top:0;"><strong>This plugin submits data directly to HubSpot's Forms API.</strong> Your HubSpot form MUST have the following fields configured:</p>
+                <h2 style="color:#0073aa;">📋 HubSpot Field Setup (Individual CCS Fields)</h2>
+                <div style="background:#e7f5fe; padding:15px; border-left:4px solid #0073aa; margin:20px 0;">
+                    <p style="margin-top:0;"><strong>This plugin submits data directly to HubSpot's Forms API using individual fields.</strong> Your HubSpot form should have the following fields configured:</p>
                     
-                    <h3>Step 1: Create a Contact Property</h3>
-                    <ol>
-                        <li>In HubSpot, go to <strong>Settings → Properties → Contact Properties</strong></li>
-                        <li>Click <strong>Create Property</strong></li>
-                        <li>Fill in:
-                            <ul>
-                                <li><strong>Label:</strong> Calculate Summary (or any name you like)</li>
-                                <li><strong>Internal name:</strong> <code>calculate_summary</code> (this MUST match the Hidden Field Name above)</li>
-                                <li><strong>Field type:</strong> <span style="color:#d63638; font-weight:bold;">Multi-line text</span> (VERY IMPORTANT - single line will truncate data!)</li>
-                            </ul>
-                        </li>
-                        <li>Save the property</li>
-                    </ol>
+                    <h3>Step 1: Create Contact Properties</h3>
+                    <p>In HubSpot, go to <strong>Settings → Properties → Contact Properties</strong> and create the following fields:</p>
+                    
+                    <h4>Required Fields (Single-line text):</h4>
+                    <ul style="columns: 2; -webkit-columns: 2; -moz-columns: 2;">
+                        <li><code>firstname</code></li>
+                        <li><code>lastname</code></li>
+                        <li><code>email</code></li>
+                        <li><code>phone</code></li>
+                        <li><code>ccs_suburb</code></li>
+                        <li><code>ccs_household_income</code></li>
+                        <li><code>ccs_activity_level</code></li>
+                        <li><code>ccs_activity_hours</code></li>
+                        <li><code>ccs_number_of_children</code></li>
+                        <li><code>ccs_daily_fee</code></li>
+                        <li><code>ccs_days_per_week</code></li>
+                        <li><code>ccs_ccs_percentage</code></li>
+                        <li><code>ccs_hourly_rate_cap</code></li>
+                        <li><code>ccs_annual_subsidy_cap</code></li>
+                        <li><code>ccs_fortnight_hours</code></li>
+                        <li><code>ccs_subsidy_per_session</code></li>
+                        <li><code>ccs_out_of_pocket_per_session</code></li>
+                        <li><code>ccs_weekly_subsidy</code></li>
+                        <li><code>ccs_weekly_out_of_pocket</code></li>
+                        <li><code>ccs_annual_subsidy</code></li>
+                        <li><code>ccs_annual_out_of_pocket</code></li>
+                        <li><code>ccs_total_annual_fees</code></li>
+                        <li><code>ccs_current_period</code></li>
+                        <li><code>ccs_cap_remaining</code></li>
+                        <li><code>ccs_submission_date</code></li>
+                        <li><code>ccs_calculator_version</code></li>
+                    </ul>
+                    
+                    <h4>Child Details (Multi-line text - for up to 5 children):</h4>
+                    <ul>
+                        <li><code>ccs_child_1_details</code></li>
+                        <li><code>ccs_child_2_details</code></li>
+                        <li><code>ccs_child_3_details</code></li>
+                        <li><code>ccs_child_4_details</code></li>
+                        <li><code>ccs_child_5_details</code></li>
+                    </ul>
 
                     <h3>Step 2: Add Fields to Your Form</h3>
                     <ol>
                         <li>Go to <strong>Marketing → Lead Capture → Forms</strong></li>
                         <li>Edit your form</li>
-                        <li>Ensure these fields exist with EXACT internal names:
-                            <ul>
-                                <li><code>firstname</code> - First Name</li>
-                                <li><code>lastname</code> - Last Name</li>
-                                <li><code>email</code> - Email</li>
-                                <li><code>phone</code> - Phone Number</li>
-                                <li><code>calculate_summary</code> - Your multi-line text field for calculator data</li>
-                            </ul>
-                        </li>
+                        <li>Add the required fields from the list above</li>
                         <li><strong>Publish</strong> the form (unpublished forms won't accept API submissions)</li>
                     </ol>
 
@@ -722,6 +726,8 @@ class Menu
                         <li>Look for "Internal name" in the field properties panel</li>
                         <li>The internal name must match EXACTLY (case-sensitive)</li>
                     </ol>
+                    
+                    <p style="margin-top:15px; padding:10px; background:#d4edda; border-radius:4px;"><strong>✅ Benefits:</strong> Individual fields allow better data segmentation, reporting, and workflow automation in HubSpot.</p>
                 </div>
                 </div>
 

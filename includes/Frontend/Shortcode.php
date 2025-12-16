@@ -2164,221 +2164,134 @@ jQuery(document).ready(function($){
 
 
     // HubSpot Form Integration
-    // Strip any prefix like "0-1/" from the hidden field name if user entered it
-    let hubspotHiddenFieldName = '<?php echo esc_js(get_option('ccs_hubspot_hidden_field', 'calculate_summary')); ?>';
-    hubspotHiddenFieldName = hubspotHiddenFieldName.replace(/^\d+-\d+\//, ''); // Remove prefix like "0-1/"
     
-    let hubspotFormElement = null;
-    
-    // Function to generate current summary text for HubSpot
-    function generateSummaryText() {
-        let lines = [];
-        
-        // ============================================
-        // OVERALL SUMMARY
-        // ============================================
-        lines.push('═══════════════════════════════════════');
-        lines.push('OVERALL SUMMARY');
-        lines.push('═══════════════════════════════════════');
-        
-        // Extract each row from summary-overall table
-        $('#summary-overall .summary-row-tr').each(function() {
-            const cells = $(this).find('.summary-row-td');
-            if (cells.length >= 2) {
-                const label = $(cells[0]).text().replace(/\s+/g, ' ').trim();
-                const value = $(cells[1]).text().replace(/\s+/g, ' ').trim();
-                if (label && value) {
-                    lines.push(label + ': ' + value);
-                }
-            }
-        });
-        
-        // ============================================
-        // HOUSEHOLD INCOME INFORMATION
-        // ============================================
-        lines.push('');
-        lines.push('───────────────────────────────────────');
-        lines.push('HOUSEHOLD INCOME INFORMATION');
-        lines.push('───────────────────────────────────────');
-        
-        // Extract from household income table - each td.income-info-item has label (.income-info-item-p) and value (.income-info-item-value)
-        $('#household-income-info .income-info-item').each(function() {
-            if ($(this).hasClass('empty')) return; // Skip empty cells
-            const label = $(this).find('.income-info-item-p').text().replace(/\s+/g, ' ').trim();
-            const value = $(this).find('.income-info-item-value').text().replace(/\s+/g, ' ').trim();
-            if (label && value) {
-                lines.push(label + ': ' + value);
-            }
-        });
-        
-        // ============================================
-        // FORTNIGHTLY BREAKDOWN
-        // ============================================
-        lines.push('');
-        lines.push('───────────────────────────────────────');
-        lines.push('FORTNIGHTLY BREAKDOWN');
-        lines.push('───────────────────────────────────────');
-        
-        // Extract Week 1 and Week 2 data
-        $('#summary-weekly td').each(function(index) {
-            const weekDiv = $(this).find('> div');
-            if (weekDiv.length === 0) return;
-            
-            const weekTitle = weekDiv.find('h4').text().replace(/\s+/g, ' ').trim();
-            if (!weekTitle) return;
-            
-            lines.push('');
-            lines.push(weekTitle + ':');
-            
-            // Each data row is a div with two spans (label and value)
-            weekDiv.find('> div').each(function() {
-                const spans = $(this).find('span');
-                if (spans.length >= 2) {
-                    const label = $(spans[0]).text().replace(/\s+/g, ' ').trim();
-                    const value = $(spans[1]).text().replace(/\s+/g, ' ').trim();
-                    if (label && value) {
-                        lines.push('  • ' + label + ': ' + value);
-                    }
-                }
-            });
-        });
-        
-        // ============================================
-        // CHILD DETAILS
-        // ============================================
-        lines.push('');
-        lines.push('───────────────────────────────────────');
-        lines.push('CHILD DETAILS');
-        lines.push('───────────────────────────────────────');
-        
-        // Extract each child card
-        $('#child-details-summary .child-detail-card').each(function() {
-            const childTitle = $(this).find('h5').text().replace(/\s+/g, ' ').trim();
-            lines.push('');
-            lines.push(childTitle + ':');
-            
-            // Each p element contains a label (in strong) and value
-            $(this).find('p').each(function() {
-                const strongText = $(this).find('strong').text().replace(/\s+/g, ' ').trim();
-                const fullText = $(this).text().replace(/\s+/g, ' ').trim();
-                // Remove the strong text from full text to get the value
-                const value = fullText.replace(strongText, '').trim();
-                if (strongText && value) {
-                    lines.push('  • ' + strongText + ' ' + value);
-                }
-            });
-        });
-        
-        // ============================================
-        // FOOTER
-        // ============================================
-        lines.push('');
-        lines.push('═══════════════════════════════════════');
-        lines.push('Generated: ' + new Date().toLocaleString());
-        
-        return lines.join('\n');
+    // Function to get the current period multiplier and label
+    function getCurrentPeriodInfo() {
+        const period = $('.summary-btn.button-primary').data('period') || 'fortnight';
+        const multipliers = { week: 0.5, fortnight: 1, month: 26/12, year: 26 };
+        const labels = { week: 'per week', fortnight: 'per fortnight', month: 'per month', year: 'per year' };
+        return {
+            period: period,
+            multiplier: multipliers[period] || 1,
+            label: labels[period] || 'per fortnight'
+        };
     }
     
-    // Function to update HubSpot hidden field with current summary
-    function updateHubSpotHiddenField() {
-        if (!hubspotFormElement) {
-            console.log('HubSpot form element not ready yet');
-            return;
-        }
+    // Function to generate all individual field values for HubSpot
+    function generateSummaryFields() {
+        const periodInfo = getCurrentPeriodInfo();
+        const mult = periodInfo.multiplier;
+        const periodLabel = periodInfo.label;
         
-        const summaryText = generateSummaryText();
+        // Calculate totals from childrenData
+        let totalFee = 0, totalSub = 0, totalOut = 0, totalWithholding = 0, totalSubPaid = 0;
+        let week1Fee = 0, week2Fee = 0, week1Sub = 0, week2Sub = 0;
+        let week1Withholding = 0, week2Withholding = 0, week1Paid = 0, week2Paid = 0;
+        let week1OutOfPocket = 0, week2OutOfPocket = 0;
         
-        // Try multiple selectors for HubSpot hidden field
-        // HubSpot uses different naming conventions including prefixes like "0-1/"
-        const selectors = [
-            // Standard name
-            'input[name="' + hubspotHiddenFieldName + '"]',
-            // HubSpot prefixed names (0-1/, 0-2/, etc.)
-            'input[name$="/' + hubspotHiddenFieldName + '"]',
-            'input[name*="' + hubspotHiddenFieldName + '"]',
-            // TICKET prefix for ticket forms
-            'input[name="TICKET.' + hubspotHiddenFieldName + '"]',
-            // Data attribute based
-            'input[data-hsfc-id="HiddenField"][name*="' + hubspotHiddenFieldName + '"]',
-            'input[type="hidden"][name*="' + hubspotHiddenFieldName + '"]',
-            // ID based
-            'input[id*="' + hubspotHiddenFieldName + '"]',
-            // Textarea variants
-            'textarea[name="' + hubspotHiddenFieldName + '"]',
-            'textarea[name*="' + hubspotHiddenFieldName + '"]'
-        ];
-        
-        let hiddenField = null;
-        const $form = $(hubspotFormElement);
-        
-        // First try in the form element
-        for (let i = 0; i < selectors.length; i++) {
-            hiddenField = $form.find(selectors[i]);
-            if (hiddenField.length > 0) {
-                console.log('Found HubSpot hidden field with selector:', selectors[i]);
-                break;
-            }
-        }
-        
-        // Also search in the container directly (more reliable)
-        if (!hiddenField || hiddenField.length === 0) {
-            for (let i = 0; i < selectors.length; i++) {
-                hiddenField = $('#hubspot-form-container').find(selectors[i]);
-                if (hiddenField.length > 0) {
-                    console.log('Found HubSpot hidden field in container with selector:', selectors[i]);
-                    break;
-                }
-            }
-        }
-        
-        // Also try within iframe if HubSpot uses iframe embed
-        if ((!hiddenField || hiddenField.length === 0)) {
-            const iframe = $('#hubspot-form-container iframe');
-            if (iframe.length > 0) {
-                try {
-                    const iframeDoc = iframe.contents();
-                    for (let i = 0; i < selectors.length; i++) {
-                        hiddenField = iframeDoc.find(selectors[i]);
-                        if (hiddenField.length > 0) {
-                            console.log('Found HubSpot hidden field in iframe with selector:', selectors[i]);
-                            break;
-                        }
-                    }
-                } catch(e) {
-                    console.log('Cannot access iframe content (cross-origin)');
-                }
-            }
-        }
-        
-        if (hiddenField && hiddenField.length > 0) {
-            hiddenField.val(summaryText);
-            // Also set the attribute for forms that read from attribute
-            hiddenField.attr('value', summaryText);
+        childrenData.forEach((c) => {
+            totalFee += c.fortnightFee * mult;
+            totalSub += c.fortnightSubBeforeWithholding * mult;
+            totalOut += c.outPocket * mult;
+            totalWithholding += (c.week1Withholding + c.week2Withholding) * mult;
+            totalSubPaid += c.fortnightSub * mult;
             
-            // Trigger input and change events to notify HubSpot of the value change
-            // HubSpot's React-based forms listen for these events
-            const nativeInputEvent = new Event('input', { bubbles: true });
-            const nativeChangeEvent = new Event('change', { bubbles: true });
-            hiddenField[0].dispatchEvent(nativeInputEvent);
-            hiddenField[0].dispatchEvent(nativeChangeEvent);
-            
-            // Also trigger jQuery events as fallback
-            hiddenField.trigger('input').trigger('change').trigger('blur');
-            
-            console.log('✓ Summary populated in HubSpot hidden field');
-            console.log('  Field name:', hiddenField.attr('name'));
-            console.log('  Summary length:', summaryText.length, 'characters');
+            week1Fee += c.week1Fee;
+            week2Fee += c.week2Fee;
+            week1Sub += c.week1Sub;
+            week2Sub += c.week2Sub;
+            week1Withholding += c.week1Withholding;
+            week2Withholding += c.week2Withholding;
+            week1Paid += c.week1Sub; // Subsidy paid after withholding
+            week2Paid += c.week2Sub;
+            week1OutOfPocket += Math.max(0, c.week1Fee - c.week1Sub);
+            week2OutOfPocket += Math.max(0, c.week2Fee - c.week2Sub);
+        });
+        
+        // Get household income information
+        const knowsCCS = $('#know_ccs_percentage').val();
+        const familyIncome = $('#family_ati').val() || '';
+        const activityHoursText = $('#activity option:selected').text() || '';
+        const ccsHours = $('#ccs_hours_display').val() || '';
+        const withholdingPct = $('#ccs_withholding_percentage').val() || '5';
+        
+        let standardCCS, higherCCS;
+        if (knowsCCS === 'yes') {
+            standardCCS = $('#standard_ccs_percentage').val() || '';
+            higherCCS = $('#higher_ccs_percentage').val() || '';
         } else {
-            console.warn('⚠ Hidden field "' + hubspotHiddenFieldName + '" not found in form.');
-            console.warn('  Please verify the hidden field internal name in HubSpot matches: ' + hubspotHiddenFieldName);
-            
-            // Log all available inputs for debugging
-            const allInputs = $('#hubspot-form-container').find('input, textarea');
-            console.warn('  Available form inputs (' + allInputs.length + '):');
-            allInputs.each(function() { 
-                console.warn('    -', this.name || this.id || '(no name/id)', '| type:', this.type);
-            });
+            standardCCS = $('#standard_ccs_percentage_calc').val() || '';
+            higherCCS = $('#higher_ccs_percentage_calc').val() || '';
         }
+        
+        // Location and enrolment info
+        const suburb = $('#suburb').val() || '';
+        const atsi = $('#atsi option:selected').text() || '';
+        const enrolmentOption = getEnrollmentOptionText();
+        
+        // Build fields object - ONE field per value (no duplicates)
+        const fields = {
+            // Period info
+            ccs_period: periodLabel,
+            
+            // Overall Summary
+            ccs_total_fees: '$' + formatCurrency(totalFee) + ' ' + periodLabel,
+            ccs_estimated_subsidy: '$' + formatCurrency(totalSub) + ' ' + periodLabel,
+            ccs_withholding_amount: '$' + formatCurrency(totalWithholding) + ' ' + periodLabel,
+            ccs_subsidy_paid: '$' + formatCurrency(totalSubPaid) + ' ' + periodLabel,
+            ccs_out_of_pocket: '$' + formatCurrency(totalOut) + ' ' + periodLabel,
+            
+            // Household Income Information
+            ccs_family_income: familyIncome ? '$' + formatCurrency(parseFloat(familyIncome)) : '',
+            ccs_activity_hours: activityHoursText,
+            ccs_subsidy_hours: ccsHours,
+            ccs_withholding_percentage: withholdingPct + '%',
+            ccs_standard_percentage: standardCCS + '%',
+            ccs_higher_percentage: higherCCS + '%',
+            
+            // Location & Enrolment
+            ccs_suburb: suburb,
+            ccs_atsi: atsi,
+            ccs_enrolment_option: enrolmentOption,
+            
+            // Week 1 Breakdown
+            ccs_week1_fee: '$' + formatCurrency(week1Fee),
+            ccs_week1_subsidy: '$' + formatCurrency(week1Sub),
+            ccs_week1_withholding: '$' + formatCurrency(week1Withholding),
+            ccs_week1_paid: '$' + formatCurrency(week1Paid),
+            ccs_week1_out_of_pocket: '$' + formatCurrency(week1OutOfPocket),
+            
+            // Week 2 Breakdown
+            ccs_week2_fee: '$' + formatCurrency(week2Fee),
+            ccs_week2_subsidy: '$' + formatCurrency(week2Sub),
+            ccs_week2_withholding: '$' + formatCurrency(week2Withholding),
+            ccs_week2_paid: '$' + formatCurrency(week2Paid),
+            ccs_week2_out_of_pocket: '$' + formatCurrency(week2OutOfPocket),
+            
+            // Number of children (for conditional display in emails)
+            ccs_number_of_children: childrenData.length.toString()
+        };
+        
+        // Generate formatted child details for each child (up to 5 children)
+        childrenData.forEach((child, index) => {
+            const childNum = index + 1;
+            if (childNum <= 5) {
+                // Create individual field for each child's complete details
+                const childDetails = [
+                    'CCS Percentage: ' + (child.ccs_pct * 100).toFixed(2) + '%',
+                    'Days per Fortnight: Week 1: ' + child.daysWeek1 + ', Week 2: ' + child.daysWeek2,
+                    'Session (hours/day): ' + child.hoursPerDay,
+                    'Daily Fee: $' + formatCurrency(child.feePerDay),
+                    'Fortnight Fee: $' + formatCurrency(child.fortnightFee),
+                    'Fortnight Subsidy: $' + formatCurrency(child.fortnightSub),
+                    'Out of Pocket: $' + formatCurrency(child.outPocket)
+                ].join('\n');
+                
+                fields['ccs_child' + childNum + '_details'] = childDetails;
+            }
+        });
+        
+        return fields;
     }
     
     function loadHubSpotForm() {
@@ -2397,7 +2310,6 @@ jQuery(document).ready(function($){
         console.log('Portal ID:', portalId);
         console.log('Form ID:', formId);
         console.log('Region:', region);
-        console.log('Hidden field name:', hubspotHiddenFieldName);
         
         // Create a custom form that submits directly to HubSpot's Forms API v3
         // This bypasses all iframe/cross-origin issues
@@ -2478,23 +2390,107 @@ jQuery(document).ready(function($){
             console.log('✓ International phone input initialized for HubSpot form');
         }
         
+        // Email validation function
+        function isValidEmail(email) {
+            const emailRegex = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+            return emailRegex.test(email);
+        }
+        
+        // Phone validation function
+        function isValidPhone(phoneInput, rawValue) {
+            // If intl-tel-input is available, use its validation
+            if (phoneInput && typeof phoneInput.isValidNumber === 'function') {
+                return phoneInput.isValidNumber();
+            }
+            // Fallback: basic validation - at least 8 digits
+            const digitsOnly = rawValue.replace(/\D/g, '');
+            return digitsOnly.length >= 8 && digitsOnly.length <= 15;
+        }
+        
+        // Show validation error on a field
+        function showFieldError($field, message) {
+            $field.css('border-color', '#d63638');
+            $field.siblings('.hs-field-error').remove();
+            $field.after('<div class="hs-field-error" style="color: #d63638; font-size: 12px; margin-top: 4px;">' + message + '</div>');
+        }
+        
+        // Clear validation error on a field
+        function clearFieldError($field) {
+            $field.css('border-color', '#ccc');
+            $field.siblings('.hs-field-error').remove();
+        }
+        
+        // Clear errors on input
+        $('#hs_firstname, #hs_lastname, #hs_email, #hs_phone').on('input', function() {
+            clearFieldError($(this));
+        });
+        
         // Handle form submission directly to HubSpot Forms API v3
         $('#hubspot-direct-form').on('submit', function(e) {
             e.preventDefault();
             
-            const $btn = $('#hs-submit-btn');
-            $btn.prop('disabled', true).text('Submitting...');
+            // Clear all previous errors
+            clearFieldError($('#hs_firstname'));
+            clearFieldError($('#hs_lastname'));
+            clearFieldError($('#hs_email'));
+            clearFieldError($('#hs_phone'));
             
             // Get form values
             const firstname = $('#hs_firstname').val().trim();
             const lastname = $('#hs_lastname').val().trim();
             const email = $('#hs_email').val().trim();
+            const rawPhone = $('#hs_phone').val().trim();
+            
+            // Validation
+            let hasError = false;
+            
+            if (!firstname) {
+                showFieldError($('#hs_firstname'), 'Please enter your first name');
+                hasError = true;
+            }
+            
+            if (!lastname) {
+                showFieldError($('#hs_lastname'), 'Please enter your last name');
+                hasError = true;
+            }
+            
+            if (!email) {
+                showFieldError($('#hs_email'), 'Please enter your email address');
+                hasError = true;
+            } else if (!isValidEmail(email)) {
+                showFieldError($('#hs_email'), 'Please enter a valid email address');
+                hasError = true;
+            }
+            
+            if (!rawPhone) {
+                showFieldError($('#hs_phone'), 'Please enter your phone number');
+                hasError = true;
+            } else if (!isValidPhone(hsPhoneInput, rawPhone)) {
+                showFieldError($('#hs_phone'), 'Please enter a valid phone number');
+                hasError = true;
+            }
+            
+            if (hasError) {
+                return;
+            }
+            
+            const $btn = $('#hs-submit-btn');
+            $btn.prop('disabled', true).text('Submitting...');
+            
             // Get full international phone number with country code
             let phone = '';
             if (hsPhoneInput) {
+                // Try to get the formatted international number
                 phone = hsPhoneInput.getNumber();
+                // If getNumber() returns empty but user entered something, use the raw value with dial code
+                if (!phone && rawPhone) {
+                    const countryData = hsPhoneInput.getSelectedCountryData();
+                    const dialCode = countryData.dialCode || '';
+                    const rawNumber = rawPhone.replace(/^0+/, ''); // Remove leading zeros
+                    phone = dialCode ? '+' + dialCode + rawNumber : rawNumber;
+                }
             } else {
-                phone = $('#hs_phone').val().trim();
+                phone = rawPhone;
             }
             
             // Get country from intl-tel-input
@@ -2504,14 +2500,14 @@ jQuery(document).ready(function($){
                 country = countryData.name || '';
             }
             
-            // Generate summary text for the hidden field
-            const summaryText = generateSummaryText();
+            // Generate all individual field values
+            const summaryFields = generateSummaryFields();
             
             console.log('Submitting to HubSpot Forms API v3...');
             console.log('Email:', email);
             console.log('Phone:', phone);
             console.log('Country:', country);
-            console.log('Summary length:', summaryText.length, 'characters');
+            console.log('Individual fields:', Object.keys(summaryFields).length);
             
             // Build the fields array for HubSpot API
             const fields = [
@@ -2530,8 +2526,14 @@ jQuery(document).ready(function($){
                 fields.push({ name: 'country', value: country });
             }
             
-            // Add the summary to the hidden field
-            fields.push({ name: hubspotHiddenFieldName, value: summaryText });
+            // Add all individual summary fields
+            // These will only be saved if corresponding fields exist in HubSpot form
+            Object.keys(summaryFields).forEach(function(fieldName) {
+                const fieldValue = summaryFields[fieldName];
+                if (fieldValue !== '' && fieldValue !== null && fieldValue !== undefined) {
+                    fields.push({ name: fieldName, value: fieldValue.toString() });
+                }
+            });
             
             console.log('Fields being submitted:', fields.map(f => f.name + ': ' + (f.value.length > 50 ? f.value.substring(0,50) + '...' : f.value)));
             
@@ -2658,11 +2660,8 @@ jQuery(document).ready(function($){
             $('#custom-form-container').hide();
             if ($('#hubspot-form-container').is(':empty')) {
                 loadHubSpotForm();
-            } else {
-                // Form already loaded, just update the hidden field
-                // Wait for summary content to be rendered (after loader)
-                setTimeout(updateHubSpotHiddenField, 100);
             }
+            // Form is already loaded, individual fields are submitted directly
         }
     }
     

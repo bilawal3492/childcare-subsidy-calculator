@@ -2,6 +2,33 @@
 
 All notable changes to The Child Care Subsidy Calculator plugin will be documented in this file.
 
+## [2.1.0] - 2025-11-27
+
+### 🚀 Major HubSpot Integration Update
+- **Individual CCS Fields** - Now submits 31 individual fields to HubSpot instead of one combined summary field
+- **Better Data Segmentation** - Each calculator value is stored in its own HubSpot property for improved reporting and workflows
+- **Child Details Fields** - Separate multi-line fields for up to 5 children's details (`ccs_child_1_details` through `ccs_child_5_details`)
+
+### 📱 Phone Number Improvements
+- **Fixed Phone Capture** - Resolved issue where phone numbers were not being captured in HubSpot
+- **Dial Code Fallback** - Added fallback logic to combine country dial code with phone number when international formatting fails
+- **Better International Support** - Improved handling of international phone numbers with intl-tel-input
+
+### ✅ Form Validation
+- **Email Validation** - Added RFC-compliant email validation to prevent spam submissions
+- **Phone Validation** - Added phone number validation using intl-tel-input's validation methods
+- **User-Friendly Errors** - Clear error messages displayed below fields when validation fails
+
+### 🧹 Code Cleanup
+- **Removed Unused Code** - Removed `generateSummaryText()`, `updateHubSpotHiddenField()` and related unused functions
+- **Removed Hidden Field Setting** - Removed the "Hidden Field Name" admin setting (no longer needed with individual fields)
+- **Updated Documentation** - Admin panel now shows complete list of HubSpot fields to configure
+
+### Technical Details
+- Updated files: `Shortcode.php`, `Settings.php`, `Menu.php`
+- Removed ~220 lines of unused code
+- HubSpot Forms API v3 direct submission maintained
+
 ## [2.0.4] - 2025-11-05
 
 ### Enhanced Summary Display
