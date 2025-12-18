@@ -19,6 +19,12 @@ class Email
         // Log for debugging
         error_log('CCS: send_summary_email called');
         
+        // Check form type - if HubSpot, skip sending SMTP emails (HubSpot handles it via automation)
+        $form_type = get_option('ccs_form_type', 'hubspot');
+        $skip_smtp_email = ($form_type === 'hubspot');
+        
+        error_log('CCS: Form type is: ' . $form_type . ' | Skip SMTP email: ' . ($skip_smtp_email ? 'Yes' : 'No'));
+        
         // Sanitize input
         $user_name = sanitize_text_field($_POST['user_name'] ?? '');
         $user_email = sanitize_email($_POST['user_email'] ?? '');
@@ -67,16 +73,24 @@ class Email
             return;
         }
 
-        // Send email to user
-        $this->send_user_email($user_name, $user_email, $user_phone, $summary_html);
-        
-        // Send separate email to admin
-        $this->send_admin_email($user_name, $user_email, $user_phone, $summary_html, $post_id, $location, $atsi_status, $enrolment_option);
+        // Only send SMTP emails if using Custom Form (not HubSpot)
+        if (!$skip_smtp_email) {
+            // Send email to user
+            $this->send_user_email($user_name, $user_email, $user_phone, $summary_html);
+            
+            // Send separate email to admin
+            $this->send_admin_email($user_name, $user_email, $user_phone, $summary_html, $post_id, $location, $atsi_status, $enrolment_option);
+            
+            error_log('CCS: SMTP emails sent (Custom Form mode)');
+        } else {
+            error_log('CCS: SMTP emails skipped (HubSpot handles emails via automation)');
+        }
 
         error_log('CCS: Submission complete, ID: ' . $post_id);
         wp_send_json_success([
-            'message' => 'Submission saved and emails sent!',
-            'post_id' => $post_id
+            'message' => 'Submission saved' . (!$skip_smtp_email ? ' and emails sent!' : '!'),
+            'post_id' => $post_id,
+            'emails_sent' => !$skip_smtp_email
         ]);
     }
     

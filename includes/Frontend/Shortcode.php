@@ -2186,6 +2186,7 @@ jQuery(document).ready(function($){
         // Calculate totals from childrenData
         let totalFee = 0, totalSub = 0, totalOut = 0, totalWithholding = 0, totalSubPaid = 0;
         let week1Fee = 0, week2Fee = 0, week1Sub = 0, week2Sub = 0;
+        let week1SubBeforeWithholding = 0, week2SubBeforeWithholding = 0;
         let week1Withholding = 0, week2Withholding = 0, week1Paid = 0, week2Paid = 0;
         let week1OutOfPocket = 0, week2OutOfPocket = 0;
         
@@ -2200,6 +2201,8 @@ jQuery(document).ready(function($){
             week2Fee += c.week2Fee;
             week1Sub += c.week1Sub;
             week2Sub += c.week2Sub;
+            week1SubBeforeWithholding += c.week1SubBeforeWithholding;
+            week2SubBeforeWithholding += c.week2SubBeforeWithholding;
             week1Withholding += c.week1Withholding;
             week2Withholding += c.week2Withholding;
             week1Paid += c.week1Sub; // Subsidy paid after withholding
@@ -2256,14 +2259,14 @@ jQuery(document).ready(function($){
             
             // Week 1 Breakdown
             ccs_week1_fee: '$' + formatCurrency(week1Fee),
-            ccs_week1_subsidy: '$' + formatCurrency(week1Sub),
+            ccs_week1_subsidy: '$' + formatCurrency(week1SubBeforeWithholding),
             ccs_week1_withholding: '$' + formatCurrency(week1Withholding),
             ccs_week1_paid: '$' + formatCurrency(week1Paid),
             ccs_week1_out_of_pocket: '$' + formatCurrency(week1OutOfPocket),
             
             // Week 2 Breakdown
             ccs_week2_fee: '$' + formatCurrency(week2Fee),
-            ccs_week2_subsidy: '$' + formatCurrency(week2Sub),
+            ccs_week2_subsidy: '$' + formatCurrency(week2SubBeforeWithholding),
             ccs_week2_withholding: '$' + formatCurrency(week2Withholding),
             ccs_week2_paid: '$' + formatCurrency(week2Paid),
             ccs_week2_out_of_pocket: '$' + formatCurrency(week2OutOfPocket),
