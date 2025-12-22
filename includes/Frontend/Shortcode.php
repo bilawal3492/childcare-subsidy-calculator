@@ -2275,20 +2275,20 @@ jQuery(document).ready(function($){
             ccs_number_of_children: childrenData.length.toString()
         };
         
-        // Generate formatted child details for each child (up to 5 children)
+        // Generate individual child details for HubSpot (up to 5 children)
+        // Each child gets its own field, empty fields are not sent
         childrenData.forEach((child, index) => {
             const childNum = index + 1;
             if (childNum <= 5) {
-                // Create individual field for each child's complete details
-                const childDetails = [
-                    'CCS Percentage: ' + (child.ccs_pct * 100).toFixed(2) + '%',
-                    'Days per Fortnight: Week 1: ' + child.daysWeek1 + ', Week 2: ' + child.daysWeek2,
-                    'Session (hours/day): ' + child.hoursPerDay,
-                    'Daily Fee: $' + formatCurrency(child.feePerDay),
-                    'Fortnight Fee: $' + formatCurrency(child.fortnightFee),
-                    'Fortnight Subsidy: $' + formatCurrency(child.fortnightSub),
-                    'Out of Pocket: $' + formatCurrency(child.outPocket)
-                ].join('\n');
+                // Format DOB nicely
+                let formattedDOB = '';
+                if (child.dob) {
+                    const dobDate = new Date(child.dob);
+                    formattedDOB = dobDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+                }
+                
+                // Create formatted child details - single line with separators
+                const childDetails = 'DOB: ' + formattedDOB + ' | CCS: ' + (child.ccs_pct * 100).toFixed(2) + '% | Days: W1: ' + child.daysWeek1 + ', W2: ' + child.daysWeek2 + ' | Hours/day: ' + child.hoursPerDay + ' | Daily Fee: $' + formatCurrency(child.feePerDay);
                 
                 fields['ccs_child' + childNum + '_details'] = childDetails;
             }
