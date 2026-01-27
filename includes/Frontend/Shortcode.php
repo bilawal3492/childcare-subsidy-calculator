@@ -2275,8 +2275,20 @@ jQuery(document).ready(function($){
             ccs_number_of_children: childrenData.length.toString()
         };
         
-        // Generate individual child details for HubSpot (up to 5 children)
-        // Each child gets its own field, empty fields are not sent
+        /**
+         * Generate individual child details for HubSpot (up to 5 children)
+         * 
+         * IMPORTANT: We initialize ALL 5 child slots with empty strings first,
+         * then populate only the ones that have data. This ensures that unused
+         * child slots are cleared in HubSpot (overwriting any previous values).
+         */
+        
+        // First, initialize ALL 5 child slots with empty strings to clear any previous data
+        for (let i = 1; i <= 5; i++) {
+            fields['ccs_child' + i + '_details'] = '';
+        }
+        
+        // Now populate fields only for children that actually exist
         childrenData.forEach((child, index) => {
             const childNum = index + 1;
             if (childNum <= 5) {
@@ -2287,9 +2299,8 @@ jQuery(document).ready(function($){
                     formattedDOB = dobDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
                 }
                 
-                // Create formatted child details - single line with separators
+                // Combined details field - clean and readable summary
                 const childDetails = 'DOB: ' + formattedDOB + ' | CCS: ' + (child.ccs_pct * 100).toFixed(2) + '% | Days: W1: ' + child.daysWeek1 + ', W2: ' + child.daysWeek2 + ' | Hours/day: ' + child.hoursPerDay + ' | Daily Fee: $' + formatCurrency(child.feePerDay);
-                
                 fields['ccs_child' + childNum + '_details'] = childDetails;
             }
         });
@@ -2531,9 +2542,11 @@ jQuery(document).ready(function($){
             
             // Add all individual summary fields
             // These will only be saved if corresponding fields exist in HubSpot form
+            // IMPORTANT: We must send ALL fields including empty strings to clear old values in HubSpot
             Object.keys(summaryFields).forEach(function(fieldName) {
                 const fieldValue = summaryFields[fieldName];
-                if (fieldValue !== '' && fieldValue !== null && fieldValue !== undefined) {
+                // Always send the value (even if empty) to ensure HubSpot clears old data
+                if (fieldValue !== null && fieldValue !== undefined) {
                     fields.push({ name: fieldName, value: fieldValue.toString() });
                 }
             });
@@ -2571,8 +2584,8 @@ jQuery(document).ready(function($){
                     $('#hubspot-form-container').html(`
                         <div style="text-align:center; padding:40px 20px;">
                             <div style="font-size:48px; color:#28a745; margin-bottom:15px;">✓</div>
-                            <h3 style="color:#333; margin:0 0 10px 0;">Form submitted</h3>
-                            <p style="color:#666; margin:0;">Thank you, we'll be in touch soon.</p>
+                            <h3 style="color:#333; margin:0 0 10px 0;">Success!</h3>
+                            <p style="color:#666; margin:0;">Your CCS Calculator Summary has been sent.</p>
                         </div>
                     `);
                     
