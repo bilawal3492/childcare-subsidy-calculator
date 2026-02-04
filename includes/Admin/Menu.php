@@ -139,7 +139,7 @@ class Menu
                 'in_home_family'          => 39.80
             ],
             'last_updated'          => date('Y-m-d'),
-            'disclaimer_text'       => 'This is an estimate only. Final entitlements determined by Services Australia.',
+            'disclaimer_text'       => 'This is an estimate only. Final entitlements determined by Services Australia. From 5 January 2026, all CCS eligible families can get at least 72 hours (3 days) of subsidised child care per fortnight under the 3 Day Guarantee.',
         ];
 
         // Merge saved settings with defaults

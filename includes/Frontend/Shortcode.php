@@ -83,6 +83,36 @@ class Shortcode
 .centre-option:last-child {
     border-bottom: none !important;
 }
+
+/* 3 Day Guarantee Badge Styles */
+.three-day-guarantee-badge {
+    animation: fadeInBadge 0.5s ease-out;
+}
+
+.three-day-guarantee-badge a:hover {
+    background: #f7941d !important;
+    color: #fff !important;
+    transform: translateY(-1px);
+}
+
+@keyframes fadeInBadge {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive 3 Day Guarantee Badge */
+@media (max-width: 768px) {
+    .three-day-guarantee-badge {
+        flex-direction: column !important;
+        text-align: center;
+    }
+    .three-day-guarantee-badge > div:first-child {
+        margin: 0 auto;
+    }
+    .three-day-guarantee-badge a {
+        margin-top: 10px;
+    }
+}
 </style>
 
 <div id="childcare-ccs-calculator" class="childcare-ccs-root" style="max-width:1080px; margin:0 auto; border:1px solid #ddd; padding:20px; border-radius:8px;">
@@ -183,6 +213,21 @@ class Shortcode
 
     <!-- Step 2 -->
     <div class="childcare-step" id="step2" style="display:none;">
+        <!-- 3 Day Guarantee Badge -->
+        <div class="three-day-guarantee-badge" style="background: linear-gradient(135deg, #EE7523 0%, #f9a847 100%); border-radius: 10px; padding: 16px 20px; margin-bottom: 25px; display: flex; align-items: center; gap: 15px; box-shadow: 0 3px 12px rgba(247, 148, 29, 0.25);">
+            <div style="background: #fff; border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f7941d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <div style="flex: 1;">
+                <div style="font-weight: 700; font-size: 16px; color: #fff; margin-bottom: 4px; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">🎉 3 Day Guarantee</div>
+                <div style="font-size: 14px; color: rgba(255,255,255,0.95); line-height: 1.4;">From 5 January 2026, all CCS eligible families can now get at least <strong style="color: #fff;">72 hours</strong> (3 days) of subsidised child care per fortnight.</div>
+            </div>
+            <a href="https://www.education.gov.au/early-childhood/providers/child-care-subsidy/3-day-guarantee" target="_blank" rel="noopener" style="background: #fff; color: #f7941d; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">Learn More</a>
+        </div>
+        
         <!-- Row 1: Do you know CCS Percentage and Activity Hours (always visible) -->
         <div class="house-hold-income-info" style="display:flex; gap:15px; margin-bottom:15px;">
             <label style="width:50%;">Do you know your CCS Percentage?
@@ -205,16 +250,21 @@ class Shortcode
                     <span class="tooltip-icon">i</span>
                     <div class="tooltip-content">
                         <strong>Hours of Recognised Activities per Fortnight</strong><br><br>
-                        The combined hours of work, training, study or other recognised activities undertaken per fortnight.<br><br>
-                        The hours of subsidised care the family is entitled to will be determined by the person with the lowest number of hours of activities per fortnight in the family.<br><br>
-                        <strong>Note:</strong> Parental or maternity leave (paid or unpaid) is counted as a recognised activity as long as you're expected to return to work after your leave ends. When including this as a recognised activity you should give Centrelink the hours you worked before you started your leave.
+                        <strong>3 Day Guarantee (from 5 January 2026):</strong> All CCS eligible families can now get at least 72 hours (3 days) of subsidised child care per fortnight.<br><br>
+                        Families can get <strong>100 hours</strong> of subsidised child care per fortnight if they:<br>
+                        <ul style="list-style-type: '• '; padding-left: 15px; margin: 5px 0;">
+                            <li>Are caring for an Aboriginal and/or Torres Strait Islander child</li>
+                            <li>Have more than 48 hours of recognised activities per fortnight</li>
+                            <li>Have an approved exemption or exceptional circumstances</li>
+                            <li>Receive ACCS (child wellbeing, temporary financial hardship or grandparent payments)</li>
+                        </ul>
                     </div>
                 </div>
                 <br>
                 <select style="line-height: 20px; border-style: solid; margin-top: 10px !important; width: 100%;" id="activity">
-                    <option value="48" <?php selected($policy['default_activity_hours'] ?? 48, 48); ?>>More than 48 hours</option>
-                    <option value="17" <?php selected($policy['default_activity_hours'] ?? 48, 17); ?>>17 hours to 48 hours</option>
-                    <option value="8" <?php selected($policy['default_activity_hours'] ?? 48, 8); ?>>8 hours to 16 hours</option>
+                    <option value="49" <?php selected($policy['default_activity_hours'] ?? 48, 49); ?>>More than 48 hours</option>
+                    <option value="0" <?php selected($policy['default_activity_hours'] ?? 48, 0); ?>>48 hours or less</option>
+                    <option value="none">None</option>
                 </select>
             </label>
         </div>
@@ -225,19 +275,18 @@ class Shortcode
                 <div class="tooltip-container">
                     <span class="tooltip-icon">i</span>
                     <div class="tooltip-content">
-                        <strong>Hours of Child Care Subsidy</strong><br><br>
-                        The maximum number of hours of Child Care Subsidy (per fortnight) will be decided by the hours of activity undertaken.<br><br>
+                        <strong>Hours of Child Care Subsidy — 3 Day Guarantee</strong><br><br>
+                        From 5 January 2026, all CCS eligible families can get at least <strong>72 hours</strong> (equivalent to 3 days per week) of subsidised child care per fortnight.<br><br>
                         <ul style="list-style-type: '• '; padding-left: 15px;">
-                            <li><strong>8 hours to 16 hours</strong> of activity (per fortnight): maximum 36 hours of subsidy (per fortnight)</li>
-                            <li><strong>17 hours to 48 hours</strong> of activity (per fortnight): maximum 72 hours of subsidy (per fortnight)</li>
-                            <li><strong>more than 48 hours</strong> of activity (per fortnight): maximum 100 hours of subsidy (per fortnight)</li>
+                            <li><strong>48 hours or less</strong> of recognised activities: <strong>72 hours</strong> of subsidised care per fortnight</li>
+                            <li><strong>More than 48 hours</strong> of recognised activities: <strong>100 hours</strong> of subsidised care per fortnight</li>
+                            <li><strong>Aboriginal/Torres Strait Islander children</strong>: <strong>100 hours</strong> of subsidised care per fortnight</li>
                         </ul>
-                        <strong>Low income families</strong> on $85,279 or less a year will be able to access 24 hours of subsidised care per fortnight without having to meet the activity test.<br><br>
-                        If you don't meet the activity test and you have a preschool aged child attending preschool in a centre based day care service, you can access 36 hours of subsidised care per fortnight.
+                        This applies to all service types including Centre Based Day Care, Family Day Care, Outside School Hours Care and In Home Care.
                     </div>
                 </div>
                 <br>
-                <input style="line-height: 20px; border-style: solid; margin-top: 10px !important; width: 100%; background-color: #f0f0f0;" type="text" id="ccs_hours_display" readonly value="Up to <?php echo esc_attr($policy['ccs_hours_48_plus'] ?? 100); ?> hours per fortnight">
+                <input style="line-height: 20px; border-style: solid; margin-top: 10px !important; width: 100%; background-color: #f0f0f0;" type="text" id="ccs_hours_display" readonly value="Up to 72 hours per fortnight">
             </label>
             <label style="width:50%;">CCS Withholding Percentage
                 <div class="tooltip-container">
@@ -468,21 +517,57 @@ class Shortcode
         </div>
 
 
-        <!-- Second row: summary columns -->
-        <div style="display:flex; flex-wrap:wrap; gap:20px;">
-            <div style="flex:1;">
-                <h4 id="summary-title" style="margin-bottom: 20px;">All Children</h4>
-                <div id="summary-overall">
-                    Total fees: $0.00<br>
-                    Estimated subsidy: $0.00<br>
-                    Out-of-pocket costs: $0.00
+        <!-- Summary Title - Hidden, kept for JS compatibility -->
+        <h4 id="summary-title" style="display: none;">Your estimated costs</h4>
+        
+        <!-- Main Summary Card - What you pay highlighted -->
+        <div id="summary-main-card" style="background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 25px;">
+            <!-- Header row with column labels -->
+            <div class="summary-header-row" style="display: flex; background: #f8f9fa; border-bottom: 1px solid #e9ecef;">
+                <div style="width: 40%; padding: 16px 24px;"></div>
+                <div style="width: 20%; padding: 16px 20px; text-align: center; font-weight: 600; color: #666; font-size: 14px; border-left: 1px solid #e9ecef;">Week 1</div>
+                <div style="width: 20%; padding: 16px 20px; text-align: center; font-weight: 600; color: #666; font-size: 14px; border-left: 1px solid #e9ecef;">Week 2</div>
+                <div class="period-label-header" style="width: 20%; padding: 16px 20px; text-align: center; font-weight: 600; color: #666; font-size: 14px; border-left: 1px solid #e9ecef;">Fortnightly</div>
             </div>
-            </div>
-            <div style="flex:1;">
-                <div id="summary-weekly">
-                    <p>Week 1<br>Total fee: $0<br>Est. subsidy: $0<br>Out-of-pocket: $0</p>
-                    <p>Week 2<br>Total fee: $0<br>Est. subsidy: $0<br>Out-of-pocket: $0</p>
+            
+            <!-- Government pays row -->
+            <div id="summary-govt-row" style="display: flex; border-bottom: 1px solid #e9ecef;">
+                <div style="width: 40%; padding: 20px 24px; font-size: 16px; font-weight: 500; color: #333; display: flex; align-items: center; gap: 12px;">
+                    <span style="width: 36px; height: 36px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    </span>
+                    What the Government pays
                 </div>
+                <div class="summary-govt-week1" style="width: 20%; padding: 20px; text-align: center; font-weight: 700; font-size: 20px; color: #10b981; border-left: 1px solid #e9ecef; display: flex; align-items: center; justify-content: center;">$0.00</div>
+                <div class="summary-govt-week2" style="width: 20%; padding: 20px; text-align: center; font-weight: 700; font-size: 20px; color: #10b981; border-left: 1px solid #e9ecef; display: flex; align-items: center; justify-content: center;">$0.00</div>
+                <div class="summary-govt-total" style="width: 20%; padding: 20px; text-align: center; font-weight: 700; font-size: 20px; color: #10b981; border-left: 1px solid #e9ecef; display: flex; align-items: center; justify-content: center;">$0.00</div>
+            </div>
+            
+            <!-- What you pay row - HIGHLIGHTED -->
+            <div id="summary-you-pay-row" style="display: flex; background: linear-gradient(135deg, #f7941d 0%, #ff6b35 100%);">
+                <div style="width: 40%; padding: 24px; font-size: 18px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 12px;">
+                    <span style="width: 40px; height: 40px; background: rgba(255,255,255,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                    </span>
+                    What you pay
+                </div>
+                <div class="summary-you-week1" style="width: 20%; padding: 24px 20px; text-align: center; font-weight: 800; font-size: 24px; color: #fff; border-left: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">$0.00</div>
+                <div class="summary-you-week2" style="width: 20%; padding: 24px 20px; text-align: center; font-weight: 800; font-size: 24px; color: #fff; border-left: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">$0.00</div>
+                <div class="summary-you-total" style="width: 20%; padding: 24px 20px; text-align: center; font-weight: 800; font-size: 28px; color: #fff; border-left: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">$0.00</div>
+            </div>
+        </div>
+        
+        <!-- Full Breakdown Accordion -->
+        <div id="full-breakdown-section" style="background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden; margin-bottom: 25px;">
+            <div id="breakdown-toggle" style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; cursor: pointer; transition: background 0.2s ease;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='#fff'">
+                <span style="font-size: 18px; font-weight: 600; color: #333;">Full breakdown</span>
+                <svg id="breakdown-arrow" style="transition: transform 0.3s ease;" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div id="breakdown-content" style="display: none;">
+                <!-- Breakdown table will be inserted here -->
+                <div id="summary-overall" style="padding: 0;"></div>
+                <!-- Weekly breakdown for mobile - Week 1 and Week 2 side by side -->
+                <div id="summary-weekly" style="padding: 20px; display: none;"></div>
             </div>
         </div>
 
@@ -1264,21 +1349,39 @@ jQuery(document).ready(function($){
         }
     });
 
-    // Auto-update CCS Hours display when activity hours dropdown changes
+    // Auto-update CCS Hours display when activity hours dropdown changes (3 Day Guarantee - from 5 Jan 2026)
     $('#activity').on('change', function() {
-        const activityHours = parseFloat($(this).val());
-        let ccsHours = 0;
-        
-        if (activityHours >= 48) {
-            ccsHours = policy.ccs_hours_48_plus || 100;
-        } else if (activityHours >= 17) {
-            ccsHours = policy.ccs_hours_17_48 || 72;
-        } else if (activityHours >= 8) {
-            ccsHours = policy.ccs_hours_8_16 || 36;
+        let activityHours = $(this).val();
+        const isATSI = $('#atsi').val() === 'yes';
+        let ccsHours = 72; // Minimum 72 hours guaranteed (3 days)
+        if (activityHours === 'none') {
+            activityHours = 0;
         } else {
-            ccsHours = 0;
+            activityHours = parseFloat(activityHours);
         }
-        
+        // 100 hours for: more than 48 hours activity OR Aboriginal/Torres Strait Islander children
+        if (activityHours > 48 || isATSI) {
+            ccsHours = 100;
+        } else {
+            // All other eligible families get minimum 72 hours (3 Day Guarantee)
+            ccsHours = 72;
+        }
+        $('#ccs_hours_display').val('Up to ' + ccsHours + ' hours per fortnight');
+    });
+    
+    // Also update CCS hours when ATSI selection changes
+    $('#atsi').on('change', function() {
+        const isATSI = $(this).val() === 'yes';
+        let activityHours = $('#activity').val();
+        if (activityHours === 'none') {
+            activityHours = 0;
+        } else {
+            activityHours = parseFloat(activityHours) || 0;
+        }
+        let ccsHours = 72;
+        if (activityHours > 48 || isATSI) {
+            ccsHours = 100;
+        }
         $('#ccs_hours_display').val('Up to ' + ccsHours + ' hours per fortnight');
     });
 
@@ -1490,7 +1593,8 @@ jQuery(document).ready(function($){
                     
                     <p>Fees per day ($): <input style="line-height: 20px; border-style: solid;" type="number" class="child-fee" step="0.01"></p>
                     
-                    <div class="child-calculation-output" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0px 15px 0px; border-left: 4px solid <?php echo esc_attr(get_option('ccs_accent_color', '#0073aa')); ?>;">
+                    <!-- Live Calculation Preview - Hidden as per 3 Day Guarantee update -->
+                    <div class="child-calculation-output" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0px 15px 0px; border-left: 4px solid <?php echo esc_attr(get_option('ccs_accent_color', '#0073aa')); ?>;">
                         <h5 style="margin: 0 0 10px 0; color: <?php echo esc_attr(get_option('ccs_accent_color', '#0073aa')); ?>; font-size: 14px;">📊 Live Calculation Preview</h5>
                         <div class="calculation-details" style="font-size: 13px; color: #666;">
                             <div>Hours per day: <span class="calc-hours">8</span> hours</div>
@@ -1673,18 +1777,12 @@ jQuery(document).ready(function($){
             higherCCSPct = parseFloat($('#higher_ccs_percentage_calc').val()) / 100 || 0.95;
         }
         
-        // Step 4.1 - Work out CCS hours per fortnight based on activity hours (using admin settings)
-        let ccsHoursPerFortnight = 0;
-        if (activityHours >= 48) {
-            ccsHoursPerFortnight = policy.ccs_hours_48_plus || 100;
-        } else if (activityHours >= 17) {
-            ccsHoursPerFortnight = policy.ccs_hours_17_48 || 72;
-        } else if (activityHours >= 8) {
-            ccsHoursPerFortnight = policy.ccs_hours_8_16 || 36;
-        } else {
-            ccsHoursPerFortnight = 0;
+        // Step 4.1 - Work out CCS hours per fortnight based on 3 Day Guarantee (from 5 Jan 2026)
+        let ccsHoursPerFortnight = 72; // Minimum 72 hours for all CCS eligible families
+        const isATSI = $('#atsi').val() === 'yes';
+        if (activityHours > 48 || isATSI) {
+            ccsHoursPerFortnight = 100;
         }
-        
         const ccsHoursPerWeek = ccsHoursPerFortnight / 2;
         
         childrenData = [];
@@ -1868,7 +1966,7 @@ jQuery(document).ready(function($){
                                     <span style="font-weight:700; color:#155724; font-size:20px; line-height:20px;">$${formatCurrency(week1SubTotal)}</span>
                                 </div>
                                 <div style="display: flex; flex-flow: column; gap: 5px; align-items: center; padding: 20px; background: ${summaryColors.outOfPocketBg};">
-                                    <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">Out-of-pocket</span>
+                                    <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">What you pay</span>
                                     <span style="font-weight:700; color:${summaryColors.outOfPocket}; font-size:20px; line-height:20px;">$${formatCurrency(Math.max(0,week1Total-week1SubTotal))}</span>
                                 </div>
                             </div>
@@ -1893,7 +1991,7 @@ jQuery(document).ready(function($){
                                     <span style="font-weight:700; color:#155724; font-size:20px; line-height:20px;">$${formatCurrency(week2SubTotal)}</span>
                                 </div>
                                 <div style="display: flex; flex-flow: column; gap: 5px; align-items: center; padding: 20px; background: ${summaryColors.outOfPocketBg};">
-                                    <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">Out-of-pocket</span>
+                                    <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">What you pay</span>
                                     <span style="font-weight:700; color:${summaryColors.outOfPocket}; font-size:20px; line-height:20px;">$${formatCurrency(Math.max(0,week2Total-week2SubTotal))}</span>
                                 </div>
                             </div>
@@ -1949,7 +2047,7 @@ jQuery(document).ready(function($){
                                     <span style="font-weight:700; color:#155724; font-size:20px; line-height:20px;">$${formatCurrency(c.week1Sub)}</span>
                                 </div>
                                 <div style="display: flex; flex-flow: column; gap: 5px; align-items: center; padding: 20px; background: ${summaryColors.outOfPocketBg};">
-                                    <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">Out-of-pocket</span>
+                                    <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">What you pay</span>
                                     <span style="font-weight:700; color:${summaryColors.outOfPocket}; font-size:20px; line-height:20px;">$${formatCurrency(Math.max(0,c.week1Fee-c.week1Sub))}</span>
                                 </div>
                             </div>
@@ -1974,7 +2072,7 @@ jQuery(document).ready(function($){
                                     <span style="font-weight:700; color:#155724; font-size:20px; line-height:20px;">$${formatCurrency(c.week2Sub)}</span>
                                 </div>
                                 <div style="display: flex; flex-flow: column; gap: 5px; align-items: center; padding: 20px; background: ${summaryColors.outOfPocketBg};">
-                                    <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">Out-of-pocket</span>
+                                    <span style="font-weight:400; color:#252525; font-size:14px; line-height:20px;">What you pay</span>
                                     <span style="font-weight:700; color:${summaryColors.outOfPocket}; font-size:20px; line-height:20px;">$${formatCurrency(Math.max(0,c.week2Fee-c.week2Sub))}</span>
                                 </div>
                             </div>
@@ -2068,90 +2166,153 @@ jQuery(document).ready(function($){
             </div>
         `);
 
-        // Overall summary with email-compatible table layout (no flexbox)
+        // Overall summary with same structure as main card - Label | Week 1 | Week 2 | Fortnightly
+        // Calculate weekly breakdown values for the full breakdown section
+        let week1TotalFee = 0, week2TotalFee = 0;
+        let week1SubTotal = 0, week2SubTotal = 0;
+        let week1SubBeforeWithholdingTotal = 0, week2SubBeforeWithholdingTotal = 0;
+        let week1WithholdingTotal = 0, week2WithholdingTotal = 0;
+        let week1OutPocket = 0, week2OutPocket = 0;
+        
+        if(child === 'all'){
+            childrenData.forEach((c) => {
+                week1TotalFee += c.week1Fee;
+                week2TotalFee += c.week2Fee;
+                week1SubTotal += c.week1Sub;
+                week2SubTotal += c.week2Sub;
+                week1SubBeforeWithholdingTotal += c.week1SubBeforeWithholding;
+                week2SubBeforeWithholdingTotal += c.week2SubBeforeWithholding;
+                week1WithholdingTotal += c.week1Withholding;
+                week2WithholdingTotal += c.week2Withholding;
+                week1OutPocket += Math.max(0, c.week1Fee - c.week1Sub);
+                week2OutPocket += Math.max(0, c.week2Fee - c.week2Sub);
+            });
+        } else {
+            const c = childrenData[parseInt(child)];
+            week1TotalFee = c.week1Fee;
+            week2TotalFee = c.week2Fee;
+            week1SubTotal = c.week1Sub;
+            week2SubTotal = c.week2Sub;
+            week1SubBeforeWithholdingTotal = c.week1SubBeforeWithholding;
+            week2SubBeforeWithholdingTotal = c.week2SubBeforeWithholding;
+            week1WithholdingTotal = c.week1Withholding;
+            week2WithholdingTotal = c.week2Withholding;
+            week1OutPocket = Math.max(0, c.week1Fee - c.week1Sub);
+            week2OutPocket = Math.max(0, c.week2Fee - c.week2Sub);
+        }
+        
+        // Get period label for breakdown header
+        const periodHeaderLabelMap = {
+            week: 'Weekly',
+            fortnight: 'Fortnightly',
+            month: 'Monthly',
+            year: 'Yearly'
+        };
+        const periodHeaderLabel = periodHeaderLabelMap[period] || 'Fortnightly';
+        
         $('#summary-overall').html(`
             <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin: 0;">
-                <tr>
-                    <td style="padding: 0px; border-bottom: 0;">
-                        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
-                            <tr class="summary-row-tr" style="display: flex; flex-wrap: wrap; gap: 5px;">
-                                <td class="summary-row-td" style="display: flex; flex: 1; flex-flow: column; gap: 5px; padding: 16px 20px; background: #E9F1F6; font-weight: 600; font-size: 16px; justify-content: center;">
-                                    Total fees
-                                </td>
-                                <td class="summary-row-td" style="display: flex; flex: 1; flex-flow: column; gap: 5px; padding: 16px 20px; background: #E9F1F6; font-weight: 600; text-align: right; color: ${summaryColors.totalFee}; font-size: 20px; line-height: 24px;">
-                                    $${formatCurrency(totalFee)} <span style="font-size: 16px; font-weight: 400; color: #666;">${label}</span>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
+                <!-- Header row -->
+                <tr class="breakdown-header-row" style="background: #f8f9fa; border-bottom: 1px solid #e9ecef;">
+                    <td style="width: 40%; padding: 12px 20px; font-weight: 600; color: #666; font-size: 13px;"></td>
+                    <td class="breakdown-week1-col" style="width: 20%; padding: 12px 16px; text-align: center; font-weight: 600; color: #666; font-size: 13px; border-left: 1px solid #e9ecef;">Week 1</td>
+                    <td class="breakdown-week2-col" style="width: 20%; padding: 12px 16px; text-align: center; font-weight: 600; color: #666; font-size: 13px; border-left: 1px solid #e9ecef;">Week 2</td>
+                    <td class="breakdown-period-col" style="width: 20%; padding: 12px 16px; text-align: center; font-weight: 600; color: #666; font-size: 13px; border-left: 1px solid #e9ecef;">${periodHeaderLabel}</td>
                 </tr>
-                <tr>
-                    <td style="padding: 0px;">
-                        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
-                            <tr class="summary-row-tr" style="display: flex; flex-wrap: wrap; gap: 5px;">
-                                <td class="summary-row-td" style="display: flex; flex: 1; flex-flow: column; gap: 5px; padding: 16px 20px; background: #f0ecf9; font-weight: 600; font-size: 16px; justify-content: center;">
-                                    Estimated Subsidy
-                                </td>
-                                <td class="summary-row-td" style="display: flex; flex: 1; flex-flow: column; gap: 5px; padding: 16px 20px; background: #f0ecf9; font-weight: 600; text-align: right; color: ${summaryColors.subsidy}; font-size: 20px; line-height: 24px;">
-                                    $${formatCurrency(totalSub)} <span style="font-size: 16px; font-weight: 400; color: #666;">${label}</span>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
+                <!-- Total fees row -->
+                <tr class="breakdown-row" style="background: #E9F1F6; border-bottom: 1px solid #e9ecef;">
+                    <td class="breakdown-label" style="width: 40%; padding: 16px 20px; font-weight: 500; font-size: 14px; color: #333;">Total fees</td>
+                    <td class="breakdown-week1-val" style="width: 20%; padding: 16px; text-align: center; font-weight: 600; font-size: 15px; color: ${summaryColors.totalFee}; border-left: 1px solid #e9ecef;">$${formatCurrency(week1TotalFee)}</td>
+                    <td class="breakdown-week2-val" style="width: 20%; padding: 16px; text-align: center; font-weight: 600; font-size: 15px; color: ${summaryColors.totalFee}; border-left: 1px solid #e9ecef;">$${formatCurrency(week2TotalFee)}</td>
+                    <td class="breakdown-period-val" style="width: 20%; padding: 16px; text-align: center; font-weight: 700; font-size: 16px; color: ${summaryColors.totalFee}; border-left: 1px solid #e9ecef;">$${formatCurrency(totalFee)}</td>
                 </tr>
-                <tr>
-                    <td style="padding: 0px; border-top: 0;">
-                        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
-                            <tr class="summary-row-tr" style="display: flex; flex-wrap: wrap; gap: 5px;">
-                                <td class="summary-row-td" style="display: flex; flex: 1; flex-flow: column; gap: 5px; padding: 16px 20px; background: #fff3cd; font-weight: 600; font-size: 16px; justify-content: center;">
-                                    Child Care Subsidy Withholding
-                                </td>
-                                <td class="summary-row-td" style="display: flex; flex: 1; flex-flow: column; gap: 5px; padding: 16px 20px; background: #fff3cd; font-weight: 600; text-align: right; color: #856404; font-size: 20px; line-height: 24px;">
-                                    $${formatCurrency(totalWithholding)} <span style="font-size: 16px; font-weight: 400; color: #666;">${label}</span>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
+                <!-- Estimated Subsidy row -->
+                <tr class="breakdown-row" style="background: #f0ecf9; border-bottom: 1px solid #e9ecef;">
+                    <td class="breakdown-label" style="width: 40%; padding: 16px 20px; font-weight: 500; font-size: 14px; color: #333;">Estimated subsidy</td>
+                    <td class="breakdown-week1-val" style="width: 20%; padding: 16px; text-align: center; font-weight: 600; font-size: 15px; color: ${summaryColors.subsidy}; border-left: 1px solid #e9ecef;">$${formatCurrency(week1SubBeforeWithholdingTotal)}</td>
+                    <td class="breakdown-week2-val" style="width: 20%; padding: 16px; text-align: center; font-weight: 600; font-size: 15px; color: ${summaryColors.subsidy}; border-left: 1px solid #e9ecef;">$${formatCurrency(week2SubBeforeWithholdingTotal)}</td>
+                    <td class="breakdown-period-val" style="width: 20%; padding: 16px; text-align: center; font-weight: 700; font-size: 16px; color: ${summaryColors.subsidy}; border-left: 1px solid #e9ecef;">$${formatCurrency(totalSub)}</td>
                 </tr>
-                <tr>
-                    <td style="padding: 0px; border-top: 0;">
-                        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
-                            <tr class="summary-row-tr" style="display: flex; flex-wrap: wrap; gap: 5px;">
-                                <td class="summary-row-td" style="display: flex; flex: 1; flex-flow: column; gap: 5px; padding: 16px 20px; background: #d4edda; font-weight: 600; font-size: 16px; justify-content: center;">
-                                    Child Care Subsidy Paid to Service Provider
-                                </td>
-                                <td class="summary-row-td" style="display: flex; flex: 1; flex-flow: column; gap: 5px; padding: 16px 20px; background: #d4edda; font-weight: 600; text-align: right; color: #155724; font-size: 20px; line-height: 24px;">
-                                    $${formatCurrency(totalSubPaid)} <span style="font-size: 16px; font-weight: 400; color: #666;">${label}</span>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
+                <!-- CCS Withholding row -->
+                <tr class="breakdown-row" style="background: #fff3cd; border-bottom: 1px solid #e9ecef;">
+                    <td class="breakdown-label" style="width: 40%; padding: 16px 20px; font-weight: 500; font-size: 14px; color: #333;">Child Care Subsidy (CCS) withholding</td>
+                    <td class="breakdown-week1-val" style="width: 20%; padding: 16px; text-align: center; font-weight: 600; font-size: 15px; color: #856404; border-left: 1px solid #e9ecef;">$${formatCurrency(week1WithholdingTotal)}</td>
+                    <td class="breakdown-week2-val" style="width: 20%; padding: 16px; text-align: center; font-weight: 600; font-size: 15px; color: #856404; border-left: 1px solid #e9ecef;">$${formatCurrency(week2WithholdingTotal)}</td>
+                    <td class="breakdown-period-val" style="width: 20%; padding: 16px; text-align: center; font-weight: 700; font-size: 16px; color: #856404; border-left: 1px solid #e9ecef;">$${formatCurrency(totalWithholding)}</td>
                 </tr>
-                <tr>
-                    <td style="padding: 0px; border-top: 0;">
-                        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
-                            <tr class="summary-row-tr" style="display: flex; flex-wrap: wrap; gap: 5px;">
-                                <td class="summary-row-td" style="display: flex; flex: 1; flex-flow: column; gap: 5px; padding: 16px 20px; background: #ebf8fa; font-weight: 600; font-size: 16px; justify-content: center;">
-                                    Out of pocket costs
-                                </td>
-                                <td class="summary-row-td" style="display: flex; flex: 1; flex-flow: column; gap: 5px; padding: 16px 20px; background: #ebf8fa; font-weight: 600; text-align: right; color: ${summaryColors.outOfPocket}; font-size: 20px; line-height: 24px;">
-                                    $${formatCurrency(totalOut)} <span style="font-size: 16px; font-weight: 400; color: #666;">${label}</span>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
+                <!-- CCS Paid to Provider row -->
+                <tr class="breakdown-row" style="background: #d4edda; border-bottom: 1px solid #e9ecef;">
+                    <td class="breakdown-label" style="width: 40%; padding: 16px 20px; font-weight: 500; font-size: 14px; color: #333;">Child Care Subsidy (CCS) paid to service provider</td>
+                    <td class="breakdown-week1-val" style="width: 20%; padding: 16px; text-align: center; font-weight: 600; font-size: 15px; color: #155724; border-left: 1px solid #e9ecef;">$${formatCurrency(week1SubTotal)}</td>
+                    <td class="breakdown-week2-val" style="width: 20%; padding: 16px; text-align: center; font-weight: 600; font-size: 15px; color: #155724; border-left: 1px solid #e9ecef;">$${formatCurrency(week2SubTotal)}</td>
+                    <td class="breakdown-period-val" style="width: 20%; padding: 16px; text-align: center; font-weight: 700; font-size: 16px; color: #155724; border-left: 1px solid #e9ecef;">$${formatCurrency(totalSubPaid)}</td>
+                </tr>
+                <!-- What you pay row -->
+                <tr class="breakdown-row" style="background: #ebf8fa;">
+                    <td class="breakdown-label" style="width: 40%; padding: 16px 20px; font-weight: 500; font-size: 14px; color: #333;">What you pay</td>
+                    <td class="breakdown-week1-val" style="width: 20%; padding: 16px; text-align: center; font-weight: 600; font-size: 15px; color: ${summaryColors.outOfPocket}; border-left: 1px solid #e9ecef;">$${formatCurrency(week1OutPocket)}</td>
+                    <td class="breakdown-week2-val" style="width: 20%; padding: 16px; text-align: center; font-weight: 600; font-size: 15px; color: ${summaryColors.outOfPocket}; border-left: 1px solid #e9ecef;">$${formatCurrency(week2OutPocket)}</td>
+                    <td class="breakdown-period-val" style="width: 20%; padding: 16px; text-align: center; font-weight: 700; font-size: 16px; color: ${summaryColors.outOfPocket}; border-left: 1px solid #e9ecef;">$${formatCurrency(totalOut)}</td>
                 </tr>
             </table>
         `);
-
-
-        // Weekly breakdown
+        
+        // Update main card period header label
+        $('.period-label-header').text(periodHeaderLabel);
+        
+        // Weekly breakdown for mobile view - Week 1 and Week 2 side by side
         $('#summary-weekly').html(weeklyHTML);
 
 
         // Child detail cards
         $('#child-details-summary').html(detailsHTML);
+        
+        // Update new main summary card with week1, week2 and total values
+        // Get week1 and week2 values for Government pays and What you pay
+        let week1GovtPays = 0, week2GovtPays = 0, totalGovtPays = 0;
+        let week1YouPay = 0, week2YouPay = 0, totalYouPay = 0;
+        
+        if(child === 'all'){
+            childrenData.forEach((c) => {
+                week1GovtPays += c.week1Sub;
+                week2GovtPays += c.week2Sub;
+                week1YouPay += Math.max(0, c.week1Fee - c.week1Sub);
+                week2YouPay += Math.max(0, c.week2Fee - c.week2Sub);
+            });
+        } else {
+            const c = childrenData[parseInt(child)];
+            week1GovtPays = c.week1Sub;
+            week2GovtPays = c.week2Sub;
+            week1YouPay = Math.max(0, c.week1Fee - c.week1Sub);
+            week2YouPay = Math.max(0, c.week2Fee - c.week2Sub);
+        }
+        
+        // Calculate totals with period multiplier applied
+        // (week1 + week2 = fortnightly, then multiply by mult for selected period)
+        totalGovtPays = (week1GovtPays + week2GovtPays) * mult;
+        totalYouPay = (week1YouPay + week2YouPay) * mult;
+        
+        // Update the main summary card
+        $('.summary-govt-week1').text('$' + formatCurrency(week1GovtPays));
+        $('.summary-govt-week2').text('$' + formatCurrency(week2GovtPays));
+        $('.summary-govt-total').text('$' + formatCurrency(totalGovtPays));
+        $('.summary-you-week1').text('$' + formatCurrency(week1YouPay));
+        $('.summary-you-week2').text('$' + formatCurrency(week2YouPay));
+        $('.summary-you-total').text('$' + formatCurrency(totalYouPay));
     }
+    
+    // Toggle for Full Breakdown accordion
+    $('#breakdown-toggle').click(function(){
+        const $content = $('#breakdown-content');
+        const $arrow = $('#breakdown-arrow');
+        if($content.is(':visible')){
+            $content.slideUp(300);
+            $arrow.css('transform', 'rotate(0deg)');
+        } else {
+            $content.slideDown(300);
+            $arrow.css('transform', 'rotate(180deg)');
+        }
+    });
 
 
     // handle period buttons
