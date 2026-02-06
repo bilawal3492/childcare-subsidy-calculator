@@ -754,10 +754,28 @@ class Shortcode
     </div>
 
 
-    <p class="footer_disclaimer" style="margin:0px; font-size:12px; color:#666;">
-        <?php echo esc_html($policy['disclaimer_text'] ?? ''); ?><br>
-        <em>Last updated: <?php echo esc_html($policy['last_updated'] ?? ''); ?></em>
-    </p>
+    <!-- Footer Disclaimer -->
+    <div class="footer_disclaimer" style="margin-top: 25px; padding: 16px 20px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 10px; border-left: 4px solid #f7941d; display: flex; align-items: flex-start; gap: 14px;">
+        <div style="flex-shrink: 0; width: 32px; height: 32px; background: linear-gradient(135deg, #f7941d 0%, #ff6b35 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(247, 148, 29, 0.3);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+        </div>
+        <div style="flex: 1;">
+            <p style="margin: 0 0 6px 0; font-size: 13px; line-height: 1.6; color: #555;">
+                <?php echo esc_html($policy['disclaimer_text'] ?? ''); ?>
+            </p>
+            <p style="margin: 0; font-size: 12px; color: #888; display: flex; align-items: center; gap: 6px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <em>Last updated: <?php echo esc_html($policy['last_updated'] ?? ''); ?></em>
+            </p>
+        </div>
+    </div>
 </div>
 
 
