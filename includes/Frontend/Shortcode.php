@@ -754,7 +754,7 @@ class Shortcode
     </div>
 
 
-    <p style="margin:0px; font-size:12px; color:#666;">
+    <p class="footer_disclaimer" style="margin:0px; font-size:12px; color:#666;">
         <?php echo esc_html($policy['disclaimer_text'] ?? ''); ?><br>
         <em>Last updated: <?php echo esc_html($policy['last_updated'] ?? ''); ?></em>
     </p>
