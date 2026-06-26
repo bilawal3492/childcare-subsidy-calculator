@@ -12,6 +12,17 @@ class Email
     {
         add_action('wp_ajax_send_summary_email', [$this, 'send_summary_email']);
         add_action('wp_ajax_nopriv_send_summary_email', [$this, 'send_summary_email']);
+
+        // Issues a fresh nonce so submissions work even when the calculator page
+        // is served from a cache or has been open long enough for its embedded
+        // nonce to expire. admin-ajax responses are never cached.
+        add_action('wp_ajax_ccs_refresh_nonce', [$this, 'refresh_nonce']);
+        add_action('wp_ajax_nopriv_ccs_refresh_nonce', [$this, 'refresh_nonce']);
+    }
+
+    public function refresh_nonce()
+    {
+        wp_send_json_success(['nonce' => wp_create_nonce('ccs_frontend')]);
     }
 
     public function send_summary_email()

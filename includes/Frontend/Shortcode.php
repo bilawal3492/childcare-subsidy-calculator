@@ -874,7 +874,29 @@ jQuery(document).ready(function($){
     const hourly_caps = policy.hourly_caps || {};
 
     // Security nonce for all front-end AJAX requests (suburb search + summary submit)
-    const ccsNonce = '<?php echo esc_js(wp_create_nonce('ccs_frontend')); ?>';
+    let ccsNonce = '<?php echo esc_js(wp_create_nonce('ccs_frontend')); ?>';
+
+    // Refresh the nonce on load so it works even if this page was served from a
+    // cache with a stale/expired nonce (admin-ajax responses are never cached).
+    $.get('<?php echo admin_url('admin-ajax.php'); ?>', { action: 'ccs_refresh_nonce' })
+        .done(function(r){ if (r && r.success && r.data && r.data.nonce) { ccsNonce = r.data.nonce; } });
+
+    // Post to admin-ajax after fetching a guaranteed-fresh nonce. handlers:
+    // {done, fail, always}. Falls back to the current ccsNonce if the refresh
+    // request fails, so submission still proceeds.
+    function ccsSubmitWithFreshNonce(postData, handlers) {
+        handlers = handlers || {};
+        const ajaxUrl = '<?php echo admin_url('admin-ajax.php'); ?>';
+        function go(nonce) {
+            postData.nonce = nonce || ccsNonce;
+            const req = $.post(ajaxUrl, postData, handlers.done);
+            if (handlers.fail) { req.fail(handlers.fail); }
+            if (handlers.always) { req.always(handlers.always); }
+        }
+        $.get(ajaxUrl, { action: 'ccs_refresh_nonce' })
+            .done(function(r){ go((r && r.success && r.data && r.data.nonce) ? r.data.nonce : ccsNonce); })
+            .fail(function(){ go(ccsNonce); });
+    }
 
     // Debug logging gated behind WP_DEBUG so production stays quiet.
     const CCS_DEBUG = <?php echo (defined('WP_DEBUG') && WP_DEBUG) ? 'true' : 'false'; ?>;
@@ -2960,9 +2982,8 @@ jQuery(document).ready(function($){
             `;
             
             const ccsShadow = ccsCollectShadowData();
-            $.post('<?php echo admin_url('admin-ajax.php'); ?>', {
+            ccsSubmitWithFreshNonce({
                 action: 'send_summary_email',
-                nonce: ccsNonce,
                 ccs_hp: '',
                 calc_inputs: ccsShadow.inputs,
                 calc_totals: ccsShadow.totals,
@@ -2977,8 +2998,10 @@ jQuery(document).ready(function($){
                 consent_privacy: '1',
                 consent_contact: '',
                 consent_source: 'hubspot'
-            }, function(response) {
-                ccsLog('WordPress response:', response);
+            }, {
+                done: function(response) {
+                    ccsLog('WordPress response:', response);
+                }
             });
         }
     }
@@ -3079,9 +3102,8 @@ jQuery(document).ready(function($){
             
             // Send to WordPress
             const ccsShadow = ccsCollectShadowData();
-            $.post('<?php echo admin_url('admin-ajax.php'); ?>', {
+            ccsSubmitWithFreshNonce({
                 action: 'send_summary_email',
-                nonce: ccsNonce,
                 ccs_hp: $('#ccs_hp').val() || '',
                 calc_inputs: ccsShadow.inputs,
                 calc_totals: ccsShadow.totals,
@@ -3096,19 +3118,23 @@ jQuery(document).ready(function($){
                 consent_privacy: $('#custom_privacy').is(':checked') ? '1' : '',
                 consent_contact: $('#custom_contact').is(':checked') ? '1' : '',
                 consent_source: 'custom'
-            }, function(response) {
-                ccsLog('WordPress response:', response);
-                if(response.success){
-                    $('#send-summary-response').html('<div style="color:green; padding:10px; background:#d4edda; border-radius:4px; margin-top:15px;">✓ Summary sent successfully to your email!</div>');
-                    $('#custom-summary-form')[0].reset();
-                } else {
-                    $('#send-summary-response').html('<div style="color:red; padding:10px; background:#f8d7da; border-radius:4px; margin-top:15px;">✗ Error: ' + (response.data || 'Please try again') + '</div>');
+            }, {
+                done: function(response) {
+                    ccsLog('WordPress response:', response);
+                    if(response.success){
+                        $('#send-summary-response').html('<div style="color:green; padding:10px; background:#d4edda; border-radius:4px; margin-top:15px;">✓ Summary sent successfully to your email!</div>');
+                        $('#custom-summary-form')[0].reset();
+                    } else {
+                        $('#send-summary-response').html('<div style="color:red; padding:10px; background:#f8d7da; border-radius:4px; margin-top:15px;">✗ Error: ' + (response.data || 'Please try again') + '</div>');
+                    }
+                },
+                fail: function(xhr, status, error) {
+                    console.error('AJAX error:', error);
+                    $('#send-summary-response').html('<div style="color:red; padding:10px; background:#f8d7da; border-radius:4px; margin-top:15px;">✗ Connection error. Please try again.</div>');
+                },
+                always: function() {
+                    $('#custom-summary-form button[type="submit"]').prop('disabled', false).text('Send Summary');
                 }
-            }).fail(function(xhr, status, error) {
-                console.error('AJAX error:', error);
-                $('#send-summary-response').html('<div style="color:red; padding:10px; background:#f8d7da; border-radius:4px; margin-top:15px;">✗ Connection error. Please try again.</div>');
-            }).always(function() {
-                $('#custom-summary-form button[type="submit"]').prop('disabled', false).text('Send Summary');
             });
         });
     }
