@@ -2,6 +2,13 @@
 
 All notable changes to The Child Care Subsidy Calculator plugin will be documented in this file.
 
+## [2.2.1] - 2026-06-26
+
+### 🧹 Phase 2 — Cleanup (no functional change)
+- Removed dead files: `includes/Ajax/Email.backup.php`, `assets/css/childcare-backup.css`, and the unused `includes/Autoloader.php` (the latter also had a latent case-sensitivity bug that would have failed on Linux had it been used).
+- Front-end `console.log` debug output is now gated behind `WP_DEBUG`, so production stays quiet (genuine `console.error` reporting is kept).
+- Stopped tracking `.DS_Store` files in the repository.
+
 ## [2.2.0] - 2026-06-26
 
 Stable release consolidating the security hardening and calculation-engine work from the 2.2.0 beta series. No change to the HubSpot submission or automated-email behaviour.

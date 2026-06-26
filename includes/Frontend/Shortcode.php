@@ -876,6 +876,10 @@ jQuery(document).ready(function($){
     // Security nonce for all front-end AJAX requests (suburb search + summary submit)
     const ccsNonce = '<?php echo esc_js(wp_create_nonce('ccs_frontend')); ?>';
 
+    // Debug logging gated behind WP_DEBUG so production stays quiet.
+    const CCS_DEBUG = <?php echo (defined('WP_DEBUG') && WP_DEBUG) ? 'true' : 'false'; ?>;
+    function ccsLog(){ if (CCS_DEBUG && window.console && console.log) { console.log.apply(console, arguments); } }
+
     // Collect raw calculation inputs + browser-computed totals so the server can
     // shadow-validate its own recomputation against the browser. Diagnostic only
     // — it never changes what the user sees. Defined at top scope so BOTH the
@@ -2629,10 +2633,10 @@ jQuery(document).ready(function($){
             return;
         }
         
-        console.log('Loading HubSpot form via Direct API Submission method');
-        console.log('Portal ID:', portalId);
-        console.log('Form ID:', formId);
-        console.log('Region:', region);
+        ccsLog('Loading HubSpot form via Direct API Submission method');
+        ccsLog('Portal ID:', portalId);
+        ccsLog('Form ID:', formId);
+        ccsLog('Region:', region);
         
         // Create a custom form that submits directly to HubSpot's Forms API v3
         // This bypasses all iframe/cross-origin issues
@@ -2690,7 +2694,7 @@ jQuery(document).ready(function($){
         `;
         
         $('#hubspot-form-container').html(hubspotFormHTML);
-        console.log('✓ HubSpot API form rendered');
+        ccsLog('✓ HubSpot API form rendered');
         
         // Initialize intl-tel-input for HubSpot phone field
         let hsPhoneInput = null;
@@ -2710,7 +2714,7 @@ jQuery(document).ready(function($){
                 autoPlaceholder: 'aggressive',
                 placeholderNumberType: 'MOBILE'
             });
-            console.log('✓ International phone input initialized for HubSpot form');
+            ccsLog('✓ International phone input initialized for HubSpot form');
         }
         
         // Email validation function
@@ -2826,11 +2830,11 @@ jQuery(document).ready(function($){
             // Generate all individual field values
             const summaryFields = generateSummaryFields();
             
-            console.log('Submitting to HubSpot Forms API v3...');
-            console.log('Email:', email);
-            console.log('Phone:', phone);
-            console.log('Country:', country);
-            console.log('Individual fields:', Object.keys(summaryFields).length);
+            ccsLog('Submitting to HubSpot Forms API v3...');
+            ccsLog('Email:', email);
+            ccsLog('Phone:', phone);
+            ccsLog('Country:', country);
+            ccsLog('Individual fields:', Object.keys(summaryFields).length);
             
             // Build the fields array for HubSpot API
             const fields = [
@@ -2860,7 +2864,7 @@ jQuery(document).ready(function($){
                 }
             });
             
-            console.log('Fields being submitted:', fields.map(f => f.name + ': ' + (f.value.length > 50 ? f.value.substring(0,50) + '...' : f.value)));
+            ccsLog('Fields being submitted:', fields.map(f => f.name + ': ' + (f.value.length > 50 ? f.value.substring(0,50) + '...' : f.value)));
             
             // HubSpot Forms API v3 endpoint
             const apiUrl = 'https://api.hsforms.com/submissions/v3/integration/submit/' + portalId + '/' + formId;
@@ -2887,7 +2891,7 @@ jQuery(document).ready(function($){
                 contentType: 'application/json',
                 data: JSON.stringify(submissionData),
                 success: function(response) {
-                    console.log('✓ HubSpot API submission successful!', response);
+                    ccsLog('✓ HubSpot API submission successful!', response);
                     
                     // Show success message
                     $('#hubspot-form-container').html(`
@@ -2971,7 +2975,7 @@ jQuery(document).ready(function($){
                 atsi_status: $('#atsi').val() || '',
                 enrolment_option: getEnrollmentOptionText()
             }, function(response) {
-                console.log('WordPress response:', response);
+                ccsLog('WordPress response:', response);
             });
         }
     }
@@ -3020,7 +3024,7 @@ jQuery(document).ready(function($){
                     autoPlaceholder: 'aggressive',
                     placeholderNumberType: 'MOBILE'
                 });
-                console.log('✓ International phone input initialized for custom form');
+                ccsLog('✓ International phone input initialized for custom form');
             }
         }
         
@@ -3087,7 +3091,7 @@ jQuery(document).ready(function($){
                 atsi_status: $('#atsi').val() || '',
                 enrolment_option: getEnrollmentOptionText()
             }, function(response) {
-                console.log('WordPress response:', response);
+                ccsLog('WordPress response:', response);
                 if(response.success){
                     $('#send-summary-response').html('<div style="color:green; padding:10px; background:#d4edda; border-radius:4px; margin-top:15px;">✓ Summary sent successfully to your email!</div>');
                     $('#custom-summary-form')[0].reset();
