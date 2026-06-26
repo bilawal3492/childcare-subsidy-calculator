@@ -521,7 +521,7 @@ class Shortcode
         <h4 id="summary-title" style="display: none;">Your estimated costs</h4>
         
         <!-- Main Summary Card - What you pay highlighted -->
-        <div id="summary-main-card" style="background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 25px;">
+        <div id="summary-main-card" role="region" aria-label="Your estimated childcare costs" style="background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 25px;">
             <!-- Header row with column labels -->
             <div class="summary-header-row" style="display: flex; background: #f8f9fa; border-bottom: 1px solid #e9ecef;">
                 <div style="width: 40%; padding: 16px 24px;"></div>
@@ -557,6 +557,16 @@ class Shortcode
             </div>
         </div>
         
+        <!-- Download / Print estimate -->
+        <div style="text-align:center; margin: 0 0 25px 0;">
+            <button type="button" id="ccs-download-estimate"
+                    aria-label="Download or print your childcare subsidy estimate as a PDF"
+                    style="display:inline-flex; align-items:center; gap:8px; background:#0073aa; color:#fff; border:none; padding:12px 28px; font-size:15px; font-weight:600; border-radius:8px; cursor:pointer;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download / Print Estimate (PDF)
+            </button>
+        </div>
+
         <!-- Full Breakdown Accordion -->
         <div id="full-breakdown-section" style="background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden; margin-bottom: 25px;">
             <div id="breakdown-toggle" style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; cursor: pointer; transition: background 0.2s ease;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='#fff'">
@@ -901,6 +911,48 @@ jQuery(document).ready(function($){
     // Debug logging gated behind WP_DEBUG so production stays quiet.
     const CCS_DEBUG = <?php echo (defined('WP_DEBUG') && WP_DEBUG) ? 'true' : 'false'; ?>;
     function ccsLog(){ if (CCS_DEBUG && window.console && console.log) { console.log.apply(console, arguments); } }
+
+    // ---- Download / Print estimate (Phase 6) ----
+    // Builds a clean printable document from the rendered summary and opens the
+    // browser print dialog (Save as PDF). Dependency-free; does not touch the
+    // calculation or the submission flow.
+    function ccsBuildPrintableHTML() {
+        const siteName = '<?php echo esc_js(get_bloginfo('name')); ?>';
+        const disclaimer = '<?php echo esc_js($policy['disclaimer_text'] ?? ''); ?>';
+        const today = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+        const mainCard = $('#summary-main-card').prop('outerHTML') || '';
+        const income = $('#household-income-info').html() || '';
+        const children = $('#child-details-summary').html() || '';
+        return ''
+            + '<div style="font-family: Arial, Helvetica, sans-serif; max-width: 780px; margin: 0 auto; color:#222;">'
+            +   '<div style="text-align:center; border-bottom:3px solid #0073aa; padding-bottom:14px; margin-bottom:24px;">'
+            +     '<h1 style="margin:0; font-size:24px; color:#0073aa;">Childcare Subsidy Estimate</h1>'
+            +     '<p style="margin:6px 0 0; color:#666; font-size:14px;">' + siteName + ' &middot; ' + today + '</p>'
+            +   '</div>'
+            +   '<div style="margin-bottom:24px;">' + mainCard + '</div>'
+            +   (income ? '<h2 style="font-size:18px; color:#333;">Household Income Information</h2>' + income : '')
+            +   (children ? '<h2 style="font-size:18px; color:#333; margin-top:24px;">Child Details</h2><div style="display:flex; flex-wrap:wrap; gap:16px;">' + children + '</div>' : '')
+            +   (disclaimer ? '<p style="font-size:12px; color:#777; margin-top:30px; border-top:1px solid #eee; padding-top:14px;">' + disclaimer + '</p>' : '')
+            + '</div>';
+    }
+
+    function ccsPrintEstimate() {
+        const w = window.open('', '_blank');
+        if (!w) { alert('Please allow pop-ups for this site to download your estimate.'); return; }
+        const body = ccsBuildPrintableHTML();
+        w.document.open();
+        w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Childcare Subsidy Estimate</title>'
+            + '<style>body{ -webkit-print-color-adjust:exact; print-color-adjust:exact; margin:24px; background:#fff; } @media print{ .ccs-print-actions{ display:none !important; } }</style>'
+            + '</head><body>' + body
+            + '<div class="ccs-print-actions" style="text-align:center; margin-top:28px;">'
+            + '<button onclick="window.print()" style="background:#0073aa; color:#fff; border:none; padding:10px 24px; font-size:14px; border-radius:6px; cursor:pointer;">Print / Save as PDF</button>'
+            + '</div>'
+            + '<scr' + 'ipt>window.onload=function(){ setTimeout(function(){ try{ window.focus(); window.print(); }catch(e){} }, 350); };</scr' + 'ipt>'
+            + '</body></html>');
+        w.document.close();
+    }
+
+    $(document).on('click', '#ccs-download-estimate', function(e){ e.preventDefault(); ccsPrintEstimate(); });
 
     // Collect raw calculation inputs + browser-computed totals so the server can
     // shadow-validate its own recomputation against the browser. Diagnostic only

@@ -2,6 +2,12 @@
 
 All notable changes to The Child Care Subsidy Calculator plugin will be documented in this file.
 
+## [2.3.0] - 2026-06-26
+
+### ✨ Phase 6 — UX & features (Round 1)
+- **Download / Print Estimate** - A new button on the results page opens a clean, printable version of the estimate so families can save it as a PDF or print it. Dependency-free (uses the browser's print dialog) and does not change the calculation or the submission flow.
+- **Accessibility** - The estimate figures are now exposed as a labelled region for screen readers, and the new download button is fully keyboard-accessible with a descriptive label.
+
 ## [2.2.5] - 2026-06-26
 
 ### 🐛 Fix
