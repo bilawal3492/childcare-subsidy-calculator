@@ -31,6 +31,7 @@ class Settings
         // Calculator settings
         register_setting('childcare_ccs_group', 'childcare_ccs_policy', [$this, 'childcare_ccs_policy_sanitize']);
         register_setting('childcare_ccs_group', 'ccs_centres_list', [$this, 'sanitize_centres_list']);
+        register_setting('childcare_ccs_group', 'ccs_retention_days', 'absint');
         
         // HubSpot settings (separate group)
         register_setting('childcare_ccs_hubspot_group', 'ccs_form_type', 'sanitize_text_field');

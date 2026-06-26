@@ -2,6 +2,14 @@
 
 All notable changes to The Child Care Subsidy Calculator plugin will be documented in this file.
 
+## [2.2.4] - 2026-06-26
+
+### 🔐 Phase 5 — Privacy & compliance
+- **GDPR / Privacy Act data tools** - Calculator submissions are now included in WordPress's built-in personal-data **Export** and **Erase** tools (Tools → Export/Erase Personal Data), matched by email address.
+- **Consent recorded** - The custom form's privacy agreement and optional contact opt-in are now stored with each submission (with a timestamp) and shown on the submission detail screen.
+- **Data retention** - New "Auto-delete submissions older than N days" setting (Calculator Settings → Data & Privacy). Defaults to 0 = keep forever; any value above 0 enables a daily cleanup. Never deletes data unless explicitly enabled.
+- **Documentation** - Readme privacy section updated to note ATSI status as sensitive information and describe consent, retention, and data-subject handling.
+
 ## [2.2.3] - 2026-06-26
 
 ### ⚡ Phase 4 — Performance (no visual change)

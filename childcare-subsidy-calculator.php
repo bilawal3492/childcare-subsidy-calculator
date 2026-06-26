@@ -2,7 +2,7 @@
 /**
  * Plugin Name: The Child Care Subsidy Calculator
  * Description: Calculate Australian Child Care Subsidy (CCS) with multi-child support, age-based caps, and professional email delivery.
- * Version: 2.2.3
+ * Version: 2.2.4
  * Author: i9 Education
  * Author URI: https://i9.edu.au/
  * License: GPLv2 or later
@@ -95,6 +95,7 @@ require_once CCS_CALCULATOR_PLUGIN_DIR . 'includes/CPT/Submissions.php';
 require_once CCS_CALCULATOR_PLUGIN_DIR . 'includes/Database/SuburbsTable.php';
 require_once CCS_CALCULATOR_PLUGIN_DIR . 'includes/Frontend/Assets.php';
 require_once CCS_CALCULATOR_PLUGIN_DIR . 'includes/Frontend/Shortcode.php';
+require_once CCS_CALCULATOR_PLUGIN_DIR . 'includes/Privacy/Privacy.php';
 
 // Activation hook
 register_activation_hook(__FILE__, function() {
@@ -152,6 +153,18 @@ add_action('init', function() {
     // Register Suburb Search
     $suburb_search = new CCSCalculator\Includes\Ajax\SuburbSearch();
     $suburb_search->register();
+
+    // Register Privacy (GDPR export/erase + retention)
+    $privacy = new CCSCalculator\Includes\Privacy\Privacy();
+    $privacy->register();
 }, 10);
+
+// Clear the retention cron on deactivation
+register_deactivation_hook(__FILE__, function() {
+    $timestamp = wp_next_scheduled('ccs_purge_old_submissions');
+    if ($timestamp) {
+        wp_unschedule_event($timestamp, 'ccs_purge_old_submissions');
+    }
+});
 
 // Plugin loaded successfully

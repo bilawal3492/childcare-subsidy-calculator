@@ -301,6 +301,24 @@ if (!defined('ABSPATH')) { exit; }
                     </div>
                 </div>
 
+                <!-- Data & Privacy -->
+                <div style="background:#fff; border:1px solid #e1e8ed; border-radius:8px; padding:25px; margin-bottom:30px;">
+                    <h2 style="margin-top:0; font-size:18px; color:#333;">Data & Privacy</h2>
+                    <div>
+                        <label style="display:block; font-weight:600; margin-bottom:8px; color:#333;">
+                            Auto-delete submissions older than
+                        </label>
+                        <input type="number" min="0" step="1"
+                               name="ccs_retention_days"
+                               value="<?php echo esc_attr(get_option('ccs_retention_days', 0)); ?>"
+                               style="width:120px; padding:10px; border:1px solid #ddd; border-radius:4px; font-size:14px;">
+                        <span style="color:#333;">days</span>
+                        <p class="description" style="margin-top:5px; color:#666;">
+                            Set to <strong>0</strong> to keep submissions forever (default). Any value above 0 enables a daily cleanup that permanently deletes calculator submissions older than that many days &mdash; useful for data-retention compliance.
+                        </p>
+                    </div>
+                </div>
+
                 <!-- Info Box -->
                 <div style="background:linear-gradient(135deg, #e7f5fe 0%, #f0f9ff 100%); border-left:5px solid #0073aa; padding:20px 25px; margin-bottom:30px; border-radius:8px; box-shadow:0 2px 4px rgba(0,115,170,0.1);">
                     <p style="margin:0; color:#333; font-size:14px; line-height:1.6;">

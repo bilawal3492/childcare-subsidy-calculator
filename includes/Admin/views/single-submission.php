@@ -151,6 +151,21 @@ if (!defined('ABSPATH')) { exit; }
                             <strong>Enrolment Option:</strong><br>
                             <?php echo $enrolment_option ? esc_html($enrolment_option) : '<span style="color:#999;">Not provided</span>'; ?>
                         </p>
+                        <?php
+                        $consent_privacy = get_post_meta($post_id, 'consent_privacy', true);
+                        $consent_contact = get_post_meta($post_id, 'consent_contact', true);
+                        $consent_timestamp = get_post_meta($post_id, 'consent_timestamp', true);
+                        if ($consent_timestamp !== '' || $consent_privacy !== ''):
+                        ?>
+                        <p style="margin:15px 0;">
+                            <strong>Consent:</strong><br>
+                            Privacy policy: <?php echo $consent_privacy ? '✓ Agreed' : '<span style="color:#999;">No record</span>'; ?><br>
+                            Contact opt-in: <?php echo $consent_contact ? '✓ Yes' : 'No'; ?>
+                            <?php if ($consent_timestamp): ?>
+                                <br><span style="color:#999; font-size:12px;">Recorded: <?php echo esc_html($consent_timestamp); ?></span>
+                            <?php endif; ?>
+                        </p>
+                        <?php endif; ?>
                     </div>
                     
                     <div style="background:#fff; padding:20px; border:1px solid #ccc; border-radius:8px;">

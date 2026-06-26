@@ -3,7 +3,7 @@ Contributors: i9education
 Tags: childcare, subsidy, calculator, australia, ccs, hubspot
 Requires at least: 5.0
 Tested up to: 6.4
-Stable tag: 2.2.3
+Stable tag: 2.2.4
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -284,7 +284,15 @@ Significant update with Australian suburbs database and HubSpot integration. No 
 For support, please visit [i9 Education](https://i9.edu.au/) or use the WordPress.org support forums.
 
 = Privacy Policy =
-This plugin stores calculator submissions in your WordPress database. Email addresses are only used to send calculation summaries. No data is sent to external services unless you configure HubSpot integration.
+This plugin stores calculator submissions in your WordPress database. Each submission may include the person's name, email, phone, location/suburb, enrolment option, Aboriginal and/or Torres Strait Islander (ATSI) status, and the calculation summary. Email addresses are only used to send calculation summaries. No data is sent to external services unless you configure HubSpot integration.
+
+**Sensitive information:** ATSI status is sensitive personal information under the Australian Privacy Act. Only collect and retain it where appropriate, and disclose its collection in your site's privacy policy.
+
+**Consent:** When the built-in custom form is used, the user's agreement to your privacy policy (and optional contact opt-in) is recorded with each submission, along with a timestamp.
+
+**Data subject requests:** The plugin integrates with WordPress's privacy tools (Tools → Export Personal Data / Erase Personal Data), so calculator submissions for a given email address are included in personal-data exports and erasures.
+
+**Retention:** Under CCS Calculator → Calculator Settings → Data & Privacy you can set an auto-delete period. Submissions older than that many days are permanently removed by a daily task. The default is 0 (keep submissions forever).
 
 = Credits =
 Developed by i9 Education

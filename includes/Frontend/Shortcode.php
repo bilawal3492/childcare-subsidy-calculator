@@ -2973,7 +2973,10 @@ jQuery(document).ready(function($){
                 summary_html: summaryHTML,
                 location: $('#suburb').val() || '',
                 atsi_status: $('#atsi').val() || '',
-                enrolment_option: getEnrollmentOptionText()
+                enrolment_option: getEnrollmentOptionText(),
+                consent_privacy: '1',
+                consent_contact: '',
+                consent_source: 'hubspot'
             }, function(response) {
                 ccsLog('WordPress response:', response);
             });
@@ -3089,7 +3092,10 @@ jQuery(document).ready(function($){
                 summary_html: summaryHTML,
                 location: $('#suburb').val() || '',
                 atsi_status: $('#atsi').val() || '',
-                enrolment_option: getEnrollmentOptionText()
+                enrolment_option: getEnrollmentOptionText(),
+                consent_privacy: $('#custom_privacy').is(':checked') ? '1' : '',
+                consent_contact: $('#custom_contact').is(':checked') ? '1' : '',
+                consent_source: 'custom'
             }, function(response) {
                 ccsLog('WordPress response:', response);
                 if(response.success){

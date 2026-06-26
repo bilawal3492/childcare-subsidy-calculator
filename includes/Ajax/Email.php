@@ -49,6 +49,11 @@ class Email
         $atsi_status = sanitize_text_field($_POST['atsi_status'] ?? '');
         $enrolment_option = sanitize_text_field($_POST['enrolment_option'] ?? '');
 
+        // Consent (for privacy compliance)
+        $consent_privacy = !empty($_POST['consent_privacy']) ? 1 : 0;
+        $consent_contact = !empty($_POST['consent_contact']) ? 1 : 0;
+        $consent_source  = sanitize_text_field($_POST['consent_source'] ?? '');
+
         if (empty($user_name) || empty($user_email) || empty($summary_html)) {
             wp_send_json_error('Required fields missing');
             return;
@@ -83,6 +88,12 @@ class Email
             update_post_meta($post_id, 'location', $location);
             update_post_meta($post_id, 'atsi_status', $atsi_status);
             update_post_meta($post_id, 'enrolment_option', $enrolment_option);
+
+            // Consent record (privacy compliance)
+            update_post_meta($post_id, 'consent_privacy', $consent_privacy);
+            update_post_meta($post_id, 'consent_contact', $consent_contact);
+            update_post_meta($post_id, 'consent_source', $consent_source);
+            update_post_meta($post_id, 'consent_timestamp', current_time('mysql'));
 
             // Phase 1A: shadow-validate the browser's numbers against the
             // server-side engine. Diagnostic only — never blocks the submission.
