@@ -8,9 +8,31 @@ if (!defined('ABSPATH')) {
 
 class Assets
 {
+    /** Option key holding the cached generated inline CSS. */
+    const CSS_CACHE_OPTION = 'ccs_inline_css_cache';
+
     public function register()
     {
         add_action('wp_enqueue_scripts', [$this, 'enqueue']);
+
+        // Invalidate the cached inline CSS whenever any ccs_* option changes.
+        add_action('updated_option', [$this, 'maybe_clear_css_cache']);
+        add_action('added_option', [$this, 'maybe_clear_css_cache']);
+        add_action('deleted_option', [$this, 'maybe_clear_css_cache']);
+    }
+
+    /**
+     * Clear the generated-CSS cache when a plugin option changes, so the next
+     * front-end load regenerates it. Excludes the cache option itself to avoid
+     * a self-clearing loop.
+     *
+     * @param string $option
+     */
+    public function maybe_clear_css_cache($option)
+    {
+        if (is_string($option) && strpos($option, 'ccs_') === 0 && $option !== self::CSS_CACHE_OPTION) {
+            delete_option(self::CSS_CACHE_OPTION);
+        }
     }
 
     public function enqueue()
@@ -24,8 +46,38 @@ class Assets
         // Add custom styling from admin settings
         $this->add_custom_styles();
     }
-    
+
+    /**
+     * Output the admin-configured inline styles, using a cached copy when
+     * available so the ~150 option reads + CSS string build only happen once
+     * per settings change instead of on every front-end page load.
+     */
     private function add_custom_styles()
+    {
+        $custom_css = get_option(self::CSS_CACHE_OPTION, false);
+
+        if (!is_string($custom_css) || $custom_css === '') {
+            $custom_css = $this->generate_inline_css();
+            // autoload = false: only loaded when we explicitly read it here.
+            update_option(self::CSS_CACHE_OPTION, $custom_css, false);
+        }
+
+        wp_add_inline_style('childcare-ccs-style', $custom_css);
+
+        // Add custom CSS from admin Custom CSS page
+        $user_custom_css = get_option('ccs_custom_css', '');
+        if (!empty($user_custom_css)) {
+            wp_add_inline_style('childcare-ccs-style', $user_custom_css);
+        }
+    }
+
+    /**
+     * Build the inline CSS string from the admin appearance settings.
+     * (Previously the body of add_custom_styles; now cached by that method.)
+     *
+     * @return string
+     */
+    private function generate_inline_css()
     {
         // Get styling options
         $font_family = get_option('ccs_font_family', 'Red Hat Display');
@@ -916,13 +968,7 @@ class Assets
             $font_url = str_replace(' ', '+', $font_family);
             $custom_css = "@import url('https://fonts.googleapis.com/css2?family={$font_url}:wght@400;500;600;700&display=swap');\n" . $custom_css;
         }
-        
-        wp_add_inline_style('childcare-ccs-style', $custom_css);
-        
-        // Add custom CSS from admin Custom CSS page
-        $user_custom_css = get_option('ccs_custom_css', '');
-        if (!empty($user_custom_css)) {
-            wp_add_inline_style('childcare-ccs-style', $user_custom_css);
-        }
+
+        return $custom_css;
     }
 }

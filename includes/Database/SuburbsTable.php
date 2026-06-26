@@ -93,44 +93,82 @@ class SuburbsTable
         
         // Clear existing data
         $wpdb->query("TRUNCATE TABLE {$this->table_name}");
-        
+
         $imported = 0;
         $skipped = 0;
-        
+
         // Skip header
         array_shift($lines);
-        
+
+        // Batch rows into multi-row INSERTs inside a transaction. This replaces
+        // ~18,000 individual INSERT queries with ~36 batched queries, and keeps
+        // the import atomic (a mid-import failure rolls back rather than leaving
+        // a half-populated table after the TRUNCATE).
+        $batch = [];
+        $batch_size = 500;
+
+        $wpdb->query('START TRANSACTION');
+
         foreach ($lines as $line) {
             $data = str_getcsv($line);
-            
+
             if (count($data) >= 4 && !empty($data[1]) && !empty($data[2])) {
                 $postcode = sanitize_text_field($data[1]);
                 $suburb = sanitize_text_field($data[2]);
                 $state = sanitize_text_field($data[3]);
-                
+
                 // Validate postcode
                 if (preg_match('/^\d{4}$/', $postcode) && !empty($suburb)) {
-                    $wpdb->insert(
-                        $this->table_name,
-                        [
-                            'suburb' => strtoupper($suburb),
-                            'postcode' => $postcode,
-                            'state' => strtoupper($state)
-                        ],
-                        ['%s', '%s', '%s']
-                    );
+                    $batch[] = [strtoupper($suburb), $postcode, strtoupper($state)];
                     $imported++;
+
+                    if (count($batch) >= $batch_size) {
+                        $this->insert_batch($batch);
+                        $batch = [];
+                    }
                 } else {
                     $skipped++;
                 }
             }
         }
-        
+
+        // Flush any remaining rows.
+        if (!empty($batch)) {
+            $this->insert_batch($batch);
+        }
+
+        $wpdb->query('COMMIT');
+
         return [
             'success' => true,
             'imported' => $imported,
             'skipped' => $skipped
         ];
+    }
+
+    /**
+     * Insert a batch of suburb rows in a single multi-row, prepared INSERT.
+     *
+     * @param array $batch Array of [suburb, postcode, state] rows.
+     */
+    private function insert_batch(array $batch)
+    {
+        global $wpdb;
+
+        if (empty($batch)) {
+            return;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($batch), '(%s,%s,%s)'));
+        $values = [];
+        foreach ($batch as $row) {
+            $values[] = $row[0];
+            $values[] = $row[1];
+            $values[] = $row[2];
+        }
+
+        $sql = "INSERT INTO {$this->table_name} (suburb, postcode, state) VALUES {$placeholders}";
+        $wpdb->query($wpdb->prepare($sql, $values));
     }
     
     /**

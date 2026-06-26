@@ -2,6 +2,12 @@
 
 All notable changes to The Child Care Subsidy Calculator plugin will be documented in this file.
 
+## [2.2.3] - 2026-06-26
+
+### ⚡ Phase 4 — Performance (no visual change)
+- **Cached generated CSS** - The admin appearance settings were re-read (~150 `get_option` calls) and rebuilt into a CSS string on *every* front-end page load. The result is now generated once, cached, and automatically regenerated only when a setting changes — removing those option reads from normal page loads.
+- **Batched suburb import** - The 18,000-row Australian suburbs import now uses transactional multi-row inserts (~36 queries instead of ~18,000) and is atomic, so a mid-import failure rolls back instead of leaving a half-populated table.
+
 ## [2.2.2] - 2026-06-26
 
 ### 🏗️ Phase 3 — Admin refactor (no functional change)
