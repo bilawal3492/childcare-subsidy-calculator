@@ -16,29 +16,47 @@ class Email
 
     public function send_summary_email()
     {
-        // Log for debugging
-        error_log('CCS: send_summary_email called');
-        
+        // --- Security: verify nonce (CSRF / open-relay protection) ---
+        if (!check_ajax_referer('ccs_frontend', 'nonce', false)) {
+            wp_send_json_error('Security check failed. Please refresh the page and try again.');
+            return;
+        }
+
+        // --- Security: honeypot (silently reject bots that fill the hidden field) ---
+        if (!empty($_POST['ccs_hp'])) {
+            wp_send_json_error('Submission rejected.');
+            return;
+        }
+
+        // --- Security: rate limit submissions per IP to prevent flooding ---
+        if ($this->is_rate_limited()) {
+            wp_send_json_error('Too many submissions. Please try again in a few minutes.');
+            return;
+        }
+
         // Check form type - if HubSpot, skip sending SMTP emails (HubSpot handles it via automation)
         $form_type = get_option('ccs_form_type', 'hubspot');
         $skip_smtp_email = ($form_type === 'hubspot');
-        
-        error_log('CCS: Form type is: ' . $form_type . ' | Skip SMTP email: ' . ($skip_smtp_email ? 'Yes' : 'No'));
-        
+
         // Sanitize input
         $user_name = sanitize_text_field($_POST['user_name'] ?? '');
         $user_email = sanitize_email($_POST['user_email'] ?? '');
         $user_phone = sanitize_text_field($_POST['user_phone'] ?? '');
-        $summary_html = wp_kses_post($_POST['summary_html'] ?? '');
-        
+        $summary_html = $this->sanitize_summary_html($_POST['summary_html'] ?? '');
+
         // Step 1 information
         $location = sanitize_text_field($_POST['location'] ?? '');
         $atsi_status = sanitize_text_field($_POST['atsi_status'] ?? '');
         $enrolment_option = sanitize_text_field($_POST['enrolment_option'] ?? '');
 
         if (empty($user_name) || empty($user_email) || empty($summary_html)) {
-            error_log('CCS: Missing required fields');
             wp_send_json_error('Required fields missing');
+            return;
+        }
+
+        // Validate the email before it is ever used as a mail recipient
+        if (!is_email($user_email)) {
+            wp_send_json_error('Please enter a valid email address');
             return;
         }
 
@@ -51,13 +69,11 @@ class Email
         ]);
 
         if (is_wp_error($post_id)) {
-            error_log('CCS: Error creating post - ' . $post_id->get_error_message());
             wp_send_json_error('Failed to save submission');
             return;
         }
 
         if ($post_id) {
-            error_log('CCS: Submission saved with ID: ' . $post_id);
             update_post_meta($post_id, 'user_name', $user_name);
             update_post_meta($post_id, 'user_email', $user_email);
             update_post_meta($post_id, 'user_phone', $user_phone);
@@ -67,8 +83,11 @@ class Email
             update_post_meta($post_id, 'location', $location);
             update_post_meta($post_id, 'atsi_status', $atsi_status);
             update_post_meta($post_id, 'enrolment_option', $enrolment_option);
+
+            // Phase 1A: shadow-validate the browser's numbers against the
+            // server-side engine. Diagnostic only — never blocks the submission.
+            $this->shadow_validate($post_id);
         } else {
-            error_log('CCS: Failed to create submission post');
             wp_send_json_error('Failed to save submission');
             return;
         }
@@ -77,16 +96,11 @@ class Email
         if (!$skip_smtp_email) {
             // Send email to user
             $this->send_user_email($user_name, $user_email, $user_phone, $summary_html);
-            
+
             // Send separate email to admin
             $this->send_admin_email($user_name, $user_email, $user_phone, $summary_html, $post_id, $location, $atsi_status, $enrolment_option);
-            
-            error_log('CCS: SMTP emails sent (Custom Form mode)');
-        } else {
-            error_log('CCS: SMTP emails skipped (HubSpot handles emails via automation)');
         }
 
-        error_log('CCS: Submission complete, ID: ' . $post_id);
         wp_send_json_success([
             'message' => 'Submission saved' . (!$skip_smtp_email ? ' and emails sent!' : '!'),
             'post_id' => $post_id,
@@ -113,11 +127,6 @@ class Email
         $intro = get_option('ccs_email_template_intro', 'Thank you for using our Child Care Subsidy Calculator. Here\'s your personalized estimate:');
         $body = get_option('ccs_email_template_body', 'This estimate is based on the information you provided and current government rates. Actual amounts may vary.');
         $footer_text = get_option('ccs_email_template_footer_text', 'If you have any questions, please don\'t hesitate to contact us.');
-        
-        // Debug log
-        error_log('CCS Email: Using NEW template system');
-        error_log('CCS Email Subject: ' . $subject);
-        error_log('CCS Email Greeting: ' . $greeting);
         
         // Get colors from admin panel
         $template_colors = get_option('ccs_email_template_colors', array(
@@ -414,6 +423,175 @@ class Email
         foreach ($recipients as $recipient) {
             wp_mail(trim($recipient), $subject, $message, $headers);
         }
+    }
+
+    /**
+     * Phase 1A shadow validation.
+     *
+     * Recomputes the calculation server-side with CCSEngine and compares the
+     * result to the totals the browser sent. Stores the outcome as post meta and
+     * (under WP_DEBUG) logs any mismatch. This NEVER alters the submission, the
+     * stored summary, or the emails — it only measures server/browser parity so
+     * we can trust the engine before making it authoritative (Phase 1B).
+     *
+     * @param int $post_id
+     */
+    private function shadow_validate($post_id)
+    {
+        try {
+            if (!class_exists('CCSCalculator\\Includes\\Calculator\\CCSEngine')) {
+                return;
+            }
+            if (empty($_POST['calc_inputs']) || empty($_POST['calc_totals'])) {
+                return;
+            }
+
+            $raw_inputs = json_decode(wp_unslash($_POST['calc_inputs']), true);
+            $browser    = json_decode(wp_unslash($_POST['calc_totals']), true);
+            if (!is_array($raw_inputs) || !is_array($browser)) {
+                return;
+            }
+
+            // Build a clean, typed input set (the engine also casts internally).
+            $children = [];
+            if (!empty($raw_inputs['children']) && is_array($raw_inputs['children'])) {
+                foreach ($raw_inputs['children'] as $child) {
+                    $children[] = [
+                        'dob'           => sanitize_text_field($child['dob'] ?? ''),
+                        'care_type'     => sanitize_text_field($child['care_type'] ?? 'cbdc'),
+                        'hours_per_day' => (float) ($child['hours_per_day'] ?? 0),
+                        'fee_per_day'   => (float) ($child['fee_per_day'] ?? 0),
+                        'days_week1'    => (int) ($child['days_week1'] ?? 0),
+                        'days_week2'    => (int) ($child['days_week2'] ?? 0),
+                    ];
+                }
+            }
+
+            $input = [
+                'knows_ccs'       => !empty($raw_inputs['knows_ccs']),
+                'income'          => (float) ($raw_inputs['income'] ?? 0),
+                'activity_hours'  => (float) ($raw_inputs['activity_hours'] ?? 0),
+                'withholding_pct' => (float) ($raw_inputs['withholding_pct'] ?? 0.05),
+                'is_atsi'         => !empty($raw_inputs['is_atsi']),
+                'standard_pct'    => (float) ($raw_inputs['standard_pct'] ?? 0),
+                'higher_pct'      => (float) ($raw_inputs['higher_pct'] ?? 0),
+                'children'        => $children,
+            ];
+
+            $policy = get_option('childcare_ccs_policy', []);
+            $engine = new \CCSCalculator\Includes\Calculator\CCSEngine(is_array($policy) ? $policy : []);
+            $computed = $engine->calculate($input);
+            $server = $computed['totals'];
+
+            // Store the server-computed figures as the AUTHORITATIVE record for
+            // this submission (Phase 1B, Option A). The browser HTML is kept for
+            // display/email because parity is verified; these stored figures are
+            // the trustworthy source of truth for admin/reporting/HubSpot.
+            $authoritative = [
+                'standard_pct'            => round($computed['standard_pct'] * 100, 2),
+                'higher_pct'              => round($computed['higher_pct'] * 100, 2),
+                'ccs_hours_per_fortnight' => $computed['ccs_hours_per_fortnight'],
+                'totals'                  => array_map(function ($v) {
+                    return round((float) $v, 2);
+                }, $server),
+                'computed_at'             => current_time('mysql'),
+                'engine_version'          => '1.0',
+            ];
+            update_post_meta($post_id, 'ccs_server_figures', wp_json_encode($authoritative));
+
+            // Compare the key per-fortnight totals within a 1-cent tolerance.
+            $keys = ['fortnightFee', 'fortnightSub', 'fortnightSubBeforeWithholding', 'outPocket'];
+            $diffs = [];
+            foreach ($keys as $k) {
+                $b = isset($browser[$k]) ? (float) $browser[$k] : 0.0;
+                $s = isset($server[$k]) ? (float) $server[$k] : 0.0;
+                if (abs($b - $s) > 0.01) {
+                    $diffs[$k] = ['browser' => round($b, 2), 'server' => round($s, 2)];
+                }
+            }
+
+            $result = empty($diffs) ? 'match' : 'mismatch';
+            update_post_meta($post_id, 'ccs_shadow_result', $result);
+            if (!empty($diffs)) {
+                update_post_meta($post_id, 'ccs_shadow_diffs', wp_json_encode($diffs));
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('CCS authoritative recompute mismatch (post ' . $post_id . '): ' . wp_json_encode($diffs));
+                }
+            }
+        } catch (\Throwable $e) {
+            // Never let diagnostics break a submission.
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('CCS shadow-validation error: ' . $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Sanitize the calculator summary HTML.
+     *
+     * Restricts the submitted markup to the exact set of tags/attributes the
+     * summary actually uses, so the rendered result is unchanged while any
+     * script/event-handler injection is stripped before it reaches emails,
+     * the database, or wp-admin.
+     */
+    private function sanitize_summary_html($html)
+    {
+        $common = ['style' => true, 'class' => true];
+        $cell   = array_merge($common, [
+            'colspan' => true, 'rowspan' => true, 'width' => true, 'align' => true, 'valign' => true,
+        ]);
+
+        $allowed = [
+            'div'    => $common,
+            'span'   => $common,
+            'p'      => $common,
+            'h1'     => $common,
+            'h2'     => $common,
+            'h3'     => $common,
+            'h4'     => $common,
+            'h5'     => $common,
+            'strong' => $common,
+            'b'      => $common,
+            'em'     => $common,
+            'i'      => $common,
+            'small'  => $common,
+            'br'     => [],
+            'hr'     => $common,
+            'ul'     => $common,
+            'ol'     => $common,
+            'li'     => $common,
+            'table'  => array_merge($common, ['width' => true, 'cellpadding' => true, 'cellspacing' => true, 'border' => true]),
+            'thead'  => $common,
+            'tbody'  => $common,
+            'tfoot'  => $common,
+            'tr'     => $common,
+            'td'     => $cell,
+            'th'     => $cell,
+        ];
+
+        return wp_kses($html, $allowed);
+    }
+
+    /**
+     * Basic per-IP rate limiting using transients to deter flooding/abuse
+     * of this public endpoint. Allows up to 10 submissions per 10 minutes.
+     */
+    private function is_rate_limited()
+    {
+        $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field($_SERVER['REMOTE_ADDR']) : '';
+        if (empty($ip)) {
+            return false;
+        }
+
+        $key   = 'ccs_rate_' . md5($ip);
+        $count = (int) get_transient($key);
+
+        if ($count >= 10) {
+            return true;
+        }
+
+        set_transient($key, $count + 1, 10 * MINUTE_IN_SECONDS);
+        return false;
     }
 }
 

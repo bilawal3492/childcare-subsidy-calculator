@@ -28,6 +28,12 @@ class SuburbSearch
     
     public function search_suburbs()
     {
+        // Verify nonce to prevent unauthenticated abuse of this endpoint
+        if (!check_ajax_referer('ccs_frontend', 'nonce', false)) {
+            wp_send_json_error('Security check failed.');
+            return;
+        }
+
         $query = isset($_GET['q']) ? sanitize_text_field($_GET['q']) : '';
         
         if (empty($query)) {

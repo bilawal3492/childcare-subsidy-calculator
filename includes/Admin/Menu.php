@@ -6899,7 +6899,10 @@ class Menu
         $location = get_post_meta($post_id, 'location', true);
         $atsi_status = get_post_meta($post_id, 'atsi_status', true);
         $enrolment_option = get_post_meta($post_id, 'enrolment_option', true);
-        
+        $shadow_result = get_post_meta($post_id, 'ccs_shadow_result', true);
+        $shadow_diffs = get_post_meta($post_id, 'ccs_shadow_diffs', true);
+        $server_figures = get_post_meta($post_id, 'ccs_server_figures', true);
+
         if (empty($submission_date)) {
             $submission_date = $submission->post_date;
         }
@@ -6920,6 +6923,63 @@ class Menu
                 
                 <!-- Sidebar -->
                 <div>
+                    <?php if (!empty($shadow_result)): ?>
+                    <?php
+                        $is_match = ($shadow_result === 'match');
+                        $badge_bg = $is_match ? '#edfaef' : '#fcf0f1';
+                        $badge_border = $is_match ? '#46b450' : '#d63638';
+                        $badge_text = $is_match ? '#1a7f37' : '#b32d2e';
+                    ?>
+                    <div style="background:<?php echo $badge_bg; ?>; padding:15px 20px; border:1px solid <?php echo $badge_border; ?>; border-left-width:4px; border-radius:8px; margin-bottom:20px;">
+                        <h3 style="margin-top:0; color:<?php echo $badge_text; ?>;">
+                            Calculation Check: <?php echo $is_match ? '✓ Match' : '✗ Mismatch'; ?>
+                        </h3>
+                        <p style="margin:0; font-size:13px; color:#555;">
+                            <?php if ($is_match): ?>
+                                Server-side engine agrees with the browser calculation.
+                            <?php else: ?>
+                                Server-side engine differs from the browser numbers:
+                            <?php endif; ?>
+                        </p>
+                        <?php if (!$is_match && !empty($shadow_diffs)): ?>
+                            <?php $diffs = json_decode($shadow_diffs, true); ?>
+                            <?php if (is_array($diffs)): ?>
+                            <table style="width:100%; margin-top:10px; font-size:12px; border-collapse:collapse;">
+                                <tr style="text-align:left; color:#555;">
+                                    <th style="padding:4px;">Field</th><th style="padding:4px;">Browser</th><th style="padding:4px;">Server</th>
+                                </tr>
+                                <?php foreach ($diffs as $field => $vals): ?>
+                                <tr>
+                                    <td style="padding:4px;"><?php echo esc_html($field); ?></td>
+                                    <td style="padding:4px;"><?php echo esc_html($vals['browser'] ?? ''); ?></td>
+                                    <td style="padding:4px;"><?php echo esc_html($vals['server'] ?? ''); ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </table>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php
+                    $figs = !empty($server_figures) ? json_decode($server_figures, true) : null;
+                    if (is_array($figs) && !empty($figs['totals'])):
+                        $t = $figs['totals'];
+                    ?>
+                    <div style="background:#fff; padding:20px; border:1px solid #ccc; border-radius:8px; margin-bottom:20px;">
+                        <h3 style="margin-top:0;">Verified Figures <span style="font-size:11px; font-weight:400; color:#888;">(server-computed)</span></h3>
+                        <table style="width:100%; font-size:13px; border-collapse:collapse;">
+                            <tr><td style="padding:4px 0; color:#555;">Standard CCS</td><td style="text-align:right; font-weight:600;"><?php echo esc_html(number_format((float)($figs['standard_pct'] ?? 0), 2)); ?>%</td></tr>
+                            <tr><td style="padding:4px 0; color:#555;">Higher CCS</td><td style="text-align:right; font-weight:600;"><?php echo esc_html(number_format((float)($figs['higher_pct'] ?? 0), 2)); ?>%</td></tr>
+                            <tr><td style="padding:4px 0; color:#555;">CCS hours / fortnight</td><td style="text-align:right; font-weight:600;"><?php echo esc_html((int)($figs['ccs_hours_per_fortnight'] ?? 0)); ?></td></tr>
+                            <tr><td colspan="2" style="border-top:1px solid #eee; padding-top:6px;"></td></tr>
+                            <tr><td style="padding:4px 0; color:#555;">Total fees (fortnight)</td><td style="text-align:right; font-weight:600;">$<?php echo esc_html(number_format((float)($t['fortnightFee'] ?? 0), 2)); ?></td></tr>
+                            <tr><td style="padding:4px 0; color:#555;">Subsidy (fortnight)</td><td style="text-align:right; font-weight:600;">$<?php echo esc_html(number_format((float)($t['fortnightSub'] ?? 0), 2)); ?></td></tr>
+                            <tr><td style="padding:4px 0; color:#555;">Out of pocket (fortnight)</td><td style="text-align:right; font-weight:600;">$<?php echo esc_html(number_format((float)($t['outPocket'] ?? 0), 2)); ?></td></tr>
+                        </table>
+                    </div>
+                    <?php endif; ?>
+
                     <div style="background:#fff; padding:20px; border:1px solid #ccc; border-radius:8px; margin-bottom:20px;">
                         <h3 style="margin-top:0;">Contact Details</h3>
                         

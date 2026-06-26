@@ -733,9 +733,17 @@ class Shortcode
                             </label>
                         </div>
                         
+                        <!-- Honeypot anti-spam field: placed last + display:none so browsers
+                             never autofill it and humans never see it. Only bots fill it. -->
+                        <div style="display:none !important;" aria-hidden="true">
+                            <label>Leave this field empty
+                                <input type="text" id="ccs_hp" name="ccs_hp" value="" tabindex="-1" autocomplete="off">
+                            </label>
+                        </div>
+
                         <div style="text-align:right;">
-                            <button type="submit" 
-                                    class="button button-primary nav-button nav-next" 
+                            <button type="submit"
+                                    class="button button-primary nav-button nav-next"
                                     style="padding:12px 40px; font-size:16px; font-weight:600;">
                                 Submit
                             </button>
@@ -864,6 +872,99 @@ $hubspot_hidden_field = get_option('ccs_hubspot_hidden_field', 'ccs_summary');
 jQuery(document).ready(function($){
     const policy = <?php echo json_encode($policy ?: []); ?>;
     const hourly_caps = policy.hourly_caps || {};
+
+    // Security nonce for all front-end AJAX requests (suburb search + summary submit)
+    const ccsNonce = '<?php echo esc_js(wp_create_nonce('ccs_frontend')); ?>';
+
+    // Collect raw calculation inputs + browser-computed totals so the server can
+    // shadow-validate its own recomputation against the browser. Diagnostic only
+    // — it never changes what the user sees. Defined at top scope so BOTH the
+    // HubSpot (sendToWordPress) and custom-form submit handlers can call it.
+    function ccsCollectShadowData() {
+        const knowsCCS = $('#know_ccs_percentage').val();
+        const income = parseFloat($('#family_ati').val()) || 0;
+        const activityHours = parseFloat($('#activity').val()) || 0;
+        const withholdingValue = parseFloat($('#ccs_withholding_percentage').val());
+        const withholdingPct = isNaN(withholdingValue) ? 0.05 : withholdingValue / 100;
+
+        let standardCCSPct = 0, higherCCSPct = 0;
+        if (knowsCCS === 'yes') {
+            standardCCSPct = parseFloat($('#standard_ccs_percentage').val()) / 100 || 0;
+            higherCCSPct = parseFloat($('#higher_ccs_percentage').val()) / 100 || 0;
+        } else {
+            standardCCSPct = parseFloat($('#standard_ccs_percentage_calc').val()) / 100 || 0;
+            higherCCSPct = parseFloat($('#higher_ccs_percentage_calc').val()) / 100 || 0.95;
+        }
+
+        const children = [];
+        $('#children-details .child-details').each(function(){
+            children.push({
+                dob: $(this).find('.child-dob').val() || '',
+                care_type: $(this).find('.child-care-type').val() || 'cbdc',
+                hours_per_day: parseFloat($(this).find('.child-hours-slider').val()) || 0,
+                fee_per_day: parseFloat($(this).find('.child-fee').val()) || 0,
+                days_week1: $(this).find('.fortnight-day-btn[data-week="1"].active').length,
+                days_week2: $(this).find('.fortnight-day-btn[data-week="2"].active').length
+            });
+        });
+
+        const inputs = {
+            knows_ccs: knowsCCS === 'yes',
+            income: income,
+            activity_hours: activityHours,
+            withholding_pct: withholdingPct,
+            is_atsi: $('#atsi').val() === 'yes',
+            standard_pct: standardCCSPct,
+            higher_pct: higherCCSPct,
+            children: children
+        };
+
+        // Sum the browser's per-fortnight totals from childrenData (set by calculateCCS).
+        const totals = { fortnightFee: 0, fortnightSub: 0, fortnightSubBeforeWithholding: 0, outPocket: 0 };
+        if (typeof childrenData !== 'undefined' && Array.isArray(childrenData)) {
+            childrenData.forEach(function(c){
+                totals.fortnightFee += c.fortnightFee || 0;
+                totals.fortnightSub += c.fortnightSub || 0;
+                totals.fortnightSubBeforeWithholding += c.fortnightSubBeforeWithholding || 0;
+                totals.outPocket += c.outPocket || 0;
+            });
+        }
+
+        return { inputs: JSON.stringify(inputs), totals: JSON.stringify(totals) };
+    }
+
+    // Human-readable label for a care-type code.
+    function ccsCareTypeLabel(careType) {
+        const map = {
+            cbdc: 'Centre Based Day Care',
+            fdc:  'Family Day Care',
+            oshc: 'Outside School Hours Care (OSHC)',
+            ihc:  'In Home Care'
+        };
+        return map[careType] || 'Centre Based Day Care';
+    }
+
+    // Hourly CCS rate cap by care type + age, using the admin-configured caps.
+    // 'cbdc' (default) preserves the previous behaviour exactly: below school age
+    // uses the Centre-Based cap, school age uses the OSHC school-age cap (same $).
+    function getHourlyCap(careType, age) {
+        const belowSchool = age < 6;
+        switch (careType) {
+            case 'fdc':
+                return parseFloat(hourly_caps.family_day_care_all) || 13.56;
+            case 'oshc':
+                return belowSchool
+                    ? (parseFloat(hourly_caps.oshc_below_school_age) || 14.63)
+                    : (parseFloat(hourly_caps.oshc_school_age) || 12.81);
+            case 'ihc':
+                return parseFloat(hourly_caps.in_home_family) || 39.80;
+            case 'cbdc':
+            default:
+                return belowSchool
+                    ? (parseFloat(hourly_caps.centre_based_day_care) || 14.63)
+                    : (parseFloat(hourly_caps.oshc_school_age) || 12.81);
+        }
+    }
     
     // Summary page colors from admin settings
     const summaryColors = {
@@ -1082,7 +1183,8 @@ jQuery(document).ready(function($){
                 type: 'GET',
                 data: {
                     action: 'ccs_search_suburbs',
-                    q: val
+                    q: val,
+                    nonce: ccsNonce
                 },
                 success: function(response) {
                     // Hide loader
@@ -1573,6 +1675,14 @@ jQuery(document).ready(function($){
                 <div class="child-details" style="margin-top: 40px;" data-child="${i}">
                     <h4 style="margin-bottom: 20px;">Child ${i}</h4>
                     <p>Date of Birth: <input style="line-height: 20px; border-style: solid;" type="date" class="child-dob"></p>
+                    <p>Type of Care:
+                        <select class="child-care-type" style="line-height: 20px; border-style: solid; padding: 4px;">
+                            <option value="cbdc" selected>Centre Based Day Care</option>
+                            <option value="fdc">Family Day Care</option>
+                            <option value="oshc">Outside School Hours Care (OSHC)</option>
+                            <option value="ihc">In Home Care</option>
+                        </select>
+                    </p>
                     <p><strong>Fortnightly Days:</strong></p>
                     <div class="fortnight-days" style="margin-bottom: 20px;">
                         <div style="margin-bottom: 15px;">
@@ -1764,7 +1874,23 @@ jQuery(document).ready(function($){
         }
     }
 
-    function getAge(dob){ if(!dob) return 0; const d=new Date(dob); const diff=Date.now()-d.getTime(); return new Date(diff).getUTCFullYear()-1970; }
+    // Robust whole-year (calendar) age. Parses the date locally and subtracts a
+    // year if the birthday hasn't occurred yet — matches the PHP engine's
+    // DateTime diff. Returns 0 for empty/invalid/future dates.
+    function getAge(dob){
+        if(!dob) return 0;
+        const parts = String(dob).split('-');
+        if(parts.length !== 3) return 0;
+        const y = parseInt(parts[0],10), m = parseInt(parts[1],10), d = parseInt(parts[2],10);
+        if(!y || !m || !d) return 0;
+        const birth = new Date(y, m-1, d);
+        const now = new Date();
+        if(birth > now) return 0;
+        let age = now.getFullYear() - birth.getFullYear();
+        const md = now.getMonth() - birth.getMonth();
+        if(md < 0 || (md === 0 && now.getDate() < birth.getDate())) age--;
+        return age;
+    }
 
 
     // CCS Calculations
@@ -1825,9 +1951,9 @@ jQuery(document).ready(function($){
             // Step 4.2 - Work out hourly fee
             const hourlyFee = hoursPerDay > 0 ? feePerDay / hoursPerDay : 0;
             
-            // Step 4.3 - Get hourly CCS rate cap based on age and service type
-            // Using Centre Based Day Care as default service type
-            const cap = (age < 6) ? (hourly_caps.centre_based_day_care || 14.63) : (hourly_caps.oshc_school_age || 12.81);
+            // Step 4.3 - Get hourly CCS rate cap based on selected care type and age
+            const careType = $(this).find('.child-care-type').val() || 'cbdc';
+            const cap = getHourlyCap(careType, age);
             
             // Step 4.4 - Work out hourly CCS amount (lower of hourly fee and cap × CCS rate)
             const effectiveHourlyRate = Math.min(hourlyFee, cap);
@@ -1858,8 +1984,8 @@ jQuery(document).ready(function($){
             const outPocket = week1OutOfPocket + week2OutOfPocket;
             
             // Step 4.9 - Cost after EOY reconciliation (when withholding is returned)
-            const week1AfterEOY = week1OutOfPocket - week1Withholding;
-            const week2AfterEOY = week2OutOfPocket - week2Withholding;
+            const week1AfterEOY = Math.max(0, week1OutOfPocket - week1Withholding);
+            const week2AfterEOY = Math.max(0, week2OutOfPocket - week2Withholding);
             
             childrenData.push({
                 dob, hoursPerDay, feePerDay, daysWeek1, daysWeek2, 
@@ -1877,6 +2003,8 @@ jQuery(document).ready(function($){
                 isHigherCCS: isEligibleForHigherCCS,
                 hourlyFee: hourlyFee,
                 hourlyCap: cap,
+                careType: careType,
+                careTypeLabel: ccsCareTypeLabel(careType),
                 hourlyCCSAmount: hourlyCCSAmount
             });
             
@@ -1949,6 +2077,7 @@ jQuery(document).ready(function($){
                     <div class="child-detail-card" style="flex: 1; padding:20px; border:1px solid #f5f5f5; border-radius:5px; background:#fff;">
                         <h5 style="margin-bottom: 15px; color: ${summaryColors.heading};">Child ${i+1}</h5>
                         <p style="font-size: 16px; line-height: 20px;"><strong>Location:</strong> ${c.suburb || '-'}</p>
+                        <p style="font-size: 16px; line-height: 20px;"><strong>Type of Care:</strong> ${c.careTypeLabel || 'Centre Based Day Care'}</p>
                         <p style="font-size: 16px; line-height: 20px;"><strong>CCS Percentage:</strong> ${(c.ccs_pct*100).toFixed(2)}%</p>
                         <p style="font-size: 16px; line-height: 20px;"><strong>Days per Fortnight:</strong> Week 1: ${c.daysWeek1}, Week 2: ${c.daysWeek2}</p>
                         <p style="font-size: 16px; line-height: 20px;"><strong>Session (hours/day):</strong> ${c.hoursPerDay}</p>
@@ -2034,6 +2163,7 @@ jQuery(document).ready(function($){
                 <div class="child-detail-card" style="flex: 1; padding:20px; border:1px solid #f5f5f5; border-radius:5px; background:#fff;">
                     <h5 style="margin-bottom: 15px; color: ${summaryColors.heading};">Child ${parseInt(child)+1}</h5>
                     <p style="font-size: 16px; line-height: 20px;"><strong>Location:</strong> ${c.suburb || '-'}</p>
+                    <p style="font-size: 16px; line-height: 20px;"><strong>Type of Care:</strong> ${c.careTypeLabel || 'Centre Based Day Care'}</p>
                     <p style="font-size: 16px; line-height: 20px;"><strong>CCS Percentage:</strong> ${(c.ccs_pct*100).toFixed(2)}%</p>
                     <p style="font-size: 16px; line-height: 20px;"><strong>Days per Fortnight:</strong> Week 1: ${c.daysWeek1}, Week 2: ${c.daysWeek2}</p>
                     <p style="font-size: 16px; line-height: 20px;"><strong>Session (hours/day):</strong> ${c.hoursPerDay}</p>
@@ -2479,7 +2609,7 @@ jQuery(document).ready(function($){
                 }
                 
                 // Combined details field - clean and readable summary
-                const childDetails = 'DOB: ' + formattedDOB + ' | CCS: ' + (child.ccs_pct * 100).toFixed(2) + '% | Days: W1: ' + child.daysWeek1 + ', W2: ' + child.daysWeek2 + ' | Hours/day: ' + child.hoursPerDay + ' | Daily Fee: $' + formatCurrency(child.feePerDay);
+                const childDetails = 'DOB: ' + formattedDOB + ' | Care: ' + (child.careTypeLabel || 'Centre Based Day Care') + ' | CCS: ' + (child.ccs_pct * 100).toFixed(2) + '% | Days: W1: ' + child.daysWeek1 + ', W2: ' + child.daysWeek2 + ' | Hours/day: ' + child.hoursPerDay + ' | Daily Fee: $' + formatCurrency(child.feePerDay);
                 fields['ccs_child' + childNum + '_details'] = childDetails;
             }
         });
@@ -2801,6 +2931,7 @@ jQuery(document).ready(function($){
             return null;
         }
         
+        // Collect the raw calculation inputs + browser-computed totals so the
         // Helper function to send data to WordPress
         function sendToWordPress(firstname, lastname, email, phone, country) {
             const summaryHTML = `
@@ -2824,8 +2955,13 @@ jQuery(document).ready(function($){
                 </div>
             `;
             
+            const ccsShadow = ccsCollectShadowData();
             $.post('<?php echo admin_url('admin-ajax.php'); ?>', {
                 action: 'send_summary_email',
+                nonce: ccsNonce,
+                ccs_hp: '',
+                calc_inputs: ccsShadow.inputs,
+                calc_totals: ccsShadow.totals,
                 user_name: firstname + ' ' + lastname,
                 user_email: email,
                 user_phone: phone,
@@ -2935,8 +3071,13 @@ jQuery(document).ready(function($){
             $('#custom-summary-form button[type="submit"]').prop('disabled', true).text('Sending...');
             
             // Send to WordPress
+            const ccsShadow = ccsCollectShadowData();
             $.post('<?php echo admin_url('admin-ajax.php'); ?>', {
                 action: 'send_summary_email',
+                nonce: ccsNonce,
+                ccs_hp: $('#ccs_hp').val() || '',
+                calc_inputs: ccsShadow.inputs,
+                calc_totals: ccsShadow.totals,
                 user_name: fullName,
                 user_email: email,
                 user_phone: phone,

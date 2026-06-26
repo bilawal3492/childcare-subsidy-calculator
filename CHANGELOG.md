@@ -2,6 +2,88 @@
 
 All notable changes to The Child Care Subsidy Calculator plugin will be documented in this file.
 
+## [2.2.0] - 2026-06-26
+
+Stable release consolidating the security hardening and calculation-engine work from the 2.2.0 beta series. No change to the HubSpot submission or automated-email behaviour.
+
+### 🔒 Security
+- All front-end AJAX (summary submission + suburb search) now require a valid nonce, closing the previously open/unauthenticated endpoints.
+- Email recipient validated with `is_email()`, per-IP rate limiting, and a honeypot field to stop spam/abuse of the public endpoint.
+- Submitted summary HTML is sanitised through a strict tag/attribute allowlist before it reaches emails, the database, or wp-admin.
+- Removed a debug tool and verbose logging from the shipped plugin.
+
+### 🧮 Calculation engine
+- New server-side `CCSEngine` mirrors the calculator exactly and is covered by 59 automated tests.
+- Each submission is recomputed server-side and stored as an authoritative figures record; the admin submission screen shows a Match/Mismatch check plus a "Verified Figures" panel.
+
+### 🎯 Accuracy
+- **Per-child "Type of Care" selector** (Centre Based Day Care, Family Day Care, OSHC, In Home Care) applies the correct hourly-rate cap per care type and age. Centre Based Day Care (the default) reproduces previous numbers exactly.
+- Robust calendar-based age calculation replacing the previous epoch-based method.
+- End-of-year figure floored at $0 (defensive).
+
+## [2.2.0-beta7] - 2026-06-26
+
+### 🔧 Phase 1B — Small correctness fixes
+- **Robust age calculation** - Replaced the fragile epoch-based `getAge` (which could mis-handle leap years/timezones) with a proper calendar-age calculation that matches the server engine: subtracts a year if the birthday hasn't occurred yet, and returns 0 for empty/invalid/future dates.
+- **After-EOY floored at $0 (defensive)** - The end-of-year figure is now floored at zero in both the browser and the engine. (Mathematically it was already always ≥ 0 because the subsidy is capped at the fee, so no displayed number changes — this just future-proofs the formula.)
+- Test suite expanded to 59 assertions (added calendar-age birthday/leap-year edge cases).
+
+## [2.2.0-beta6] - 2026-06-26
+
+### 🐛 Fix
+- **Server recompute ignored care type** - The server-side validation rebuilt each child without the `care_type` field, so it defaulted every child to Centre Based Day Care and produced a false mismatch (e.g. a Family Day Care child was capped at the centre rate). The server now passes care type through, so Verified Figures and the match check are correct for all care types.
+
+## [2.2.0-beta5] - 2026-06-26
+
+### 🎯 Phase 1B — Care type selector + correct hourly caps
+- **Per-child "Type of Care" selector** - Each child can now be set to Centre Based Day Care (default), Family Day Care, Outside School Hours Care (OSHC), or In Home Care. The correct hourly-rate cap is applied per care type and age, replacing the previous age-only cap that ignored care type.
+- **Behaviour preserved for existing use** - Centre Based Day Care (the default) reproduces the previous numbers exactly, so existing submissions are unaffected; only FDC/OSHC/In-Home selections change the cap.
+- **Care type shown everywhere** - Appears in the on-page summary, the emailed/stored summary, and is included in the per-child details sent to HubSpot.
+- **Engine + tests** - The server engine mirrors the new cap logic; test suite expanded to 56 assertions covering every care-type/age cap.
+
+## [2.2.0-beta4] - 2026-06-26
+
+### 🔐 Phase 1B (Option A) — Authoritative server figures
+- **Server-computed figures stored as source of truth** - On each submission the server now records its own computed CCS percentages, hours, and per-fortnight totals (`ccs_server_figures`) as the trustworthy record, independent of the browser. The email/display still uses the parity-verified browser HTML, so appearance is unchanged.
+- **Admin "Verified Figures" panel** - The submission detail screen shows the server-computed Standard/Higher CCS %, CCS hours, and fortnightly fees/subsidy/out-of-pocket alongside the existing match/mismatch badge.
+
+## [2.2.0-beta3] - 2026-06-26
+
+### 🔧 Shadow-validation parity
+- **Matched the browser's percentage rounding** - The browser stores the calculated CCS percentages in form fields via `toFixed(2)` (2 decimals) and reads them back. The server engine now replicates that exact round-trip, eliminating ~6-cent shadow-validation mismatches caused by the server using full-precision percentages. Engine test suite expanded to 48 assertions.
+
+## [2.2.0-beta2] - 2026-06-26
+
+### 🐛 Fix
+- **Submit stuck on "Sending…" (custom form)** - Fixed `ReferenceError: ccsCollectShadowData is not defined`. The shadow-validation helper was defined inside the HubSpot form scope and was unreachable from the custom-form submit handler; it is now defined at the top scope so both submit paths work.
+
+## [2.2.0-beta1] - 2026-06-26
+
+### 🧪 Phase 1A — Server-side calculation engine (shadow mode)
+This is a STAGING beta. No user-facing numbers change; it adds a server-side engine that silently double-checks the browser's calculation.
+
+- **New `CCSEngine` (server-side)** - PHP re-implementation of the CCS calculation that mirrors the existing browser logic exactly (income→subsidy %, higher-CCS bands, 3-Day Guarantee hours, age-based caps, withholding, out-of-pocket). Covered by 46 automated tests.
+- **Shadow validation** - On each submission the server recomputes the figures and compares them to the browser's totals within a 1-cent tolerance. The result is stored on the submission and never blocks or alters it.
+- **Admin visibility** - The submission detail screen now shows a "Calculation Check: ✓ Match / ✗ Mismatch" badge (with a field-by-field diff on mismatch) so parity can be verified on real data before the engine is made authoritative (Phase 1B).
+
+## [2.1.2] - 2026-06-26
+
+### 🐛 Fix
+- **Honeypot false positive** - The anti-spam honeypot field could be auto-filled by browsers/password managers (it was an off-screen text input rendered first in the form), causing legitimate custom-form submissions to be wrongly rejected with "Submission rejected." The field is now hidden with `display:none` and placed last in the form so it is never auto-filled, while still catching bots.
+
+## [2.1.1] - 2026-06-26
+
+### 🔒 Security Hardening (Phase 0)
+No changes to calculator behaviour, HubSpot submission, or email delivery — these fixes wrap the existing flow with protection only.
+
+- **CSRF / nonce verification** - The summary-submission (`send_summary_email`) and suburb-search (`ccs_search_suburbs`) AJAX endpoints now require a valid WordPress nonce, closing the previously open, unauthenticated endpoints.
+- **Email recipient validation** - Submissions are now validated with `is_email()` before any mail is sent, preventing the endpoint from being used as an open relay.
+- **Rate limiting** - Per-IP throttling (max 10 submissions / 10 minutes) deters flooding and database-spamming abuse.
+- **Honeypot anti-spam** - Hidden field on the custom form silently rejects bot submissions (invisible to real users).
+- **Stricter summary sanitization** - Submitted summary HTML is now filtered through a tight tag/attribute allowlist (rendering is unchanged) to strip any script/event-handler injection before it reaches emails, the database, or wp-admin.
+- **Removed debug logging** - Stripped informational `error_log()` calls that ran on every submission.
+- **Removed debug tool from production** - Deleted `check-email-settings.php` from the shipped plugin.
+
 ## [2.1.0] - 2025-11-27
 
 ### 🚀 Major HubSpot Integration Update
