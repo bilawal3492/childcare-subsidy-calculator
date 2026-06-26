@@ -917,23 +917,139 @@ jQuery(document).ready(function($){
     // browser print dialog (Save as PDF). Dependency-free; does not touch the
     // calculation or the submission flow.
     function ccsBuildPrintableHTML() {
+        // Branding + contact pulled from WordPress Site Identity & plugin settings
+        const brand = ('<?php echo esc_js(get_option('ccs_button_bg_color', '#0073aa')); ?>' || '#0073aa');
         const siteName = '<?php echo esc_js(get_bloginfo('name')); ?>';
+        const logoUrl = '<?php $__lid = get_theme_mod('custom_logo'); echo esc_js($__lid ? wp_get_attachment_image_url($__lid, 'full') : ''); ?>';
+        const homeLabel = '<?php echo esc_js(preg_replace('#^https?://#', '', untrailingslashit(home_url()))); ?>';
+        const contactEmail = '<?php echo esc_js(get_option('ccs_email_contact_email', get_option('admin_email'))); ?>';
+        const contactPhone = '<?php echo esc_js(get_option('ccs_email_contact_phone', '')); ?>';
         const disclaimer = '<?php echo esc_js($policy['disclaimer_text'] ?? ''); ?>';
         const today = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
-        const mainCard = $('#summary-main-card').prop('outerHTML') || '';
-        const income = $('#household-income-info').html() || '';
-        const children = $('#child-details-summary').html() || '';
+        const m = function(v){ return '$' + formatCurrency(v || 0); };
+
+        // Household inputs
+        const knowsCCS = $('#know_ccs_percentage').val();
+        const incomeRaw = parseFloat($('#family_ati').val()) || 0;
+        const activityText = ($('#activity option:selected').text() || '').trim() || '—';
+        const ccsHoursText = ($('#ccs_hours_display').val() || '').toString().trim() || '—';
+        const withholdingPct = ($('#ccs_withholding_percentage').val() || '5') + '%';
+        const standardPct = ((knowsCCS === 'yes' ? $('#standard_ccs_percentage').val() : $('#standard_ccs_percentage_calc').val()) || '').toString();
+        const higherPct = ((knowsCCS === 'yes' ? $('#higher_ccs_percentage').val() : $('#higher_ccs_percentage_calc').val()) || '').toString();
+
+        // Totals across children
+        const cd = (typeof childrenData !== 'undefined' && Array.isArray(childrenData)) ? childrenData : [];
+        const t = { w1Fee:0,w2Fee:0,fnFee:0, w1SubBW:0,w2SubBW:0,fnSubBW:0, w1Wh:0,w2Wh:0, w1Sub:0,w2Sub:0,fnSub:0, w1Out:0,w2Out:0,fnOut:0 };
+        cd.forEach(function(c){
+            t.w1Fee+=c.week1Fee||0; t.w2Fee+=c.week2Fee||0; t.fnFee+=c.fortnightFee||0;
+            t.w1SubBW+=c.week1SubBeforeWithholding||0; t.w2SubBW+=c.week2SubBeforeWithholding||0; t.fnSubBW+=c.fortnightSubBeforeWithholding||0;
+            t.w1Wh+=c.week1Withholding||0; t.w2Wh+=c.week2Withholding||0;
+            t.w1Sub+=c.week1Sub||0; t.w2Sub+=c.week2Sub||0; t.fnSub+=c.fortnightSub||0;
+            t.w1Out+=Math.max(0,(c.week1Fee||0)-(c.week1Sub||0)); t.w2Out+=Math.max(0,(c.week2Fee||0)-(c.week2Sub||0)); t.fnOut+=c.outPocket||0;
+        });
+        const fnWh = t.w1Wh + t.w2Wh;
+
+        function row(label, w1, w2, fn, opts){
+            opts = opts || {};
+            const lbl = opts.strong ? '#fff' : '#374151';
+            const val = opts.strong ? '#fff' : (opts.color || '#111827');
+            const bg = opts.strong ? brand : 'transparent';
+            return '<tr style="background:'+bg+';">'
+                + '<td style="padding:8px 12px; font-size:12px; color:'+lbl+'; font-weight:'+(opts.strong?'700':'500')+'; border-bottom:1px solid #eef2f7;">'+label+'</td>'
+                + '<td style="padding:8px 12px; font-size:12px; text-align:right; color:'+val+'; font-weight:600; border-bottom:1px solid #eef2f7;">'+m(w1)+'</td>'
+                + '<td style="padding:8px 12px; font-size:12px; text-align:right; color:'+val+'; font-weight:600; border-bottom:1px solid #eef2f7;">'+m(w2)+'</td>'
+                + '<td style="padding:8px 12px; font-size:12.5px; text-align:right; color:'+val+'; font-weight:700; border-bottom:1px solid #eef2f7;">'+m(fn)+'</td>'
+                + '</tr>';
+        }
+
+        let childRows = '';
+        cd.forEach(function(c, i){
+            childRows += '<tr>'
+                + '<td style="padding:7px 10px; font-size:11.5px; border-bottom:1px solid #eef2f7; font-weight:700; color:'+brand+';">Child '+(i+1)+'</td>'
+                + '<td style="padding:7px 10px; font-size:11.5px; border-bottom:1px solid #eef2f7;">'+(c.careTypeLabel||'—')+'</td>'
+                + '<td style="padding:7px 10px; font-size:11.5px; border-bottom:1px solid #eef2f7; text-align:center;">'+((c.ccs_pct*100).toFixed(2))+'%</td>'
+                + '<td style="padding:7px 10px; font-size:11.5px; border-bottom:1px solid #eef2f7; text-align:center;">'+c.daysWeek1+' / '+c.daysWeek2+'</td>'
+                + '<td style="padding:7px 10px; font-size:11.5px; border-bottom:1px solid #eef2f7; text-align:center;">'+c.hoursPerDay+'</td>'
+                + '<td style="padding:7px 10px; font-size:11.5px; border-bottom:1px solid #eef2f7; text-align:right;">'+m(c.feePerDay)+'</td>'
+                + '</tr>';
+        });
+
+        function field(label, value){
+            return '<div style="margin-bottom:9px;">'
+                + '<div style="font-size:9.5px; text-transform:uppercase; letter-spacing:.5px; color:#9ca3af;">'+label+'</div>'
+                + '<div style="font-size:12.5px; font-weight:700; color:#111827;">'+value+'</div></div>';
+        }
+
+        const logoHTML = logoUrl
+            ? '<img src="'+logoUrl+'" alt="'+siteName+'" style="max-height:44px; max-width:190px; display:block;">'
+            : '<div style="font-size:19px; font-weight:800; color:#fff;">'+siteName+'</div>';
+
+        const contactBits = [];
+        if (homeLabel) contactBits.push('&#127760; '+homeLabel);
+        if (contactEmail) contactBits.push('&#9993; '+contactEmail);
+        if (contactPhone) contactBits.push('&#9742; '+contactPhone);
+
         return ''
-            + '<div style="font-family: Arial, Helvetica, sans-serif; max-width: 780px; margin: 0 auto; color:#222;">'
-            +   '<div style="text-align:center; border-bottom:3px solid #0073aa; padding-bottom:14px; margin-bottom:24px;">'
-            +     '<h1 style="margin:0; font-size:24px; color:#0073aa;">Childcare Subsidy Estimate</h1>'
-            +     '<p style="margin:6px 0 0; color:#666; font-size:14px;">' + siteName + ' &middot; ' + today + '</p>'
-            +   '</div>'
-            +   '<div style="margin-bottom:24px;">' + mainCard + '</div>'
-            +   (income ? '<h2 style="font-size:18px; color:#333;">Household Income Information</h2>' + income : '')
-            +   (children ? '<h2 style="font-size:18px; color:#333; margin-top:24px;">Child Details</h2><div style="display:flex; flex-wrap:wrap; gap:16px;">' + children + '</div>' : '')
-            +   (disclaimer ? '<p style="font-size:12px; color:#777; margin-top:30px; border-top:1px solid #eee; padding-top:14px;">' + disclaimer + '</p>' : '')
-            + '</div>';
+        + '<div class="pdf-doc" style="font-family:Arial,Helvetica,sans-serif; color:#1f2937; max-width:720px; margin:0 auto;">'
+          + '<div style="background:'+brand+'; border-radius:14px; padding:16px 22px; display:flex; align-items:center; justify-content:space-between; gap:16px;">'
+            + '<div style="display:flex; align-items:center;">'+logoHTML+'</div>'
+            + '<div style="text-align:right; color:#fff;">'
+              + '<div style="font-size:17px; font-weight:800;">Childcare Subsidy Estimate</div>'
+              + '<div style="font-size:11.5px; opacity:.9;">'+today+'</div>'
+            + '</div>'
+          + '</div>'
+          + '<div style="display:flex; gap:14px; margin-top:14px;">'
+            + '<div style="flex:1; background:#ecfdf5; border:1px solid #d1fae5; border-radius:12px; padding:13px 18px;">'
+              + '<div style="font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:#059669; font-weight:700;">Government pays / fortnight</div>'
+              + '<div style="font-size:25px; font-weight:800; color:#059669; margin-top:2px;">'+m(t.fnSub)+'</div></div>'
+            + '<div style="flex:1; background:linear-gradient(135deg,#f7941d,#ff6b35); border-radius:12px; padding:13px 18px; color:#fff;">'
+              + '<div style="font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; font-weight:700; opacity:.95;">What you pay / fortnight</div>'
+              + '<div style="font-size:25px; font-weight:800; margin-top:2px;">'+m(t.fnOut)+'</div></div>'
+          + '</div>'
+          + '<div style="margin-top:16px;">'
+            + '<div style="font-size:12px; font-weight:800; color:'+brand+'; text-transform:uppercase; letter-spacing:.6px; margin-bottom:7px;">Full Breakdown</div>'
+            + '<table style="width:100%; border-collapse:collapse; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden;">'
+              + '<thead><tr style="background:#f8fafc;">'
+                + '<th style="padding:8px 12px; text-align:left; font-size:10px; color:#6b7280; text-transform:uppercase; letter-spacing:.4px;">Item</th>'
+                + '<th style="padding:8px 12px; text-align:right; font-size:10px; color:#6b7280; text-transform:uppercase;">Week 1</th>'
+                + '<th style="padding:8px 12px; text-align:right; font-size:10px; color:#6b7280; text-transform:uppercase;">Week 2</th>'
+                + '<th style="padding:8px 12px; text-align:right; font-size:10px; color:#6b7280; text-transform:uppercase;">Fortnightly</th>'
+              + '</tr></thead><tbody>'
+              + row('Total fees', t.w1Fee, t.w2Fee, t.fnFee)
+              + row('Estimated subsidy', t.w1SubBW, t.w2SubBW, t.fnSubBW, {color:'#059669'})
+              + row('CCS withholding', t.w1Wh, t.w2Wh, fnWh, {color:'#b45309'})
+              + row('CCS paid to provider', t.w1Sub, t.w2Sub, t.fnSub, {color:'#059669'})
+              + row('What you pay', t.w1Out, t.w2Out, t.fnOut, {strong:true})
+            + '</tbody></table>'
+          + '</div>'
+          + '<div style="display:flex; gap:16px; margin-top:16px; align-items:flex-start;">'
+            + '<div style="width:33%; background:#f8fafc; border:1px solid #e5e7eb; border-radius:12px; padding:13px 16px;">'
+              + '<div style="font-size:12px; font-weight:800; color:'+brand+'; text-transform:uppercase; letter-spacing:.6px; margin-bottom:9px;">Household</div>'
+              + field('Family income', incomeRaw ? m(incomeRaw) : '—')
+              + field('Activity hours', activityText)
+              + field('CCS hours', ccsHoursText)
+              + field('Standard CCS', standardPct ? standardPct+'%' : '—')
+              + field('Higher CCS', higherPct ? higherPct+'%' : '—')
+              + field('Withholding', withholdingPct)
+            + '</div>'
+            + '<div style="flex:1;">'
+              + '<div style="font-size:12px; font-weight:800; color:'+brand+'; text-transform:uppercase; letter-spacing:.6px; margin-bottom:9px;">Children</div>'
+              + '<table style="width:100%; border-collapse:collapse; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden;">'
+                + '<thead><tr style="background:#f8fafc;">'
+                  + '<th style="padding:7px 10px; text-align:left; font-size:9.5px; color:#6b7280;">Child</th>'
+                  + '<th style="padding:7px 10px; text-align:left; font-size:9.5px; color:#6b7280;">Care type</th>'
+                  + '<th style="padding:7px 10px; text-align:center; font-size:9.5px; color:#6b7280;">CCS</th>'
+                  + '<th style="padding:7px 10px; text-align:center; font-size:9.5px; color:#6b7280;">Days</th>'
+                  + '<th style="padding:7px 10px; text-align:center; font-size:9.5px; color:#6b7280;">Hrs</th>'
+                  + '<th style="padding:7px 10px; text-align:right; font-size:9.5px; color:#6b7280;">Fee</th>'
+                + '</tr></thead><tbody>'+childRows+'</tbody></table>'
+            + '</div>'
+          + '</div>'
+          + '<div style="margin-top:16px; background:'+brand+'; border-radius:12px; padding:11px 18px; text-align:center; color:#fff; font-size:11.5px; font-weight:600;">'
+            + contactBits.join('<span style="opacity:.45; margin:0 10px;">|</span>')
+          + '</div>'
+          + (disclaimer ? '<p style="font-size:10px; color:#9ca3af; margin:11px 4px 0; line-height:1.5;">'+disclaimer+'</p>' : '')
+        + '</div>';
     }
 
     function ccsPrintEstimate() {
@@ -942,12 +1058,12 @@ jQuery(document).ready(function($){
         const body = ccsBuildPrintableHTML();
         w.document.open();
         w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Childcare Subsidy Estimate</title>'
-            + '<style>body{ -webkit-print-color-adjust:exact; print-color-adjust:exact; margin:24px; background:#fff; } @media print{ .ccs-print-actions{ display:none !important; } }</style>'
+            + '<style>@page{ size:A4; margin:9mm; } html,body{ margin:0; padding:0; background:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact; font-family:Arial,Helvetica,sans-serif; } .pdf-doc{ padding:4mm 2mm; } @media print{ .ccs-print-actions{ display:none !important; } }</style>'
             + '</head><body>' + body
-            + '<div class="ccs-print-actions" style="text-align:center; margin-top:28px;">'
-            + '<button onclick="window.print()" style="background:#0073aa; color:#fff; border:none; padding:10px 24px; font-size:14px; border-radius:6px; cursor:pointer;">Print / Save as PDF</button>'
+            + '<div class="ccs-print-actions" style="text-align:center; margin:24px 0;">'
+            + '<button onclick="window.print()" style="background:#0073aa; color:#fff; border:none; padding:11px 26px; font-size:14px; font-weight:600; border-radius:6px; cursor:pointer;">Print / Save as PDF</button>'
             + '</div>'
-            + '<scr' + 'ipt>window.onload=function(){ setTimeout(function(){ try{ window.focus(); window.print(); }catch(e){} }, 350); };</scr' + 'ipt>'
+            + '<scr' + 'ipt>window.onload=function(){ setTimeout(function(){ try{ window.focus(); window.print(); }catch(e){} }, 400); };</scr' + 'ipt>'
             + '</body></html>');
         w.document.close();
     }
