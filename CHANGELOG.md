@@ -2,10 +2,12 @@
 
 All notable changes to The Child Care Subsidy Calculator plugin will be documented in this file.
 
-## [2.2.4] - 2026-06-26
+## [2.2.5] - 2026-06-26
 
 ### 🐛 Fix
-- **"Security check failed" on submit** - The summary submission now fetches a fresh security nonce immediately before sending (and refreshes it on page load), so submissions no longer fail when the calculator page is served from a cache or has been open long enough for its embedded nonce to expire.
+- **"Security check failed" on submit** - The summary submission now fetches a fresh security nonce immediately before sending (and refreshes it on page load), so submissions no longer fail when the calculator page is served from a cache or has been open long enough for its embedded nonce to expire. Adds an uncached `ccs_refresh_nonce` endpoint.
+
+## [2.2.4] - 2026-06-26
 
 ### 🔐 Phase 5 — Privacy & compliance
 - **GDPR / Privacy Act data tools** - Calculator submissions are now included in WordPress's built-in personal-data **Export** and **Erase** tools (Tools → Export/Erase Personal Data), matched by email address.
