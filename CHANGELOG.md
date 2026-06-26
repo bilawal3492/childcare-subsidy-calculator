@@ -2,6 +2,11 @@
 
 All notable changes to The Child Care Subsidy Calculator plugin will be documented in this file.
 
+## [2.2.2] - 2026-06-26
+
+### 🏗️ Phase 3 — Admin refactor (no functional change)
+- Split the 7,081-line `includes/Admin/Menu.php` into a 177-line controller plus ten view partials under `includes/Admin/views/` (settings, form integration, appearance, custom CSS, email template, submissions, single submission, how-to-use, dashboard, changelog). Each admin page's markup is byte-identical — only relocated — so behaviour is unchanged. The file is now maintainable instead of a single 7k-line blob.
+
 ## [2.2.1] - 2026-06-26
 
 ### 🧹 Phase 2 — Cleanup (no functional change)
