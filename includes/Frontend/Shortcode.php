@@ -916,11 +916,50 @@ jQuery(document).ready(function($){
     // Builds a clean printable document from the rendered summary and opens the
     // browser print dialog (Save as PDF). Dependency-free; does not touch the
     // calculation or the submission flow.
+    // Normalises a #hex / rgb() / rgba() string to {r,g,b}; null if unparseable.
+    function ccsRGB(c){
+        c = (c || '').toString().trim();
+        let m = c.match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);
+        if (m){ let h = m[1]; if (h.length === 3) h = h.replace(/./g, '$&$&');
+            return { r:parseInt(h.slice(0,2),16), g:parseInt(h.slice(2,4),16), b:parseInt(h.slice(4,6),16) }; }
+        m = c.match(/rgba?\(([^)]+)\)/i);
+        if (m){ const p = m[1].split(',').map(function(s){ return parseFloat(s); });
+            return { r:p[0]||0, g:p[1]||0, b:p[2]||0 }; }
+        return null;
+    }
+    function ccsHex(c, fb){ const r = ccsRGB(c); if (!r) return fb;
+        const h = function(x){ return ('0' + Math.max(0, Math.min(255, Math.round(x))).toString(16)).slice(-2); };
+        return '#' + h(r.r) + h(r.g) + h(r.b); }
+    function ccsMix(c, t, a){ const x = ccsRGB(c) || {r:0,g:0,b:0};
+        return 'rgb(' + Math.round(x.r+(t.r-x.r)*a) + ',' + Math.round(x.g+(t.g-x.g)*a) + ',' + Math.round(x.b+(t.b-x.b)*a) + ')'; }
+    function ccsTint(c, a){ return ccsMix(c, {r:255,g:255,b:255}, a); }   // toward white
+    function ccsShade(c, a){ return ccsMix(c, {r:0,g:0,b:0}, a); }        // toward black
+    function ccsLum(c){ const x = ccsRGB(c) || {r:0,g:0,b:0};
+        const f = function(v){ v/=255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); };
+        return 0.2126*f(x.r) + 0.7152*f(x.g) + 0.0722*f(x.b); }
+    // Legible text colour for a given fill (white on dark brands, ink on light ones).
+    function ccsTextOn(c){ return ccsLum(c) > 0.6 ? '#1f2937' : '#ffffff'; }
+
     function ccsBuildPrintableHTML() {
-        // Branding + contact pulled from WordPress Site Identity & plugin settings
-        const brand = ('<?php echo esc_js(get_option('ccs_button_bg_color', '#0073aa')); ?>' || '#0073aa');
+        // Palette is inherited from this site's existing brand settings (single source
+        // of truth) + WordPress Site Identity — no PDF-specific colours to maintain.
+        const PRIMARY = ccsHex('<?php echo esc_js(get_option('ccs_button_bg_color', '#0073aa')); ?>', '#0073aa');
+        const _accentRaw = '<?php echo esc_js(get_option('ccs_accent_color', '')); ?>';
+        const ACCENT  = _accentRaw ? ccsHex(_accentRaw, PRIMARY) : ccsShade(PRIMARY, 0.22);
+        const SUBSIDY = ccsHex('<?php echo esc_js(get_option('ccs_subsidy_color', '#16a34a')); ?>', '#16a34a');
+        const AMBER   = '#b45309';
+        const brand   = PRIMARY;                                   // brand fills
+        const headText = ccsTextOn(PRIMARY);                       // text on brand fills
+        // Brand colour used as TEXT on light backgrounds (darkened if the brand is pale).
+        const inkBrand = ccsLum(PRIMARY) > 0.6 ? ccsShade(PRIMARY, 0.45) : PRIMARY;
+        const brandGrad = 'linear-gradient(135deg,' + PRIMARY + ' 0%,' + ACCENT + ' 100%)';
+        const subsidyInk = ccsLum(SUBSIDY) > 0.6 ? ccsShade(SUBSIDY, 0.4) : SUBSIDY;
+        const subsidyBg  = ccsTint(SUBSIDY, 0.90);
+        const subsidyBorder = ccsTint(SUBSIDY, 0.74);
+
         const siteName = '<?php echo esc_js(get_bloginfo('name')); ?>';
-        const logoUrl = '<?php $__lid = get_theme_mod('custom_logo'); echo esc_js($__lid ? wp_get_attachment_image_url($__lid, 'full') : ''); ?>';
+        // Dedicated print logo if set, else the theme's Site Identity logo.
+        const logoUrl = '<?php $__pdflogo = get_option('ccs_pdf_logo'); if ($__pdflogo) { echo esc_js($__pdflogo); } else { $__lid = get_theme_mod('custom_logo'); echo esc_js($__lid ? wp_get_attachment_image_url($__lid, 'full') : ''); } ?>';
         const homeLabel = '<?php echo esc_js(preg_replace('#^https?://#', '', untrailingslashit(home_url()))); ?>';
         const contactEmail = '<?php echo esc_js(get_option('ccs_email_contact_email', get_option('admin_email'))); ?>';
         const contactPhone = '<?php echo esc_js(get_option('ccs_email_contact_phone', '')); ?>';
@@ -951,104 +990,127 @@ jQuery(document).ready(function($){
 
         function row(label, w1, w2, fn, opts){
             opts = opts || {};
-            const lbl = opts.strong ? '#fff' : '#374151';
-            const val = opts.strong ? '#fff' : (opts.color || '#111827');
-            const bg = opts.strong ? brand : 'transparent';
+            const strong = !!opts.strong;
+            const lbl = strong ? headText : '#475569';
+            const val = strong ? headText : (opts.color || '#0f172a');
+            const bg  = strong ? brand : 'transparent';
+            const bb  = strong ? 'none' : '1px solid #eef2f7';
+            const lw  = strong ? '700' : '500';
+            const vw  = strong ? '800' : '600';
             return '<tr style="background:'+bg+';">'
-                + '<td style="padding:8px 12px; font-size:12px; color:'+lbl+'; font-weight:'+(opts.strong?'700':'500')+'; border-bottom:1px solid #eef2f7;">'+label+'</td>'
-                + '<td style="padding:8px 12px; font-size:12px; text-align:right; color:'+val+'; font-weight:600; border-bottom:1px solid #eef2f7;">'+m(w1)+'</td>'
-                + '<td style="padding:8px 12px; font-size:12px; text-align:right; color:'+val+'; font-weight:600; border-bottom:1px solid #eef2f7;">'+m(w2)+'</td>'
-                + '<td style="padding:8px 12px; font-size:12.5px; text-align:right; color:'+val+'; font-weight:700; border-bottom:1px solid #eef2f7;">'+m(fn)+'</td>'
+                + '<td style="padding:10px 14px; font-size:12px; color:'+lbl+'; font-weight:'+lw+'; border-bottom:'+bb+';">'+label+'</td>'
+                + '<td style="padding:10px 14px; font-size:12px; text-align:right; color:'+val+'; font-weight:'+vw+'; border-bottom:'+bb+';">'+m(w1)+'</td>'
+                + '<td style="padding:10px 14px; font-size:12px; text-align:right; color:'+val+'; font-weight:'+vw+'; border-bottom:'+bb+';">'+m(w2)+'</td>'
+                + '<td style="padding:10px 14px; font-size:13px; text-align:right; color:'+val+'; font-weight:800; border-bottom:'+bb+';">'+m(fn)+'</td>'
                 + '</tr>';
         }
 
         let childRows = '';
         cd.forEach(function(c, i){
-            childRows += '<tr>'
-                + '<td style="padding:7px 10px; font-size:11.5px; border-bottom:1px solid #eef2f7; font-weight:700; color:'+brand+';">Child '+(i+1)+'</td>'
-                + '<td style="padding:7px 10px; font-size:11.5px; border-bottom:1px solid #eef2f7;">'+(c.careTypeLabel||'—')+'</td>'
-                + '<td style="padding:7px 10px; font-size:11.5px; border-bottom:1px solid #eef2f7; text-align:center;">'+((c.ccs_pct*100).toFixed(2))+'%</td>'
-                + '<td style="padding:7px 10px; font-size:11.5px; border-bottom:1px solid #eef2f7; text-align:center;">'+c.daysWeek1+' / '+c.daysWeek2+'</td>'
-                + '<td style="padding:7px 10px; font-size:11.5px; border-bottom:1px solid #eef2f7; text-align:center;">'+c.hoursPerDay+'</td>'
-                + '<td style="padding:7px 10px; font-size:11.5px; border-bottom:1px solid #eef2f7; text-align:right;">'+m(c.feePerDay)+'</td>'
+            const zebra = (i % 2) ? '#fbfcfe' : '#ffffff';
+            childRows += '<tr style="background:'+zebra+';">'
+                + '<td style="padding:9px 12px; font-size:11.5px; border-bottom:1px solid #eef2f7; font-weight:700; color:'+inkBrand+';">Child '+(i+1)+'</td>'
+                + '<td style="padding:9px 12px; font-size:11.5px; border-bottom:1px solid #eef2f7; color:#334155;">'+(c.careTypeLabel||'—')+'</td>'
+                + '<td style="padding:9px 12px; font-size:11.5px; border-bottom:1px solid #eef2f7; text-align:center; color:#334155;">'+((c.ccs_pct*100).toFixed(2))+'%</td>'
+                + '<td style="padding:9px 12px; font-size:11.5px; border-bottom:1px solid #eef2f7; text-align:center; color:#334155;">'+c.daysWeek1+' / '+c.daysWeek2+'</td>'
+                + '<td style="padding:9px 12px; font-size:11.5px; border-bottom:1px solid #eef2f7; text-align:center; color:#334155;">'+c.hoursPerDay+'</td>'
+                + '<td style="padding:9px 12px; font-size:11.5px; border-bottom:1px solid #eef2f7; text-align:right; color:#0f172a; font-weight:600;">'+m(c.feePerDay)+'</td>'
                 + '</tr>';
         });
 
         function field(label, value){
-            return '<div style="margin-bottom:9px;">'
-                + '<div style="font-size:9.5px; text-transform:uppercase; letter-spacing:.5px; color:#9ca3af;">'+label+'</div>'
-                + '<div style="font-size:12.5px; font-weight:700; color:#111827;">'+value+'</div></div>';
+            return '<div style="padding:7px 0; border-bottom:1px solid #eef2f7;">'
+                + '<div style="font-size:9px; text-transform:uppercase; letter-spacing:.6px; color:#94a3b8; font-weight:600;">'+label+'</div>'
+                + '<div style="font-size:12.5px; font-weight:700; color:#0f172a; margin-top:1px;">'+value+'</div></div>';
         }
 
+        // Logo on a white panel so dark, colour and transparent logos all stay
+        // crisp and legible on the coloured header band; full-res source keeps it sharp.
         const logoHTML = logoUrl
-            ? '<img src="'+logoUrl+'" alt="'+siteName+'" style="max-height:44px; max-width:190px; display:block;">'
-            : '<div style="font-size:19px; font-weight:800; color:#fff;">'+siteName+'</div>';
+            ? '<span style="display:inline-flex; align-items:center; justify-content:center; background:#fff; border-radius:10px; padding:9px 13px; box-shadow:0 2px 5px rgba(0,0,0,.14);">'
+                + '<img src="'+logoUrl+'" alt="'+siteName+'" style="max-height:48px; max-width:210px; height:auto; display:block;"></span>'
+            : '<div style="font-size:21px; font-weight:800; letter-spacing:-.3px; color:'+headText+';">'+siteName+'</div>';
+
+        const sectionTitle = function(txt){
+            return '<div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">'
+                + '<span style="width:4px; height:14px; border-radius:3px; background:'+brandGrad+'; display:inline-block;"></span>'
+                + '<span style="font-size:12px; font-weight:800; color:'+inkBrand+'; text-transform:uppercase; letter-spacing:.7px;">'+txt+'</span></div>';
+        };
 
         const contactBits = [];
-        if (homeLabel) contactBits.push('&#127760; '+homeLabel);
-        if (contactEmail) contactBits.push('&#9993; '+contactEmail);
-        if (contactPhone) contactBits.push('&#9742; '+contactPhone);
+        if (homeLabel) contactBits.push('&#127760;&nbsp; '+homeLabel);
+        if (contactEmail) contactBits.push('&#9993;&nbsp; '+contactEmail);
+        if (contactPhone) contactBits.push('&#9742;&nbsp; '+contactPhone);
 
         return ''
-        + '<div class="pdf-doc" style="font-family:Arial,Helvetica,sans-serif; color:#1f2937; max-width:720px; margin:0 auto;">'
-          + '<div style="background:'+brand+'; border-radius:14px; padding:16px 22px; display:flex; align-items:center; justify-content:space-between; gap:16px;">'
+        + '<div class="pdf-doc" style="font-family:\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif; color:#0f172a; max-width:760px; margin:0 auto;">'
+          // Header band
+          + '<div style="background:'+brandGrad+'; border-radius:16px; padding:20px 26px; display:flex; align-items:center; justify-content:space-between; gap:18px;">'
             + '<div style="display:flex; align-items:center;">'+logoHTML+'</div>'
-            + '<div style="text-align:right; color:#fff;">'
-              + '<div style="font-size:17px; font-weight:800;">Childcare Subsidy Estimate</div>'
-              + '<div style="font-size:11.5px; opacity:.9;">'+today+'</div>'
+            + '<div style="text-align:right; color:'+headText+';">'
+              + '<div style="font-size:10px; text-transform:uppercase; letter-spacing:2px; font-weight:700; opacity:.85;">Estimate</div>'
+              + '<div style="font-size:19px; font-weight:800; line-height:1.2; margin-top:2px;">Childcare Subsidy Estimate</div>'
+              + '<div style="font-size:11.5px; opacity:.9; margin-top:3px;">'+today+'</div>'
             + '</div>'
           + '</div>'
-          + '<div style="display:flex; gap:14px; margin-top:14px;">'
-            + '<div style="flex:1; background:#ecfdf5; border:1px solid #d1fae5; border-radius:12px; padding:13px 18px;">'
-              + '<div style="font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:#059669; font-weight:700;">Government pays / fortnight</div>'
-              + '<div style="font-size:25px; font-weight:800; color:#059669; margin-top:2px;">'+m(t.fnSub)+'</div></div>'
-            + '<div style="flex:1; background:linear-gradient(135deg,#f7941d,#ff6b35); border-radius:12px; padding:13px 18px; color:#fff;">'
-              + '<div style="font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; font-weight:700; opacity:.95;">What you pay / fortnight</div>'
-              + '<div style="font-size:25px; font-weight:800; margin-top:2px;">'+m(t.fnOut)+'</div></div>'
+          // Hero summary cards
+          + '<div style="display:flex; gap:14px; margin-top:16px;">'
+            + '<div style="flex:1; background:'+subsidyBg+'; border:1px solid '+subsidyBorder+'; border-radius:14px; padding:15px 20px;">'
+              + '<div style="font-size:10px; text-transform:uppercase; letter-spacing:.6px; color:'+subsidyInk+'; font-weight:700;">Government pays</div>'
+              + '<div style="font-size:27px; font-weight:800; color:'+subsidyInk+'; margin-top:3px; line-height:1;">'+m(t.fnSub)+'</div>'
+              + '<div style="font-size:10px; color:#64748b; margin-top:4px; font-weight:600;">per fortnight</div></div>'
+            + '<div style="flex:1; background:'+brandGrad+'; border-radius:14px; padding:15px 20px; color:'+headText+';">'
+              + '<div style="font-size:10px; text-transform:uppercase; letter-spacing:.6px; font-weight:700; opacity:.95;">What you pay</div>'
+              + '<div style="font-size:27px; font-weight:800; margin-top:3px; line-height:1;">'+m(t.fnOut)+'</div>'
+              + '<div style="font-size:10px; opacity:.85; margin-top:4px; font-weight:600;">per fortnight</div></div>'
           + '</div>'
-          + '<div style="margin-top:16px;">'
-            + '<div style="font-size:12px; font-weight:800; color:'+brand+'; text-transform:uppercase; letter-spacing:.6px; margin-bottom:7px;">Full Breakdown</div>'
-            + '<table style="width:100%; border-collapse:collapse; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden;">'
-              + '<thead><tr style="background:#f8fafc;">'
-                + '<th style="padding:8px 12px; text-align:left; font-size:10px; color:#6b7280; text-transform:uppercase; letter-spacing:.4px;">Item</th>'
-                + '<th style="padding:8px 12px; text-align:right; font-size:10px; color:#6b7280; text-transform:uppercase;">Week 1</th>'
-                + '<th style="padding:8px 12px; text-align:right; font-size:10px; color:#6b7280; text-transform:uppercase;">Week 2</th>'
-                + '<th style="padding:8px 12px; text-align:right; font-size:10px; color:#6b7280; text-transform:uppercase;">Fortnightly</th>'
+          // Full breakdown
+          + '<div style="margin-top:18px;">'
+            + sectionTitle('Full Breakdown')
+            + '<table style="width:100%; border-collapse:separate; border-spacing:0; border:1px solid #e6eaf0; border-radius:12px; overflow:hidden;">'
+              + '<thead><tr style="background:#f7f9fc;">'
+                + '<th style="padding:9px 14px; text-align:left; font-size:9.5px; color:#64748b; text-transform:uppercase; letter-spacing:.5px;">Item</th>'
+                + '<th style="padding:9px 14px; text-align:right; font-size:9.5px; color:#64748b; text-transform:uppercase; letter-spacing:.5px;">Week 1</th>'
+                + '<th style="padding:9px 14px; text-align:right; font-size:9.5px; color:#64748b; text-transform:uppercase; letter-spacing:.5px;">Week 2</th>'
+                + '<th style="padding:9px 14px; text-align:right; font-size:9.5px; color:#64748b; text-transform:uppercase; letter-spacing:.5px;">Fortnightly</th>'
               + '</tr></thead><tbody>'
               + row('Total fees', t.w1Fee, t.w2Fee, t.fnFee)
-              + row('Estimated subsidy', t.w1SubBW, t.w2SubBW, t.fnSubBW, {color:'#059669'})
-              + row('CCS withholding', t.w1Wh, t.w2Wh, fnWh, {color:'#b45309'})
-              + row('CCS paid to provider', t.w1Sub, t.w2Sub, t.fnSub, {color:'#059669'})
+              + row('Estimated subsidy', t.w1SubBW, t.w2SubBW, t.fnSubBW, {color:subsidyInk})
+              + row('CCS withholding', t.w1Wh, t.w2Wh, fnWh, {color:AMBER})
+              + row('CCS paid to provider', t.w1Sub, t.w2Sub, t.fnSub, {color:subsidyInk})
               + row('What you pay', t.w1Out, t.w2Out, t.fnOut, {strong:true})
             + '</tbody></table>'
           + '</div>'
-          + '<div style="display:flex; gap:16px; margin-top:16px; align-items:flex-start;">'
-            + '<div style="width:33%; background:#f8fafc; border:1px solid #e5e7eb; border-radius:12px; padding:13px 16px;">'
-              + '<div style="font-size:12px; font-weight:800; color:'+brand+'; text-transform:uppercase; letter-spacing:.6px; margin-bottom:9px;">Household</div>'
+          // Household + children
+          + '<div style="display:flex; gap:16px; margin-top:18px; align-items:flex-start;">'
+            + '<div style="width:34%; background:#f8fafc; border:1px solid #e6eaf0; border-radius:14px; padding:14px 18px;">'
+              + sectionTitle('Household')
               + field('Family income', incomeRaw ? m(incomeRaw) : '—')
               + field('Activity hours', activityText)
               + field('CCS hours', ccsHoursText)
               + field('Standard CCS', standardPct ? standardPct+'%' : '—')
               + field('Higher CCS', higherPct ? higherPct+'%' : '—')
-              + field('Withholding', withholdingPct)
+              + '<div style="padding:7px 0 0;"><div style="font-size:9px; text-transform:uppercase; letter-spacing:.6px; color:#94a3b8; font-weight:600;">Withholding</div>'
+              + '<div style="font-size:12.5px; font-weight:700; color:#0f172a; margin-top:1px;">'+withholdingPct+'</div></div>'
             + '</div>'
             + '<div style="flex:1;">'
-              + '<div style="font-size:12px; font-weight:800; color:'+brand+'; text-transform:uppercase; letter-spacing:.6px; margin-bottom:9px;">Children</div>'
-              + '<table style="width:100%; border-collapse:collapse; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden;">'
-                + '<thead><tr style="background:#f8fafc;">'
-                  + '<th style="padding:7px 10px; text-align:left; font-size:9.5px; color:#6b7280;">Child</th>'
-                  + '<th style="padding:7px 10px; text-align:left; font-size:9.5px; color:#6b7280;">Care type</th>'
-                  + '<th style="padding:7px 10px; text-align:center; font-size:9.5px; color:#6b7280;">CCS</th>'
-                  + '<th style="padding:7px 10px; text-align:center; font-size:9.5px; color:#6b7280;">Days</th>'
-                  + '<th style="padding:7px 10px; text-align:center; font-size:9.5px; color:#6b7280;">Hrs</th>'
-                  + '<th style="padding:7px 10px; text-align:right; font-size:9.5px; color:#6b7280;">Fee</th>'
+              + sectionTitle('Children')
+              + '<table style="width:100%; border-collapse:separate; border-spacing:0; border:1px solid #e6eaf0; border-radius:12px; overflow:hidden;">'
+                + '<thead><tr style="background:#f7f9fc;">'
+                  + '<th style="padding:9px 12px; text-align:left; font-size:9px; color:#64748b; text-transform:uppercase; letter-spacing:.4px;">Child</th>'
+                  + '<th style="padding:9px 12px; text-align:left; font-size:9px; color:#64748b; text-transform:uppercase; letter-spacing:.4px;">Care type</th>'
+                  + '<th style="padding:9px 12px; text-align:center; font-size:9px; color:#64748b; text-transform:uppercase; letter-spacing:.4px;">CCS</th>'
+                  + '<th style="padding:9px 12px; text-align:center; font-size:9px; color:#64748b; text-transform:uppercase; letter-spacing:.4px;">Days</th>'
+                  + '<th style="padding:9px 12px; text-align:center; font-size:9px; color:#64748b; text-transform:uppercase; letter-spacing:.4px;">Hrs</th>'
+                  + '<th style="padding:9px 12px; text-align:right; font-size:9px; color:#64748b; text-transform:uppercase; letter-spacing:.4px;">Fee</th>'
                 + '</tr></thead><tbody>'+childRows+'</tbody></table>'
             + '</div>'
           + '</div>'
-          + '<div style="margin-top:16px; background:'+brand+'; border-radius:12px; padding:11px 18px; text-align:center; color:#fff; font-size:11.5px; font-weight:600;">'
-            + contactBits.join('<span style="opacity:.45; margin:0 10px;">|</span>')
+          // Contact footer
+          + '<div style="margin-top:18px; background:'+brandGrad+'; border-radius:14px; padding:13px 20px; text-align:center; color:'+headText+'; font-size:11.5px; font-weight:600;">'
+            + contactBits.join('<span style="opacity:.45; margin:0 12px;">&bull;</span>')
           + '</div>'
-          + (disclaimer ? '<p style="font-size:10px; color:#9ca3af; margin:11px 4px 0; line-height:1.5;">'+disclaimer+'</p>' : '')
+          + (disclaimer ? '<p style="font-size:9.5px; color:#94a3b8; margin:12px 6px 0; line-height:1.55;">'+disclaimer+'</p>' : '')
         + '</div>';
     }
 
@@ -1056,12 +1118,14 @@ jQuery(document).ready(function($){
         const w = window.open('', '_blank');
         if (!w) { alert('Please allow pop-ups for this site to download your estimate.'); return; }
         const body = ccsBuildPrintableHTML();
+        const btnBrand = ccsHex('<?php echo esc_js(get_option('ccs_button_bg_color', '#0073aa')); ?>', '#0073aa');
+        const btnText = ccsTextOn(btnBrand);
         w.document.open();
         w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Childcare Subsidy Estimate</title>'
-            + '<style>@page{ size:A4; margin:9mm; } html,body{ margin:0; padding:0; background:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact; font-family:Arial,Helvetica,sans-serif; } .pdf-doc{ padding:4mm 2mm; } @media print{ .ccs-print-actions{ display:none !important; } }</style>'
+            + '<style>@page{ size:A4; margin:9mm; } html,body{ margin:0; padding:0; background:#f1f5f9; -webkit-print-color-adjust:exact; print-color-adjust:exact; color-adjust:exact; font-family:\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif; } .pdf-doc{ padding:6mm 4mm; } *{ box-sizing:border-box; } @media print{ html,body{ background:#fff; } .pdf-doc{ padding:0; } .ccs-print-actions{ display:none !important; } }</style>'
             + '</head><body>' + body
-            + '<div class="ccs-print-actions" style="text-align:center; margin:24px 0;">'
-            + '<button onclick="window.print()" style="background:#0073aa; color:#fff; border:none; padding:11px 26px; font-size:14px; font-weight:600; border-radius:6px; cursor:pointer;">Print / Save as PDF</button>'
+            + '<div class="ccs-print-actions" style="text-align:center; margin:26px 0;">'
+            + '<button onclick="window.print()" style="background:'+btnBrand+'; color:'+btnText+'; border:none; padding:12px 28px; font-size:14px; font-weight:700; border-radius:8px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.15);">Print / Save as PDF</button>'
             + '</div>'
             + '<scr' + 'ipt>window.onload=function(){ setTimeout(function(){ try{ window.focus(); window.print(); }catch(e){} }, 400); };</scr' + 'ipt>'
             + '</body></html>');
