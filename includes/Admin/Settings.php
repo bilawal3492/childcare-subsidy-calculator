@@ -162,7 +162,12 @@ class Settings
         register_setting('childcare_ccs_styling_group', 'ccs_fee_bg_color', [$this, 'sanitize_color_with_alpha']);
         register_setting('childcare_ccs_styling_group', 'ccs_subsidy_bg_color', [$this, 'sanitize_color_with_alpha']);
         register_setting('childcare_ccs_styling_group', 'ccs_out_of_pocket_bg_color', [$this, 'sanitize_color_with_alpha']);
-        
+
+        // Estimate PDF / Print: optional dedicated print logo. Colours for the PDF
+        // are inherited from the existing brand settings above (button, accent,
+        // subsidy) so each site styles its own estimate with no duplicate config.
+        register_setting('childcare_ccs_styling_group', 'ccs_pdf_logo', 'esc_url_raw');
+
         // Summary period buttons (Fortnightly, Weekly, Monthly, Yearly)
         register_setting('childcare_ccs_styling_group', 'ccs_period_btn_bg_color', [$this, 'sanitize_color_with_alpha']);
         register_setting('childcare_ccs_styling_group', 'ccs_period_btn_text_color', [$this, 'sanitize_color_with_alpha']);

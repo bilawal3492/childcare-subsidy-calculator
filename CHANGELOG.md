@@ -2,6 +2,23 @@
 
 All notable changes to The Child Care Subsidy Calculator plugin will be documented in this file.
 
+## [2.3.1] - 2026-06-26
+
+### 💎 Premium PDF redesign
+- Rebuilt the Download / Print estimate as a polished single-page PDF, generated from the calculation data rather than a clone of the screen:
+  - **Branded header** with the site logo from WordPress **Site Identity** (Customizer → Site Identity → Logo), falling back to the site name.
+  - **Hero summary** cards: "Government pays" and "What you pay" per fortnight.
+  - **Full Week 1 / Week 2 / Fortnightly breakdown** (total fees, estimated subsidy, withholding, paid to provider, what you pay) — the breakdown that was previously missing.
+  - **Household** details and a compact **per-child** table.
+  - **Contact footer** with the website address, email and phone (from the Email Template settings), plus the disclaimer.
+  - Tuned with an A4 print stylesheet to fit one page.
+
+## [2.3.0] - 2026-06-26
+
+### ✨ Phase 6 — UX & features (Round 1)
+- **Download / Print Estimate** - A new button on the results page opens a clean, printable version of the estimate so families can save it as a PDF or print it. Dependency-free (uses the browser's print dialog) and does not change the calculation or the submission flow.
+- **Accessibility** - The estimate figures are now exposed as a labelled region for screen readers, and the new download button is fully keyboard-accessible with a descriptive label.
+
 ## [2.2.5] - 2026-06-26
 
 ### 🐛 Fix

@@ -521,7 +521,7 @@ class Shortcode
         <h4 id="summary-title" style="display: none;">Your estimated costs</h4>
         
         <!-- Main Summary Card - What you pay highlighted -->
-        <div id="summary-main-card" style="background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 25px;">
+        <div id="summary-main-card" role="region" aria-label="Your estimated childcare costs" style="background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 25px;">
             <!-- Header row with column labels -->
             <div class="summary-header-row" style="display: flex; background: #f8f9fa; border-bottom: 1px solid #e9ecef;">
                 <div style="width: 40%; padding: 16px 24px;"></div>
@@ -557,6 +557,16 @@ class Shortcode
             </div>
         </div>
         
+        <!-- Download / Print estimate -->
+        <div style="text-align:center; margin: 0 0 25px 0;">
+            <button type="button" id="ccs-download-estimate"
+                    aria-label="Download or print your childcare subsidy estimate as a PDF"
+                    style="display:inline-flex; align-items:center; gap:8px; background:#0073aa; color:#fff; border:none; padding:12px 28px; font-size:15px; font-weight:600; border-radius:8px; cursor:pointer;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download / Print Estimate (PDF)
+            </button>
+        </div>
+
         <!-- Full Breakdown Accordion -->
         <div id="full-breakdown-section" style="background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden; margin-bottom: 25px;">
             <div id="breakdown-toggle" style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; cursor: pointer; transition: background 0.2s ease;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='#fff'">
@@ -901,6 +911,228 @@ jQuery(document).ready(function($){
     // Debug logging gated behind WP_DEBUG so production stays quiet.
     const CCS_DEBUG = <?php echo (defined('WP_DEBUG') && WP_DEBUG) ? 'true' : 'false'; ?>;
     function ccsLog(){ if (CCS_DEBUG && window.console && console.log) { console.log.apply(console, arguments); } }
+
+    // ---- Download / Print estimate (Phase 6) ----
+    // Builds a clean printable document from the rendered summary and opens the
+    // browser print dialog (Save as PDF). Dependency-free; does not touch the
+    // calculation or the submission flow.
+    // Normalises a #hex / rgb() / rgba() string to {r,g,b}; null if unparseable.
+    function ccsRGB(c){
+        c = (c || '').toString().trim();
+        let m = c.match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);
+        if (m){ let h = m[1]; if (h.length === 3) h = h.replace(/./g, '$&$&');
+            return { r:parseInt(h.slice(0,2),16), g:parseInt(h.slice(2,4),16), b:parseInt(h.slice(4,6),16) }; }
+        m = c.match(/rgba?\(([^)]+)\)/i);
+        if (m){ const p = m[1].split(',').map(function(s){ return parseFloat(s); });
+            return { r:p[0]||0, g:p[1]||0, b:p[2]||0 }; }
+        return null;
+    }
+    function ccsHex(c, fb){ const r = ccsRGB(c); if (!r) return fb;
+        const h = function(x){ return ('0' + Math.max(0, Math.min(255, Math.round(x))).toString(16)).slice(-2); };
+        return '#' + h(r.r) + h(r.g) + h(r.b); }
+    function ccsMix(c, t, a){ const x = ccsRGB(c) || {r:0,g:0,b:0};
+        return 'rgb(' + Math.round(x.r+(t.r-x.r)*a) + ',' + Math.round(x.g+(t.g-x.g)*a) + ',' + Math.round(x.b+(t.b-x.b)*a) + ')'; }
+    function ccsTint(c, a){ return ccsMix(c, {r:255,g:255,b:255}, a); }   // toward white
+    function ccsShade(c, a){ return ccsMix(c, {r:0,g:0,b:0}, a); }        // toward black
+    function ccsLum(c){ const x = ccsRGB(c) || {r:0,g:0,b:0};
+        const f = function(v){ v/=255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); };
+        return 0.2126*f(x.r) + 0.7152*f(x.g) + 0.0722*f(x.b); }
+    // Legible text colour for a given fill (white on dark brands, ink on light ones).
+    function ccsTextOn(c){ return ccsLum(c) > 0.6 ? '#1f2937' : '#ffffff'; }
+
+    function ccsBuildPrintableHTML() {
+        // Palette is inherited from this site's existing brand settings (single source
+        // of truth) + WordPress Site Identity — no PDF-specific colours to maintain.
+        const PRIMARY = ccsHex('<?php echo esc_js(get_option('ccs_button_bg_color', '#0073aa')); ?>', '#0073aa');
+        const _accentRaw = '<?php echo esc_js(get_option('ccs_accent_color', '')); ?>';
+        const ACCENT  = _accentRaw ? ccsHex(_accentRaw, PRIMARY) : ccsShade(PRIMARY, 0.22);
+        const SUBSIDY = ccsHex('<?php echo esc_js(get_option('ccs_subsidy_color', '#16a34a')); ?>', '#16a34a');
+        const AMBER   = '#b45309';
+        const brand   = PRIMARY;                                   // brand fills
+        const headText = ccsTextOn(PRIMARY);                       // text on brand fills
+        // Brand colour used as TEXT on light backgrounds (darkened if the brand is pale).
+        const inkBrand = ccsLum(PRIMARY) > 0.6 ? ccsShade(PRIMARY, 0.45) : PRIMARY;
+        const brandGrad = 'linear-gradient(135deg,' + PRIMARY + ' 0%,' + ACCENT + ' 100%)';
+        const subsidyInk = ccsLum(SUBSIDY) > 0.6 ? ccsShade(SUBSIDY, 0.4) : SUBSIDY;
+        const subsidyBg  = ccsTint(SUBSIDY, 0.90);
+        const subsidyBorder = ccsTint(SUBSIDY, 0.74);
+
+        const siteName = '<?php echo esc_js(get_bloginfo('name')); ?>';
+        // Dedicated print logo if set, else the theme's Site Identity logo.
+        const logoUrl = '<?php $__pdflogo = get_option('ccs_pdf_logo'); if ($__pdflogo) { echo esc_js($__pdflogo); } else { $__lid = get_theme_mod('custom_logo'); echo esc_js($__lid ? wp_get_attachment_image_url($__lid, 'full') : ''); } ?>';
+        const homeLabel = '<?php echo esc_js(preg_replace('#^https?://#', '', untrailingslashit(home_url()))); ?>';
+        const contactEmail = '<?php echo esc_js(get_option('ccs_email_contact_email', get_option('admin_email'))); ?>';
+        const contactPhone = '<?php echo esc_js(get_option('ccs_email_contact_phone', '')); ?>';
+        const disclaimer = '<?php echo esc_js($policy['disclaimer_text'] ?? ''); ?>';
+        const today = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+        const m = function(v){ return '$' + formatCurrency(v || 0); };
+
+        // Household inputs
+        const knowsCCS = $('#know_ccs_percentage').val();
+        const incomeRaw = parseFloat($('#family_ati').val()) || 0;
+        const activityText = ($('#activity option:selected').text() || '').trim() || '—';
+        const ccsHoursText = ($('#ccs_hours_display').val() || '').toString().trim() || '—';
+        const withholdingPct = ($('#ccs_withholding_percentage').val() || '5') + '%';
+        const standardPct = ((knowsCCS === 'yes' ? $('#standard_ccs_percentage').val() : $('#standard_ccs_percentage_calc').val()) || '').toString();
+        const higherPct = ((knowsCCS === 'yes' ? $('#higher_ccs_percentage').val() : $('#higher_ccs_percentage_calc').val()) || '').toString();
+
+        // Totals across children
+        const cd = (typeof childrenData !== 'undefined' && Array.isArray(childrenData)) ? childrenData : [];
+        const t = { w1Fee:0,w2Fee:0,fnFee:0, w1SubBW:0,w2SubBW:0,fnSubBW:0, w1Wh:0,w2Wh:0, w1Sub:0,w2Sub:0,fnSub:0, w1Out:0,w2Out:0,fnOut:0 };
+        cd.forEach(function(c){
+            t.w1Fee+=c.week1Fee||0; t.w2Fee+=c.week2Fee||0; t.fnFee+=c.fortnightFee||0;
+            t.w1SubBW+=c.week1SubBeforeWithholding||0; t.w2SubBW+=c.week2SubBeforeWithholding||0; t.fnSubBW+=c.fortnightSubBeforeWithholding||0;
+            t.w1Wh+=c.week1Withholding||0; t.w2Wh+=c.week2Withholding||0;
+            t.w1Sub+=c.week1Sub||0; t.w2Sub+=c.week2Sub||0; t.fnSub+=c.fortnightSub||0;
+            t.w1Out+=Math.max(0,(c.week1Fee||0)-(c.week1Sub||0)); t.w2Out+=Math.max(0,(c.week2Fee||0)-(c.week2Sub||0)); t.fnOut+=c.outPocket||0;
+        });
+        const fnWh = t.w1Wh + t.w2Wh;
+
+        function row(label, w1, w2, fn, opts){
+            opts = opts || {};
+            const strong = !!opts.strong;
+            const lbl = strong ? headText : '#475569';
+            const val = strong ? headText : (opts.color || '#0f172a');
+            const bg  = strong ? brand : 'transparent';
+            const bb  = strong ? 'none' : '1px solid #eef2f7';
+            const lw  = strong ? '700' : '500';
+            const vw  = strong ? '800' : '600';
+            return '<tr style="background:'+bg+';">'
+                + '<td style="padding:10px 14px; font-size:12px; color:'+lbl+'; font-weight:'+lw+'; border-bottom:'+bb+';">'+label+'</td>'
+                + '<td style="padding:10px 14px; font-size:12px; text-align:right; color:'+val+'; font-weight:'+vw+'; border-bottom:'+bb+';">'+m(w1)+'</td>'
+                + '<td style="padding:10px 14px; font-size:12px; text-align:right; color:'+val+'; font-weight:'+vw+'; border-bottom:'+bb+';">'+m(w2)+'</td>'
+                + '<td style="padding:10px 14px; font-size:13px; text-align:right; color:'+val+'; font-weight:800; border-bottom:'+bb+';">'+m(fn)+'</td>'
+                + '</tr>';
+        }
+
+        let childRows = '';
+        cd.forEach(function(c, i){
+            const zebra = (i % 2) ? '#fbfcfe' : '#ffffff';
+            childRows += '<tr style="background:'+zebra+';">'
+                + '<td style="padding:9px 12px; font-size:11.5px; border-bottom:1px solid #eef2f7; font-weight:700; color:'+inkBrand+';">Child '+(i+1)+'</td>'
+                + '<td style="padding:9px 12px; font-size:11.5px; border-bottom:1px solid #eef2f7; color:#334155;">'+(c.careTypeLabel||'—')+'</td>'
+                + '<td style="padding:9px 12px; font-size:11.5px; border-bottom:1px solid #eef2f7; text-align:center; color:#334155;">'+((c.ccs_pct*100).toFixed(2))+'%</td>'
+                + '<td style="padding:9px 12px; font-size:11.5px; border-bottom:1px solid #eef2f7; text-align:center; color:#334155;">'+c.daysWeek1+' / '+c.daysWeek2+'</td>'
+                + '<td style="padding:9px 12px; font-size:11.5px; border-bottom:1px solid #eef2f7; text-align:center; color:#334155;">'+c.hoursPerDay+'</td>'
+                + '<td style="padding:9px 12px; font-size:11.5px; border-bottom:1px solid #eef2f7; text-align:right; color:#0f172a; font-weight:600;">'+m(c.feePerDay)+'</td>'
+                + '</tr>';
+        });
+
+        function field(label, value){
+            return '<div style="padding:7px 0; border-bottom:1px solid #eef2f7;">'
+                + '<div style="font-size:9px; text-transform:uppercase; letter-spacing:.6px; color:#94a3b8; font-weight:600;">'+label+'</div>'
+                + '<div style="font-size:12.5px; font-weight:700; color:#0f172a; margin-top:1px;">'+value+'</div></div>';
+        }
+
+        // Logo on a white panel so dark, colour and transparent logos all stay
+        // crisp and legible on the coloured header band; full-res source keeps it sharp.
+        const logoHTML = logoUrl
+            ? '<span style="display:inline-flex; align-items:center; justify-content:center; background:#fff; border-radius:10px; padding:9px 13px; box-shadow:0 2px 5px rgba(0,0,0,.14);">'
+                + '<img src="'+logoUrl+'" alt="'+siteName+'" style="max-height:48px; max-width:210px; height:auto; display:block;"></span>'
+            : '<div style="font-size:21px; font-weight:800; letter-spacing:-.3px; color:'+headText+';">'+siteName+'</div>';
+
+        const sectionTitle = function(txt){
+            return '<div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">'
+                + '<span style="width:4px; height:14px; border-radius:3px; background:'+brandGrad+'; display:inline-block;"></span>'
+                + '<span style="font-size:12px; font-weight:800; color:'+inkBrand+'; text-transform:uppercase; letter-spacing:.7px;">'+txt+'</span></div>';
+        };
+
+        const contactBits = [];
+        if (homeLabel) contactBits.push('&#127760;&nbsp; '+homeLabel);
+        if (contactEmail) contactBits.push('&#9993;&nbsp; '+contactEmail);
+        if (contactPhone) contactBits.push('&#9742;&nbsp; '+contactPhone);
+
+        return ''
+        + '<div class="pdf-doc" style="font-family:\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif; color:#0f172a; max-width:760px; margin:0 auto;">'
+          // Header band
+          + '<div style="background:'+brandGrad+'; border-radius:16px; padding:20px 26px; display:flex; align-items:center; justify-content:space-between; gap:18px;">'
+            + '<div style="display:flex; align-items:center;">'+logoHTML+'</div>'
+            + '<div style="text-align:right; color:'+headText+';">'
+              + '<div style="font-size:10px; text-transform:uppercase; letter-spacing:2px; font-weight:700; opacity:.85;">Estimate</div>'
+              + '<div style="font-size:19px; font-weight:800; line-height:1.2; margin-top:2px;">Childcare Subsidy Estimate</div>'
+              + '<div style="font-size:11.5px; opacity:.9; margin-top:3px;">'+today+'</div>'
+            + '</div>'
+          + '</div>'
+          // Hero summary cards
+          + '<div style="display:flex; gap:14px; margin-top:16px;">'
+            + '<div style="flex:1; background:'+subsidyBg+'; border:1px solid '+subsidyBorder+'; border-radius:14px; padding:15px 20px;">'
+              + '<div style="font-size:10px; text-transform:uppercase; letter-spacing:.6px; color:'+subsidyInk+'; font-weight:700;">Government pays</div>'
+              + '<div style="font-size:27px; font-weight:800; color:'+subsidyInk+'; margin-top:3px; line-height:1;">'+m(t.fnSub)+'</div>'
+              + '<div style="font-size:10px; color:#64748b; margin-top:4px; font-weight:600;">per fortnight</div></div>'
+            + '<div style="flex:1; background:'+brandGrad+'; border-radius:14px; padding:15px 20px; color:'+headText+';">'
+              + '<div style="font-size:10px; text-transform:uppercase; letter-spacing:.6px; font-weight:700; opacity:.95;">What you pay</div>'
+              + '<div style="font-size:27px; font-weight:800; margin-top:3px; line-height:1;">'+m(t.fnOut)+'</div>'
+              + '<div style="font-size:10px; opacity:.85; margin-top:4px; font-weight:600;">per fortnight</div></div>'
+          + '</div>'
+          // Full breakdown
+          + '<div style="margin-top:18px;">'
+            + sectionTitle('Full Breakdown')
+            + '<table style="width:100%; border-collapse:separate; border-spacing:0; border:1px solid #e6eaf0; border-radius:12px; overflow:hidden;">'
+              + '<thead><tr style="background:#f7f9fc;">'
+                + '<th style="padding:9px 14px; text-align:left; font-size:9.5px; color:#64748b; text-transform:uppercase; letter-spacing:.5px;">Item</th>'
+                + '<th style="padding:9px 14px; text-align:right; font-size:9.5px; color:#64748b; text-transform:uppercase; letter-spacing:.5px;">Week 1</th>'
+                + '<th style="padding:9px 14px; text-align:right; font-size:9.5px; color:#64748b; text-transform:uppercase; letter-spacing:.5px;">Week 2</th>'
+                + '<th style="padding:9px 14px; text-align:right; font-size:9.5px; color:#64748b; text-transform:uppercase; letter-spacing:.5px;">Fortnightly</th>'
+              + '</tr></thead><tbody>'
+              + row('Total fees', t.w1Fee, t.w2Fee, t.fnFee)
+              + row('Estimated subsidy', t.w1SubBW, t.w2SubBW, t.fnSubBW, {color:subsidyInk})
+              + row('CCS withholding', t.w1Wh, t.w2Wh, fnWh, {color:AMBER})
+              + row('CCS paid to provider', t.w1Sub, t.w2Sub, t.fnSub, {color:subsidyInk})
+              + row('What you pay', t.w1Out, t.w2Out, t.fnOut, {strong:true})
+            + '</tbody></table>'
+          + '</div>'
+          // Household + children
+          + '<div style="display:flex; gap:16px; margin-top:18px; align-items:flex-start;">'
+            + '<div style="width:34%; background:#f8fafc; border:1px solid #e6eaf0; border-radius:14px; padding:14px 18px;">'
+              + sectionTitle('Household')
+              + field('Family income', incomeRaw ? m(incomeRaw) : '—')
+              + field('Activity hours', activityText)
+              + field('CCS hours', ccsHoursText)
+              + field('Standard CCS', standardPct ? standardPct+'%' : '—')
+              + field('Higher CCS', higherPct ? higherPct+'%' : '—')
+              + '<div style="padding:7px 0 0;"><div style="font-size:9px; text-transform:uppercase; letter-spacing:.6px; color:#94a3b8; font-weight:600;">Withholding</div>'
+              + '<div style="font-size:12.5px; font-weight:700; color:#0f172a; margin-top:1px;">'+withholdingPct+'</div></div>'
+            + '</div>'
+            + '<div style="flex:1;">'
+              + sectionTitle('Children')
+              + '<table style="width:100%; border-collapse:separate; border-spacing:0; border:1px solid #e6eaf0; border-radius:12px; overflow:hidden;">'
+                + '<thead><tr style="background:#f7f9fc;">'
+                  + '<th style="padding:9px 12px; text-align:left; font-size:9px; color:#64748b; text-transform:uppercase; letter-spacing:.4px;">Child</th>'
+                  + '<th style="padding:9px 12px; text-align:left; font-size:9px; color:#64748b; text-transform:uppercase; letter-spacing:.4px;">Care type</th>'
+                  + '<th style="padding:9px 12px; text-align:center; font-size:9px; color:#64748b; text-transform:uppercase; letter-spacing:.4px;">CCS</th>'
+                  + '<th style="padding:9px 12px; text-align:center; font-size:9px; color:#64748b; text-transform:uppercase; letter-spacing:.4px;">Days</th>'
+                  + '<th style="padding:9px 12px; text-align:center; font-size:9px; color:#64748b; text-transform:uppercase; letter-spacing:.4px;">Hrs</th>'
+                  + '<th style="padding:9px 12px; text-align:right; font-size:9px; color:#64748b; text-transform:uppercase; letter-spacing:.4px;">Fee</th>'
+                + '</tr></thead><tbody>'+childRows+'</tbody></table>'
+            + '</div>'
+          + '</div>'
+          // Contact footer
+          + '<div style="margin-top:18px; background:'+brandGrad+'; border-radius:14px; padding:13px 20px; text-align:center; color:'+headText+'; font-size:11.5px; font-weight:600;">'
+            + contactBits.join('<span style="opacity:.45; margin:0 12px;">&bull;</span>')
+          + '</div>'
+          + (disclaimer ? '<p style="font-size:9.5px; color:#94a3b8; margin:12px 6px 0; line-height:1.55;">'+disclaimer+'</p>' : '')
+        + '</div>';
+    }
+
+    function ccsPrintEstimate() {
+        const w = window.open('', '_blank');
+        if (!w) { alert('Please allow pop-ups for this site to download your estimate.'); return; }
+        const body = ccsBuildPrintableHTML();
+        const btnBrand = ccsHex('<?php echo esc_js(get_option('ccs_button_bg_color', '#0073aa')); ?>', '#0073aa');
+        const btnText = ccsTextOn(btnBrand);
+        w.document.open();
+        w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Childcare Subsidy Estimate</title>'
+            + '<style>@page{ size:A4; margin:9mm; } html,body{ margin:0; padding:0; background:#f1f5f9; -webkit-print-color-adjust:exact; print-color-adjust:exact; color-adjust:exact; font-family:\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif; } .pdf-doc{ padding:6mm 4mm; } *{ box-sizing:border-box; } @media print{ html,body{ background:#fff; } .pdf-doc{ padding:0; } .ccs-print-actions{ display:none !important; } }</style>'
+            + '</head><body>' + body
+            + '<div class="ccs-print-actions" style="text-align:center; margin:26px 0;">'
+            + '<button onclick="window.print()" style="background:'+btnBrand+'; color:'+btnText+'; border:none; padding:12px 28px; font-size:14px; font-weight:700; border-radius:8px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.15);">Print / Save as PDF</button>'
+            + '</div>'
+            + '<scr' + 'ipt>window.onload=function(){ setTimeout(function(){ try{ window.focus(); window.print(); }catch(e){} }, 400); };</scr' + 'ipt>'
+            + '</body></html>');
+        w.document.close();
+    }
+
+    $(document).on('click', '#ccs-download-estimate', function(e){ e.preventDefault(); ccsPrintEstimate(); });
 
     // Collect raw calculation inputs + browser-computed totals so the server can
     // shadow-validate its own recomputation against the browser. Diagnostic only

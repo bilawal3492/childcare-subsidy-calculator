@@ -3743,6 +3743,42 @@ if (!defined('ABSPATH')) { exit; }
                     </tr>
                 </table>
 
+                <div style="background:#fff7ed; padding:15px; border-radius:8px; margin:20px 0;">
+                    <h4 style="margin-top:0; color:#c2410c;">📄 Estimate PDF / Print</h4>
+                </div>
+                <p class="description" style="margin:0 0 14px; max-width:760px;">
+                    The downloadable / printable estimate <strong>inherits this site's brand colours automatically</strong> —
+                    it uses your <em>Primary button colour</em> for the header, section titles and footer, your
+                    <em>Accent colour</em> for highlights, and your <em>Subsidy colour</em> for the "government pays" figures.
+                    There are no separate PDF colours to maintain, so each website it is installed on is correctly branded out of the box.
+                </p>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="ccs_pdf_logo">Estimate PDF Logo (optional)</label>
+                        </th>
+                        <td>
+                            <input type="text"
+                                   id="ccs_pdf_logo"
+                                   name="ccs_pdf_logo"
+                                   value="<?php echo esc_attr(get_option('ccs_pdf_logo', '')); ?>"
+                                   style="width: 400px;">
+                            <button type="button" class="button ccs-upload-image-btn" data-target="ccs_pdf_logo">Upload Image</button>
+                            <button type="button" class="button ccs-remove-image-btn" data-target="ccs_pdf_logo">Remove</button>
+                            <p class="description">
+                                Optional logo used only on the estimate PDF. Use a high-resolution logo for crisp printing.
+                                Leave empty to use the theme's Site Identity logo. The logo is placed on a white panel in the header,
+                                so dark, colour and transparent logos all stay clearly visible.
+                            </p>
+                            <?php if (get_option('ccs_pdf_logo')): ?>
+                            <div style="margin-top:10px; display:inline-block; background:#fff; border:1px solid #ddd; border-radius:8px; padding:8px 12px;">
+                                <img src="<?php echo esc_url(get_option('ccs_pdf_logo')); ?>" style="max-width:200px; max-height:60px; height:auto; display:block;">
+                            </div>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                </table>
+
                 <?php elseif ($active_tab === 'mobile'): ?>
                 
                 <!-- MOBILE & RESPONSIVE TAB -->
