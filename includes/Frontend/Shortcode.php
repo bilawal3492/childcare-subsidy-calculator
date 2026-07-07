@@ -558,7 +558,7 @@ class Shortcode
         </div>
         
         <!-- Download / Print estimate -->
-        <div style="text-align:center; margin: 0 0 25px 0;">
+        <div class="download-print-estimate" style="text-align:center; margin: 0 0 25px 0;">
             <button type="button" id="ccs-download-estimate"
                     aria-label="Download or print your childcare subsidy estimate as a PDF"
                     style="display:inline-flex; align-items:center; gap:8px; background:#0073aa; color:#fff; border:none; padding:12px 28px; font-size:15px; font-weight:600; border-radius:8px; cursor:pointer;">
@@ -1209,18 +1209,22 @@ jQuery(document).ready(function($){
         const belowSchool = age < 6;
         switch (careType) {
             case 'fdc':
-                return parseFloat(hourly_caps.family_day_care_all) || 13.56;
+                return parseFloat(hourly_caps.family_day_care_all) || 14.08;
             case 'oshc':
                 return belowSchool
-                    ? (parseFloat(hourly_caps.oshc_below_school_age) || 14.63)
-                    : (parseFloat(hourly_caps.oshc_school_age) || 12.81);
+                    ? (parseFloat(hourly_caps.oshc_below_school_age) || 15.19)
+                    : (parseFloat(hourly_caps.oshc_school_age) || 13.30);
             case 'ihc':
-                return parseFloat(hourly_caps.in_home_family) || 39.80;
+                return parseFloat(hourly_caps.in_home_family) || 41.31;
             case 'cbdc':
             default:
+                // Accept either admin key scheme: `centre_below_school_age` /
+                // `centre_school_age` are what the settings form saves; the older
+                // `centre_based_day_care` / `oshc_school_age` keys are kept as a
+                // fallback so no existing install regresses.
                 return belowSchool
-                    ? (parseFloat(hourly_caps.centre_based_day_care) || 14.63)
-                    : (parseFloat(hourly_caps.oshc_school_age) || 12.81);
+                    ? (parseFloat(hourly_caps.centre_below_school_age) || parseFloat(hourly_caps.centre_based_day_care) || 15.19)
+                    : (parseFloat(hourly_caps.centre_school_age) || parseFloat(hourly_caps.oshc_school_age) || 13.30);
         }
     }
     

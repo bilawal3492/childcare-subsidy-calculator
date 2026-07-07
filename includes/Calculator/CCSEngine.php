@@ -423,18 +423,22 @@ class CCSEngine
 
         switch ($care_type) {
             case 'fdc':
-                return $this->cap_float('family_day_care_all', 13.56);
+                return $this->cap_float('family_day_care_all', 14.08);
             case 'oshc':
                 return $belowSchool
-                    ? $this->cap_float('oshc_below_school_age', 14.63)
-                    : $this->cap_float('oshc_school_age', 12.81);
+                    ? $this->cap_float('oshc_below_school_age', 15.19)
+                    : $this->cap_float('oshc_school_age', 13.30);
             case 'ihc':
-                return $this->cap_float('in_home_family', 39.80);
+                return $this->cap_float('in_home_family', 41.31);
             case 'cbdc':
             default:
+                // Accept either admin key scheme: `centre_below_school_age` /
+                // `centre_school_age` are what the settings form saves; the older
+                // `centre_based_day_care` / `oshc_school_age` keys are kept as a
+                // fallback so no existing install regresses.
                 return $belowSchool
-                    ? $this->cap_float('centre_based_day_care', 14.63)
-                    : $this->cap_float('oshc_school_age', 12.81);
+                    ? $this->cap_float_any(['centre_below_school_age', 'centre_based_day_care'], 15.19)
+                    : $this->cap_float_any(['centre_school_age', 'oshc_school_age'], 13.30);
         }
     }
 
@@ -450,6 +454,20 @@ class CCSEngine
     {
         if (isset($this->hourly_caps[$key]) && $this->hourly_caps[$key] !== '') {
             return (float) $this->hourly_caps[$key];
+        }
+        return (float) $default;
+    }
+
+    /**
+     * Returns the first non-empty cap among $keys, in order, else $default.
+     * Lets the engine accept more than one admin key naming scheme.
+     */
+    private function cap_float_any(array $keys, $default)
+    {
+        foreach ($keys as $key) {
+            if (isset($this->hourly_caps[$key]) && $this->hourly_caps[$key] !== '') {
+                return (float) $this->hourly_caps[$key];
+            }
         }
         return (float) $default;
     }
