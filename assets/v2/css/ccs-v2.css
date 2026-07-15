@@ -1,0 +1,725 @@
+/* =====================================================================
+   ccs-v2.css — Premium redesign for the Child Care Subsidy Calculator
+   ---------------------------------------------------------------------
+   Everything is scoped to .ccs-redesign, so it can NEVER affect the
+   original [thechildcare_ccs_calculator] shortcode.
+
+   Brand awareness: --ccs-brand (and its tints) are set from the
+   wp-admin primary button colour by ccs-v2.js at runtime, so this
+   redesign automatically matches each site's branding. Base input /
+   label / button styling still comes from the shared admin-generated
+   CSS (handle: childcare-ccs-style).
+   ===================================================================== */
+
+.ccs-redesign{
+  --ccs-brand:#0073aa;
+  --ccs-brand-dark:#005c88;
+  --ccs-brand-soft:#eaf3f8;
+  --ccs-brand-contrast:#ffffff;
+  --ccs-ink:#0f172a;
+  --ccs-ink-2:#475569;
+  --ccs-ink-3:#94a3b8;
+  --ccs-line:#e6eaf0;
+  --ccs-surface:#ffffff;
+  --ccs-canvas:#f5f7fb;
+  --ccs-good:#16a34a;
+  --ccs-good-soft:#ecfdf3;
+  --ccs-radius:16px;
+  --ccs-radius-sm:12px;
+  --ccs-shadow:0 6px 24px rgba(15,23,42,.07), 0 1px 3px rgba(15,23,42,.05);
+  --ccs-shadow-lg:0 14px 44px rgba(15,23,42,.13);
+  color:var(--ccs-ink);
+  max-width:1240px;
+  margin:0 auto;
+  /* Applied without !important so an admin-set container background wins. */
+  background:var(--ccs-canvas);
+}
+.ccs-redesign,
+.ccs-redesign *,
+.ccs-redesign *::before,
+.ccs-redesign *::after{ box-sizing:border-box; }
+
+/* Hide the legacy top progress bar + in-flow download button — the sidebar
+   nav and the panel action buttons replace them (elements kept for JS). */
+.ccs-redesign #childcare-progress{ display:none !important; }
+.ccs-redesign .download-print-estimate{ display:none !important; }
+
+/* ---------- Shell grid ---------- */
+.ccs-redesign .ccs-shell{
+  display:grid;
+  grid-template-columns:250px minmax(0,1fr) 348px;
+  gap:15px;
+  align-items:stretch;
+}
+/* On the long Summary step, use content-sized sticky rails (don't stretch) */
+.ccs-redesign.ccs-summary-active .ccs-shell{ align-items:start; }
+
+/* ============ Left sidebar ============ */
+.ccs-redesign .ccs-sidebar{
+  position:sticky; top:20px;
+  background:var(--ccs-surface);
+  border:1px solid var(--ccs-line);
+  border-radius:var(--ccs-radius);
+  box-shadow:var(--ccs-shadow);
+  padding:20px 18px;
+  display:flex; flex-direction:column; gap:20px;
+}
+.ccs-redesign .ccs-brand{ display:flex; align-items:center; gap:12px; }
+.ccs-redesign .ccs-brand-mark{
+  width:40px; height:40px; border-radius:12px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg,var(--ccs-brand),var(--ccs-brand-dark));
+  color:var(--ccs-brand-contrast);
+  box-shadow:0 4px 12px rgba(0,0,0,.14);
+}
+.ccs-redesign .ccs-brand-text{ display:flex; flex-direction:column; line-height:1.15; }
+.ccs-redesign .ccs-brand-title{ font-weight:800; font-size:15px; letter-spacing:-.2px; color:var(--ccs-ink); }
+.ccs-redesign .ccs-brand-sub{ font-weight:600; font-size:12px; color:var(--ccs-ink-3); }
+
+/* nav */
+.ccs-redesign .ccs-nav{ display:flex; flex-direction:column; gap:2px; position:relative; }
+.ccs-redesign .ccs-nav-item{
+  display:flex; align-items:center; gap:12px;
+  width:100%; text-align:left; cursor:pointer;
+  background:transparent; border:none; border-radius:12px;
+  padding:11px 12px; position:relative; font-family:inherit;
+  transition:background .18s ease;
+}
+.ccs-redesign .ccs-nav-item:hover{ background:var(--ccs-brand-soft); }
+.ccs-redesign .ccs-nav-item:focus-visible{ outline:2px solid var(--ccs-brand); outline-offset:2px; }
+.ccs-redesign .ccs-nav-ic{
+  width:30px; height:30px; flex-shrink:0; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:13px;
+  background:#eef2f7; color:var(--ccs-ink-3);
+  transition:all .2s ease;
+}
+.ccs-redesign .ccs-nav-tx{ display:flex; flex-direction:column; line-height:1.2; }
+.ccs-redesign .ccs-nav-title{ font-weight:700; font-size:13.5px; color:var(--ccs-ink-2); }
+.ccs-redesign .ccs-nav-desc{ font-weight:500; font-size:11px; color:var(--ccs-ink-3); }
+
+/* connecting line between dots */
+.ccs-redesign .ccs-nav-item::before{
+  content:""; position:absolute; left:26px; top:-3px; width:2px; height:9px;
+  background:var(--ccs-line);
+}
+.ccs-redesign .ccs-nav-item:first-child::before{ display:none; }
+
+/* states (mirrored from the hidden progress steps by ccs-v2.js) */
+.ccs-redesign .ccs-nav-item.is-active{ background:var(--ccs-brand-soft); }
+.ccs-redesign .ccs-nav-item.is-active .ccs-nav-ic{
+  background:var(--ccs-brand); color:var(--ccs-brand-contrast);
+  box-shadow:0 0 0 4px var(--ccs-brand-soft);
+}
+.ccs-redesign .ccs-nav-item.is-active .ccs-nav-title{ color:var(--ccs-brand-dark); }
+.ccs-redesign .ccs-nav-item.is-completed .ccs-nav-ic{
+  background:var(--ccs-brand); color:var(--ccs-brand-contrast); font-size:0;
+}
+.ccs-redesign .ccs-nav-item.is-completed .ccs-nav-ic::after{ content:"\2713"; font-size:14px; font-weight:800; }
+.ccs-redesign .ccs-nav-item.is-completed::before,
+.ccs-redesign .ccs-nav-item.is-active::before{ background:var(--ccs-brand); }
+
+/* sidebar footer disclaimer (icon + heading + full-width message, anchored bottom) */
+.ccs-redesign .ccs-sidebar-foot{ margin-top:auto; padding-top:16px; border-top:1px solid var(--ccs-line); }
+.ccs-redesign .ccs-note-head{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.ccs-redesign .ccs-note-ic{
+  width:34px; height:34px; flex-shrink:0; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg,var(--ccs-brand),var(--ccs-brand-dark)); color:var(--ccs-brand-contrast);
+  box-shadow:0 3px 8px rgba(0,0,0,.12);
+}
+.ccs-redesign .ccs-note-title{ font-weight:800; font-size:14px; color:var(--ccs-ink); letter-spacing:-.1px; }
+.ccs-redesign .ccs-note-text{ margin:0 0 10px; font-size:11.5px; line-height:1.55; color:var(--ccs-ink-2); }
+.ccs-redesign .ccs-note-updated{
+  margin:0; font-size:10.5px; color:var(--ccs-ink-3);
+  display:flex; align-items:center; gap:6px;
+}
+.ccs-redesign .ccs-note-updated svg{ flex-shrink:0; }
+.ccs-redesign .ccs-note-updated em{ font-style:italic; }
+
+/* ============ Center: step content ============ */
+.ccs-redesign .ccs-main{ display:flex; flex-direction:column; }
+.ccs-redesign .ccs-main-inner{
+  flex:1;
+  background:var(--ccs-surface);
+  border:1px solid var(--ccs-line);
+  border-radius:var(--ccs-radius);
+  box-shadow:var(--ccs-shadow);
+  padding:20px;
+}
+.ccs-redesign .childcare-step{ animation:ccsFade .35s ease; }
+@keyframes ccsFade{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
+
+/* ============ Right: sticky summary panel ============ */
+.ccs-redesign .ccs-summary-panel{
+  position:sticky; top:20px;
+  background:var(--ccs-surface);
+  border:1px solid var(--ccs-line);
+  border-radius:var(--ccs-radius);
+  box-shadow:var(--ccs-shadow);
+  overflow:hidden;
+  display:flex; flex-direction:column;
+}
+.ccs-redesign .ccs-panel-actions{
+  display:flex; gap:10px; padding:16px;
+  background:linear-gradient(180deg,var(--ccs-brand-soft),rgba(255,255,255,0));
+  border-bottom:1px solid var(--ccs-line);
+}
+.ccs-redesign .ccs-panel-btn{
+  flex:1; display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  padding:11px 10px; border-radius:11px; font-weight:700; font-size:13px; cursor:pointer;
+  border:1px solid transparent; font-family:inherit; transition:all .18s ease;
+}
+.ccs-redesign .ccs-panel-btn svg{ flex-shrink:0; }
+.ccs-redesign .ccs-panel-btn--email{ background:var(--ccs-brand); color:var(--ccs-brand-contrast); }
+.ccs-redesign .ccs-panel-btn--email:hover:not(:disabled){ background:var(--ccs-brand-dark); }
+.ccs-redesign .ccs-panel-btn--print{ background:#fff; color:var(--ccs-brand); border-color:var(--ccs-line); }
+.ccs-redesign .ccs-panel-btn--print:hover:not(:disabled){ border-color:var(--ccs-brand); }
+.ccs-redesign .ccs-panel-btn:disabled{ opacity:.45; cursor:not-allowed; }
+
+.ccs-redesign .ccs-panel-body{ padding:16px; flex:1; display:flex; flex-direction:column; }
+.ccs-redesign .ccs-panel-figures{ flex:1; }
+.ccs-redesign .ccs-panel-note{ margin-top:auto; }
+.ccs-redesign .ccs-panel-placeholder{ text-align:center; padding:24px 14px; }
+.ccs-redesign .ccs-panel-ph-ic{
+  display:inline-flex; width:52px; height:52px; border-radius:14px;
+  align-items:center; justify-content:center;
+  background:var(--ccs-brand-soft); color:var(--ccs-brand); margin-bottom:12px;
+}
+.ccs-redesign .ccs-panel-ph-title{ font-weight:700; color:var(--ccs-ink-2); margin:0 0 4px; font-size:14px; }
+.ccs-redesign .ccs-panel-ph-text{ font-size:12.5px; line-height:1.5; margin:0; color:var(--ccs-ink-3); }
+
+/* compact live figures (built by ccs-v2.js) */
+.ccs-redesign .ccs-panel-figures{ display:flex; flex-direction:column; gap:12px; }
+.ccs-redesign .ccs-fig{
+  border-radius:var(--ccs-radius-sm); padding:15px 16px; border:1px solid var(--ccs-line);
+}
+.ccs-redesign .ccs-fig-label{
+  display:flex; align-items:center; gap:8px;
+  font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
+}
+.ccs-redesign .ccs-fig-val{ font-size:27px; font-weight:800; line-height:1.05; margin-top:5px; }
+.ccs-redesign .ccs-fig-sub{ font-size:11px; font-weight:600; margin-top:3px; opacity:.8; }
+.ccs-redesign .ccs-fig--pay{
+  background:linear-gradient(135deg,var(--ccs-brand),var(--ccs-brand-dark));
+  color:var(--ccs-brand-contrast); border-color:transparent;
+}
+.ccs-redesign .ccs-fig--pay .ccs-fig-label{ color:var(--ccs-brand-contrast); opacity:.95; }
+.ccs-redesign .ccs-fig--govt{ background:var(--ccs-good-soft); border-color:#d1fae0; }
+.ccs-redesign .ccs-fig--govt .ccs-fig-label,
+.ccs-redesign .ccs-fig--govt .ccs-fig-val{ color:#0f7a35; }
+.ccs-redesign .ccs-fig-row{ display:flex; gap:12px; }
+.ccs-redesign .ccs-fig-mini{
+  flex:1; border:1px solid var(--ccs-line); border-radius:var(--ccs-radius-sm);
+  padding:12px 14px; background:#fbfcfe;
+}
+.ccs-redesign .ccs-fig-mini .ccs-fig-label{ color:var(--ccs-ink-3); }
+.ccs-redesign .ccs-fig-mini .ccs-fig-val{ font-size:19px; color:var(--ccs-ink); }
+.ccs-redesign .ccs-panel-note{
+  margin:14px 0 0; font-size:10.5px; line-height:1.5; color:var(--ccs-ink-3); text-align:center;
+}
+/* Progressive meta rows (location / activity / income) */
+.ccs-redesign .ccs-fig-meta{ border:1px solid var(--ccs-line); border-radius:var(--ccs-radius-sm); overflow:hidden; }
+.ccs-redesign .ccs-fig-meta-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 13px; font-size:12px; }
+.ccs-redesign .ccs-fig-meta-row + .ccs-fig-meta-row{ border-top:1px solid var(--ccs-line); }
+.ccs-redesign .ccs-fig-meta-row span{ color:var(--ccs-ink-3); font-weight:600; }
+.ccs-redesign .ccs-fig-meta-row b{ color:var(--ccs-ink); font-weight:700; text-align:right; max-width:62%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* Before results, mute the big pay/government cards so "—" doesn't read as final */
+.ccs-redesign .ccs-panel-figures.is-pending .ccs-fig--pay{ background:linear-gradient(135deg,#a8b3c4,#8592a6); }
+.ccs-redesign .ccs-panel-figures.is-pending .ccs-fig--govt{ background:#f1f5f9; border-color:var(--ccs-line); }
+.ccs-redesign .ccs-panel-figures.is-pending .ccs-fig--govt .ccs-fig-label,
+.ccs-redesign .ccs-panel-figures.is-pending .ccs-fig--govt .ccs-fig-val{ color:var(--ccs-ink-3); }
+
+/* The inline email accordion is presented via the modal instead */
+.ccs-redesign #summary-email-form{ display:none !important; }
+
+/* =====================================================================
+   Summary (step 4) redesign — matches the right panel's look.
+   Every element here has inline styles, so overrides use !important.
+   Colours use the brand tokens (from the admin primary colour) and the
+   font is inherited from the admin font setting.
+   ===================================================================== */
+
+/* Child summary cards → collapsible (default open), one item per line like the panel */
+.ccs-redesign #child-details-summary{ flex-direction:column !important; gap:12px !important; margin:0 0 16px !important; }
+.ccs-redesign .child-detail-card{
+  flex:none !important; min-width:0; padding:0 !important; overflow:hidden;
+  border:1px solid var(--ccs-line) !important; border-radius:var(--ccs-radius-sm) !important;
+  background:var(--ccs-surface) !important; box-shadow:none !important;
+}
+#child-details-summary .child-detail-card p {
+    margin-bottom: 0px !important;
+}
+.ccs-redesign .child-detail-card h5{
+  margin:0 !important; padding:14px 16px !important; cursor:pointer; user-select:none;
+  display:flex !important; align-items:center; justify-content:space-between;
+  color:var(--ccs-brand-dark) !important; font-size:14.5px !important; font-weight:800 !important;
+}
+.ccs-redesign .child-detail-card h5::after{
+  content:""; width:18px; height:18px; flex-shrink:0; transition:transform .2s ease; transform:rotate(-90deg);
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.ccs-redesign .child-detail-card.is-open h5::after{ transform:rotate(0deg); }
+.ccs-redesign .child-detail-card p{
+  margin:0 !important; padding:11px 16px !important; font-size:13px !important; line-height:1.4 !important;
+  display:none; align-items:baseline; justify-content:space-between; gap:14px; text-align:right;
+  border-top:1px solid var(--ccs-line); color:var(--ccs-ink) !important;
+}
+.ccs-redesign .child-detail-card.is-open p{ display:flex !important; }
+.ccs-redesign .child-detail-card.is-open p:last-child{ padding-bottom:15px !important; }
+.ccs-redesign .child-detail-card p strong{ color:var(--ccs-ink-3) !important; font-weight:600 !important; margin:0 !important; white-space:nowrap; }
+
+/* Household / activity grid removed from the summary (values are shown in the panel) */
+.ccs-redesign #household-income-info{ display:none !important; }
+
+/* Period toggle + child select — relocated into the summary panel */
+.ccs-redesign .ccs-panel-controls{ display:none; padding:14px 16px; border-bottom:1px solid var(--ccs-line); background:#fbfcfe; }
+.ccs-redesign.ccs-has-results .ccs-panel-controls{ display:block; }
+.ccs-redesign .ccs-panel-controls .show_total{ display:block !important; margin:0 0 12px !important; }
+.ccs-redesign .ccs-panel-controls .show_total > strong{ display:block; font-size:10.5px !important; text-transform:uppercase; letter-spacing:.5px; color:var(--ccs-ink-3) !important; font-weight:700 !important; margin-bottom:7px; line-height:1.2 !important; }
+/* Single-row segmented control — all four periods on one line */
+.ccs-redesign .ccs-panel-controls .show_total_btns{
+  display:grid !important; grid-template-columns:repeat(4,1fr); gap:2px;
+  background:#eef2f7; padding:3px; border-radius:11px;
+}
+.ccs-redesign .ccs-panel-controls .summary-btn.button{
+  background:transparent !important; color:var(--ccs-ink-2) !important; border:none !important; box-shadow:none !important;
+  padding:8px 2px !important; margin:0 !important; font-size:10.5px !important; font-weight:700 !important;
+  border-radius:8px !important; min-height:0 !important; width:auto !important; letter-spacing:0 !important; white-space:nowrap;
+  transition:all .15s ease;
+}
+.ccs-redesign .ccs-panel-controls .summary-btn.button:hover{ color:var(--ccs-brand) !important; }
+.ccs-redesign .ccs-panel-controls .summary-btn.button.button-primary{
+  background:var(--ccs-brand) !important; color:var(--ccs-brand-contrast) !important; box-shadow:0 1px 3px rgba(0,0,0,.16) !important;
+}
+/* No display override here — the calculator shows this only when 2+ children (hides it for one) */
+.ccs-redesign .ccs-panel-controls #child-select-wrapper{ gap:9px; align-items:center; }
+.ccs-redesign .ccs-panel-controls #child-select-wrapper label,
+.ccs-redesign .ccs-panel-controls #child-select-wrapper label strong{ font-size:10.5px !important; text-transform:uppercase; letter-spacing:.5px; color:var(--ccs-ink-3) !important; font-weight:700 !important; margin:0 !important; line-height:1.2 !important; }
+.ccs-redesign .ccs-panel-controls #child-select{
+  flex:1; padding:9px 12px !important; border:1px solid var(--ccs-line) !important; border-radius:10px !important;
+  min-height:40px; font-size:12.5px !important; color:var(--ccs-ink) !important; background:#fff !important; width:auto !important;
+}
+
+/* Main results card — overflow fix + brand/green like the panel */
+.ccs-redesign #summary-main-card{
+  border:1px solid var(--ccs-line) !important; border-radius:var(--ccs-radius) !important;
+  box-shadow:var(--ccs-shadow) !important; margin-bottom:16px !important;
+}
+.ccs-redesign .summary-header-row{ background:#f7f9fc !important; }
+.ccs-redesign .summary-header-row > div{ padding:12px 10px !important; font-size:11px !important; color:var(--ccs-ink-3) !important; border-left-color:var(--ccs-line) !important; }
+.ccs-redesign #summary-govt-row{ border-bottom-color:var(--ccs-line) !important; }
+.ccs-redesign #summary-govt-row > div:first-child{ padding:16px 18px !important; font-size:14px !important; color:var(--ccs-ink) !important; }
+.ccs-redesign .summary-govt-week1,
+.ccs-redesign .summary-govt-week2,
+.ccs-redesign .summary-govt-total{
+  padding:15px 6px !important; font-size:16px !important; color:#0f7a35 !important;
+  border-left-color:var(--ccs-line) !important; min-width:0; overflow:hidden;
+}
+.ccs-redesign #summary-you-pay-row{ background:linear-gradient(135deg,var(--ccs-brand),var(--ccs-brand-dark)) !important; }
+.ccs-redesign #summary-you-pay-row > div:first-child{ padding:16px 18px !important; font-size:15px !important; color:var(--ccs-brand-contrast) !important; }
+.ccs-redesign .summary-you-week1,
+.ccs-redesign .summary-you-week2{ padding:16px 6px !important; font-size:17px !important; color:var(--ccs-brand-contrast) !important; min-width:0; overflow:hidden; }
+.ccs-redesign .summary-you-total{ padding:16px 6px !important; font-size:19px !important; color:var(--ccs-brand-contrast) !important; min-width:0; overflow:hidden; }
+
+/* Full breakdown */
+.ccs-redesign #full-breakdown-section{
+  border:1px solid var(--ccs-line) !important; border-radius:var(--ccs-radius) !important;
+  box-shadow:var(--ccs-shadow) !important; margin-bottom:16px !important;
+}
+.ccs-redesign #breakdown-toggle{ padding:15px 20px !important; }
+.ccs-redesign #breakdown-toggle span{ font-size:15px !important; color:var(--ccs-ink) !important; font-weight:700 !important; }
+
+/* CTA block: title + short description + buttons */
+.ccs-redesign .ccs-cta-title{ margin:0 0 5px !important; font-size:16px !important; font-weight:800 !important; color:var(--ccs-ink) !important; }
+.ccs-redesign .ccs-cta-desc{ margin:0 auto 16px !important; max-width:420px; font-size:13px !important; line-height:1.5 !important; color:var(--ccs-ink-3) !important; }
+.ccs-redesign #book-tour-btn,
+.ccs-redesign #contact-us-btn{ padding:11px 26px !important; border-radius:11px !important; font-size:14px !important; }
+
+/* =====================================================================
+   Location step (step 1) — premium redesign + advanced suburb search
+   ===================================================================== */
+.ccs-redesign #step1 input[type="text"],
+.ccs-redesign #step1 select{
+  min-height:48px !important; border:1px solid var(--ccs-line) !important; border-radius:11px !important;
+  padding:12px 14px !important; font-size:14px !important; box-shadow:none !important; background:var(--ccs-surface) !important;
+  text-transform:none !important;
+}
+.ccs-redesign #step1 input[type="text"]:focus,
+.ccs-redesign #step1 select:focus{
+  border-color:var(--ccs-brand) !important; box-shadow:0 0 0 3px var(--ccs-brand-soft) !important; outline:none !important;
+}
+.ccs-redesign #step1 #suburb{ margin-top:0 !important; }
+
+/* Enrolment options as unique selectable cards (brand-aware icon + check) */
+.ccs-redesign #enrolment-options{ display:grid !important; grid-template-columns:repeat(3,1fr); gap:12px !important; margin-bottom:18px !important; }
+.ccs-redesign .enrolment-option.button{
+  position:relative; display:flex !important; flex-direction:column; align-items:center; gap:11px;
+  background:var(--ccs-surface) !important; color:var(--ccs-ink-2) !important;
+  border:1.5px solid var(--ccs-line) !important; border-radius:14px !important;
+  padding:20px 14px !important; margin:0 !important; min-height:0 !important; height:auto !important; width:auto !important;
+  font-size:13.5px !important; font-weight:700 !important; line-height:1.3 !important; text-align:center;
+  box-shadow:none !important; transition:all .16s ease; overflow:visible;
+}
+.ccs-redesign .enrolment-option.button::before{
+  content:""; width:30px; height:30px; flex-shrink:0; background-color:var(--ccs-brand);
+  -webkit-mask:var(--eico) center/contain no-repeat; mask:var(--eico) center/contain no-repeat;
+  transition:background-color .16s ease;
+}
+.ccs-redesign .enrolment-option[data-value="existing"]{ --eico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='9' cy='7' r='4'/%3E%3Cpath d='M23 21v-2a4 4 0 0 0-3-3.87'/%3E%3Cpath d='M16 3.13a4 4 0 0 1 0 7.75'/%3E%3C/svg%3E"); }
+.ccs-redesign .enrolment-option[data-value="other"]{ --eico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 1l4 4-4 4'/%3E%3Cpath d='M3 11V9a4 4 0 0 1 4-4h14'/%3E%3Cpath d='M7 23l-4-4 4-4'/%3E%3Cpath d='M21 13v2a4 4 0 0 1-4 4H3'/%3E%3C/svg%3E"); }
+.ccs-redesign .enrolment-option[data-value="none"]{ --eico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v8M8 12h8'/%3E%3C/svg%3E"); }
+.ccs-redesign .enrolment-option.button:hover{ border-color:var(--ccs-brand) !important; background:var(--ccs-brand-soft) !important; transform:translateY(-2px); box-shadow:0 6px 16px rgba(15,23,42,.08) !important; }
+.ccs-redesign .enrolment-option.button.button-primary,
+.ccs-redesign .enrolment-option.button.active{
+  background:var(--ccs-brand) !important; color:var(--ccs-brand-contrast) !important; border-color:var(--ccs-brand) !important;
+}
+.ccs-redesign .enrolment-option.button.button-primary::before{ background-color:var(--ccs-brand-contrast); }
+.ccs-redesign .enrolment-option.button.button-primary::after{
+  content:""; position:absolute; top:9px; right:9px; width:20px; height:20px; border-radius:50%;
+  background:rgba(255,255,255,.22) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/12px no-repeat;
+}
+
+/* Advanced suburb autocomplete */
+.ccs-redesign #suburb-suggestions{
+  border:1px solid var(--ccs-line) !important; border-radius:12px !important;
+  box-shadow:var(--ccs-shadow-lg) !important; margin-top:1px !important; max-height:290px; overflow-y:auto !important;
+}
+.ccs-redesign .suburb-suggestion{
+  display:flex !important; align-items:center; gap:9px; padding:9px 14px !important; cursor:pointer;
+  border-bottom:1px solid var(--ccs-line) !important; transition:background .12s ease;
+}
+.ccs-redesign .suburb-suggestion:last-child{ border-bottom:none !important; }
+.ccs-redesign .suburb-suggestion::before{
+  content:""; width:18px; height:18px; flex-shrink:0;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.ccs-redesign .suburb-suggestion:hover,
+.ccs-redesign .suburb-suggestion.is-active{ background:var(--ccs-brand-soft) !important; }
+.ccs-redesign .suburb-suggestion:hover::before,
+.ccs-redesign .suburb-suggestion.is-active::before{
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%230073aa' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.ccs-redesign .suburb-suggestion .suburb-name{ flex:1; min-width:0; font-weight:600; font-size:12.5px; color:var(--ccs-ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ccs-redesign #suburb-suggestions .no-results,
+.ccs-redesign #suburb-suggestions .error-message{ padding:12px 14px !important; font-size:12.5px !important; }
+.ccs-redesign .suburb-suggestion.is-active .suburb-name,
+.ccs-redesign .suburb-suggestion:hover .suburb-name{ color:var(--ccs-brand-dark); }
+.ccs-redesign .suburb-suggestion .suburb-postcode{
+  margin-left:auto; flex-shrink:0; font-size:11px; font-weight:700; color:var(--ccs-ink-3);
+  background:#f1f5f9; padding:2px 9px; border-radius:20px;
+}
+.ccs-redesign #suburb-loader p{ font-size:13px !important; color:var(--ccs-ink-3) !important; }
+
+/* Centre picker dropdown */
+.ccs-redesign #centres-dropdown{ border:1px solid var(--ccs-line) !important; border-radius:12px !important; box-shadow:var(--ccs-shadow-lg) !important; }
+.ccs-redesign .centre-option{ padding:12px 15px !important; border-bottom:1px solid var(--ccs-line) !important; font-size:14px !important; }
+.ccs-redesign .centre-option:hover{ background:var(--ccs-brand-soft) !important; }
+
+@media (max-width:640px){
+  .ccs-redesign #enrolment-options{ grid-template-columns:1fr; }
+}
+
+/* =====================================================================
+   Household Income (step 2) — premium redesign (functionality unchanged)
+   ===================================================================== */
+/* 3-Day Guarantee banner → brand-aware */
+.ccs-redesign .three-day-guarantee-badge{
+  background:linear-gradient(135deg,var(--ccs-brand),var(--ccs-brand-dark)) !important;
+  border-radius:14px !important; box-shadow:var(--ccs-shadow) !important; margin-bottom:22px !important;
+}
+.ccs-redesign .three-day-guarantee-badge a{ color:var(--ccs-brand) !important; border-radius:9px !important; }
+
+/* Field labels */
+.ccs-redesign #step2 label{ font-size:11px !important; font-weight:700 !important; line-height:1.45 !important; }
+
+.childcare-step label{margin: 0px !important;}
+/* Inputs / selects premium */
+.ccs-redesign #step2 select,
+.ccs-redesign #step2 input[type="number"],
+.ccs-redesign #step2 input[type="text"]{
+  min-height:48px !important; border:1px solid var(--ccs-line) !important; border-radius:11px !important;
+  padding:12px 14px !important; font-size:14px !important; box-shadow:none !important;
+  text-transform:none !important; background:var(--ccs-surface) !important;
+}
+.ccs-redesign #step2 select:focus,
+.ccs-redesign #step2 input:focus{ border-color:var(--ccs-brand) !important; box-shadow:0 0 0 3px var(--ccs-brand-soft) !important; outline:none !important; }
+/* keep room for the % / AU$ adornments */
+.ccs-redesign #step2 input[type="number"]{ padding-right:34px !important; }
+.ccs-redesign #family_ati{ padding-left:52px !important; padding-right:14px !important; }
+/* read-only (calculated) fields — clearly muted */
+.ccs-redesign #step2 input[readonly]{ background:#f4f6fb !important; color:var(--ccs-ink-2) !important; font-weight:700 !important; cursor:default; }
+/* tooltip 'i' icon → brand + smaller */
+.ccs-redesign #step2 .tooltip-container{ vertical-align:middle; }
+.ccs-redesign #step2 .tooltip-icon{
+  background:var(--ccs-brand) !important; color:#fff !important;
+  width:11px !important; height:11px !important; min-width:11px !important;
+  font-size:9px !important; line-height:17px !important; display:inline-flex !important;
+  align-items:center; justify-content:center;
+}
+/* Bottom-align the fields so the two columns line up even when a label wraps */
+.ccs-redesign #step2 .house-hold-income-info,
+.ccs-redesign #ccs_known_fields > div,
+.ccs-redesign #ccs_unknown_fields > div,
+.ccs-redesign #step2 .tax-income{ align-items:flex-end !important; }
+
+@media (max-width:640px){
+  .ccs-redesign #step2 label[style*="width:50%"],
+  .ccs-redesign #step2 label{ width:100% !important; }
+  .ccs-redesign #step2 .house-hold-income-info,
+  .ccs-redesign #ccs_known_fields > div,
+  .ccs-redesign #ccs_unknown_fields > div,
+  .ccs-redesign #step2 .tax-income{ flex-wrap:wrap !important; }
+  .ccs-redesign .three-day-guarantee-badge{ flex-wrap:wrap; }
+}
+
+/* Summary responsive */
+@media (max-width:560px){
+  .ccs-redesign .summary-header-row > div{ font-size:10px !important; padding:10px 4px !important; }
+  .ccs-redesign .summary-govt-week1,
+  .ccs-redesign .summary-govt-week2,
+  .ccs-redesign .summary-govt-total{ font-size:13px !important; padding:12px 4px !important; }
+  .ccs-redesign .summary-you-week1,
+  .ccs-redesign .summary-you-week2{ font-size:13px !important; padding:13px 4px !important; }
+  .ccs-redesign .summary-you-total{ font-size:15px !important; padding:13px 4px !important; }
+  .ccs-redesign #summary-govt-row > div:first-child,
+  .ccs-redesign #summary-you-pay-row > div:first-child{ font-size:12.5px !important; padding:13px 10px !important; }
+}
+
+/* ============ Responsive ============ */
+@media (max-width:1080px){
+  .ccs-redesign .ccs-shell{ grid-template-columns:1fr; gap:16px; }
+  .ccs-redesign .ccs-sidebar,
+  .ccs-redesign .ccs-summary-panel{ position:static; }
+
+  /* sidebar: brand, horizontal stepper, then the disclaimer */
+  .ccs-redesign .ccs-nav{ flex-direction:row; gap:6px; overflow-x:auto; }
+  .ccs-redesign .ccs-nav-item{ flex:1 0 auto; flex-direction:column; text-align:center; gap:6px; padding:8px 10px; }
+  .ccs-redesign .ccs-nav-item::before{ display:none; }
+  .ccs-redesign .ccs-nav-tx{ align-items:center; }
+  .ccs-redesign .ccs-nav-desc{ display:none; }
+  .ccs-redesign .ccs-sidebar-foot{ margin-top:16px; }
+}
+@media (max-width:768px){
+  .ccs-redesign .ccs-main-inner{ padding:20px 16px; }
+  .ccs-redesign .ccs-brand-text{ display:none; }
+  .ccs-redesign .ccs-nav-title{ font-size:12px; }
+  .ccs-redesign .ccs-fig-val{ font-size:24px; }
+}
+
+/* ============ Hours: manual numeric entry (paired with slider) ============ */
+.ccs-redesign .ccs-hours-manual{
+  display:flex; align-items:center; gap:9px; margin-top:10px;
+  font-size:12.5px; font-weight:600; color:var(--ccs-ink-3);
+}
+.ccs-redesign .ccs-hours-manual .ccs-hours-num{
+  width:80px !important; padding:8px 10px !important; text-align:center;
+  font-weight:700; font-size:14px; border-radius:9px !important;
+}
+.ccs-redesign .ccs-hours-manual .ccs-hours-num:focus{
+  outline:none; border-color:var(--ccs-brand) !important;
+  box-shadow:0 0 0 3px var(--ccs-brand-soft) !important;
+}
+.ccs-redesign .ccs-hours-unit{ color:var(--ccs-ink-3); }
+
+/* Hide inline elements that have been relocated (e.g. email form -> modal) */
+.ccs-redesign .ccs-hidden-inline{ display:none !important; }
+
+/* ============ Modal ============ */
+body.ccs-modal-open{ overflow:hidden; }
+.ccs-redesign .ccs-modal{ position:fixed; inset:0; z-index:99999; display:none; }
+.ccs-redesign .ccs-modal.is-open{ display:flex; align-items:center; justify-content:center; padding:20px; }
+.ccs-redesign .ccs-modal__overlay{
+  position:absolute; inset:0; background:rgba(15,23,42,.55);
+  -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px);
+  animation:ccsOverlay .2s ease;
+}
+.ccs-redesign .ccs-modal__dialog{
+  position:relative; z-index:1; width:min(560px,100%);
+  max-height:calc(100vh - 40px); overflow:auto;
+  background:var(--ccs-surface); border-radius:18px; box-shadow:var(--ccs-shadow-lg);
+  animation:ccsPop .22s cubic-bezier(.2,.8,.2,1);
+}
+.ccs-redesign .ccs-modal__head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 22px; border-bottom:1px solid var(--ccs-line);
+  position:sticky; top:0; background:var(--ccs-surface); z-index:2;
+}
+.ccs-redesign .ccs-modal__title{ display:flex; align-items:center; gap:9px; font-weight:800; font-size:16px; color:var(--ccs-ink); }
+.ccs-redesign .ccs-modal__title svg{ color:var(--ccs-brand); }
+.ccs-redesign .ccs-modal__close{
+  background:#f1f5f9; border:none; width:34px; height:34px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  color:var(--ccs-ink-2); transition:background .15s ease; flex-shrink:0;
+}
+.ccs-redesign .ccs-modal__close:hover{ background:#e2e8f0; }
+.ccs-redesign .ccs-modal__body{ padding:20px 22px; }
+@keyframes ccsPop{ from{ opacity:0; transform:translateY(10px) scale(.98); } to{ opacity:1; transform:none; } }
+@keyframes ccsOverlay{ from{ opacity:0; } to{ opacity:1; } }
+
+/* =====================================================================
+   Children step — accordion cards, add-child, day pills, single hours
+   ===================================================================== */
+.ccs-redesign .ccs-step-head{ margin-bottom:18px; }
+.ccs-redesign .ccs-step-title{ margin:0 0 4px; font-size:18px; font-weight:800; color:var(--ccs-ink); letter-spacing:-.2px; }
+.ccs-redesign .ccs-step-desc{ margin:0; font-size:13px; color:var(--ccs-ink-3); }
+
+/* Add another child */
+.ccs-redesign .ccs-add-child{
+  display:inline-flex; align-items:center; gap:8px; margin-top:16px;
+  padding:11px 18px; border-radius:12px; cursor:pointer; font-family:inherit;
+  font-weight:700; font-size:13.5px; color:var(--ccs-brand);
+  background:var(--ccs-brand-soft); border:1px dashed var(--ccs-brand);
+  transition:all .16s ease;
+}
+.ccs-redesign .ccs-add-child:hover{ background:var(--ccs-brand); color:var(--ccs-brand-contrast); border-style:solid; }
+.ccs-redesign .ccs-add-child.is-max{ opacity:.45; cursor:not-allowed; }
+.ccs-redesign .ccs-add-child.is-max:hover{ background:var(--ccs-brand-soft); color:var(--ccs-brand); border-style:dashed; }
+/* Children actions row: "Add another child" left, Back/Next right */
+.ccs-redesign .ccs-child-actions{ display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-top:18px; }
+.ccs-redesign .ccs-child-actions .ccs-add-child{ margin-top:0; }
+.ccs-redesign .ccs-child-actions .next-steps{ margin:0; display:flex; gap:10px; }
+@media (max-width:520px){
+  .ccs-redesign .ccs-child-actions{ flex-direction:column-reverse; align-items:stretch; }
+  .ccs-redesign .ccs-child-actions .next-steps{ justify-content:flex-start; }
+}
+
+/* Accordion card */
+.ccs-redesign .ccs-child-card{
+  border:1px solid var(--ccs-line); border-radius:14px; margin:0 0 14px; overflow:hidden;
+  background:var(--ccs-surface); box-shadow:0 1px 2px rgba(15,23,42,.04); transition:box-shadow .18s ease;
+}
+.ccs-redesign .ccs-child-card.is-open{ box-shadow:var(--ccs-shadow); }
+.ccs-redesign .ccs-child-head{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:14px 16px; cursor:pointer; user-select:none; background:transparent; border:none; width:100%; text-align:left;
+}
+.ccs-redesign .ccs-child-head:focus-visible{ outline:2px solid var(--ccs-brand); outline-offset:-2px; }
+.ccs-redesign .ccs-child-head-l{ display:flex; align-items:center; gap:12px; min-width:0; }
+.ccs-redesign .ccs-child-avatar{
+  width:34px; height:34px; flex-shrink:0; border-radius:10px;
+  display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px;
+  background:linear-gradient(135deg,var(--ccs-brand),var(--ccs-brand-dark)); color:var(--ccs-brand-contrast);
+}
+.ccs-redesign .ccs-child-titles{ display:flex; flex-direction:column; line-height:1.2; min-width:0; }
+.ccs-redesign .ccs-child-title{ font-weight:800; font-size:14.5px; color:var(--ccs-ink); }
+.ccs-redesign .ccs-child-sub{ font-size:11px; color:var(--ccs-ink-3); }
+.ccs-redesign .ccs-child-head-r{ display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.ccs-redesign .ccs-child-remove{
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer;
+  width:32px !important; min-width:32px !important; height:32px !important; padding:0 !important;
+  border-radius:9px !important; border:1px solid #fecaca !important; box-shadow:none !important;
+  background:#fef2f2 !important; color:#dc2626 !important; transition:all .15s ease;
+}
+.ccs-redesign .ccs-child-remove svg{ display:block; }
+.ccs-redesign .ccs-child-remove:hover{ background:#dc2626 !important; color:#fff !important; border-color:#dc2626 !important; }
+.ccs-redesign .ccs-child-chev{ color:var(--ccs-ink-3); display:flex; transition:transform .22s ease; }
+.ccs-redesign .ccs-child-card.is-open .ccs-child-chev{ transform:rotate(180deg); }
+.ccs-redesign .ccs-child-card.is-open .ccs-child-sub{ display:none; }
+
+.ccs-redesign .ccs-child-body{ display:none; padding:4px 16px 18px; border-top:1px solid var(--ccs-line); }
+.ccs-redesign .ccs-child-card.is-open .ccs-child-body{ display:block; animation:ccsFade .28s ease; }
+
+/* DOB + Type of care on one row */
+.ccs-redesign .ccs-field-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; }
+.ccs-redesign .ccs-field{ display:flex; flex-direction:column; gap:6px; margin:0; }
+.ccs-redesign .ccs-field-lb{ font-size:11.5px; font-weight:700; color:var(--ccs-ink-2); text-transform:uppercase; letter-spacing:.4px; }
+.ccs-redesign .ccs-fee-field{ margin-top:16px; max-width:220px; }
+/* Premium DOB / Type / Fee inputs — matches Location & Household Income */
+.ccs-redesign .child-dob,
+.ccs-redesign .child-care-type,
+.ccs-redesign .child-fee{
+  min-height:48px !important; height:auto !important; width:100% !important;
+  border:1px solid var(--ccs-line) !important; border-radius:11px !important;
+  padding:12px 14px !important; font-size:14px !important; line-height:1.3 !important;
+  box-shadow:none !important; background:var(--ccs-surface) !important; color:var(--ccs-ink) !important;
+}
+.ccs-redesign .child-dob:focus,
+.ccs-redesign .child-care-type:focus,
+.ccs-redesign .child-fee:focus{
+  border-color:var(--ccs-brand) !important; box-shadow:0 0 0 3px var(--ccs-brand-soft) !important; outline:none !important;
+}
+
+/* Fortnightly day pills — Week 1 and Week 2 stacked, each a full-width 5-pill row */
+.ccs-redesign .ccs-days{ display:flex; flex-direction:column; gap:16px; margin-top:18px; }
+.ccs-redesign .ccs-days-wk{ min-width:0; }
+.ccs-redesign .ccs-days-lb{ display:block; font-size:11.5px; font-weight:700; color:var(--ccs-ink-2); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
+.ccs-redesign .ccs-days-row{ display:flex; gap:6px; width:100%; }
+.ccs-redesign .fortnight-day-btn.ccs-day{
+  flex:1 1 0; min-width:0; display:flex !important; flex-direction:column; align-items:center; gap:2px;
+  padding:9px 4px !important; margin:0 !important; cursor:pointer; overflow:hidden;
+  background:#fff !important; color:var(--ccs-ink-2) !important;
+  border:1px solid var(--ccs-line) !important; border-radius:10px !important;
+  font-weight:700 !important; width:auto !important; min-height:0 !important; line-height:1.1 !important;
+  transition:all .14s ease; box-shadow:none !important;
+}
+.ccs-redesign .fortnight-day-btn.ccs-day:hover{ border-color:var(--ccs-brand) !important; background:var(--ccs-brand-soft) !important; }
+.ccs-redesign .fortnight-day-btn.ccs-day.active{
+  background:var(--ccs-brand) !important; color:var(--ccs-brand-contrast) !important; border-color:var(--ccs-brand) !important;
+}
+.ccs-redesign .ccs-day .ccs-day-s{ font-size:14px; font-weight:800; }
+.ccs-redesign .ccs-day .ccs-day-f{ font-size:8.5px; text-transform:uppercase; letter-spacing:.2px; opacity:.75; }
+
+/* Hours: single slider + numeric input */
+.ccs-redesign .ccs-hours-block{ margin-top:18px; }
+.ccs-redesign .ccs-hours-block > .ccs-field-lb{ display:block; margin-bottom:8px; }
+.ccs-redesign .ccs-slider.slider-container{ display:flex; align-items:center; gap:12px; margin-top:0; }
+.ccs-redesign .ccs-slider .ccs-slider-track{ flex:1; position:relative; display:flex; align-items:center; }
+.ccs-redesign .ccs-slider .ccs-slider-track .child-hours-slider{ width:100%; }
+.ccs-redesign .ccs-slider .ccs-slider-cap{ font-size:12px; font-weight:600; color:var(--ccs-ink-3); flex-shrink:0; }
+.ccs-redesign .ccs-slider .ccs-hours-num{
+  width:66px !important; padding:8px 8px !important; text-align:center; flex-shrink:0;
+  font-weight:800 !important; font-size:15px !important; border-radius:10px !important;
+}
+.ccs-redesign .ccs-slider .ccs-hours-num:focus{ outline:none; border-color:var(--ccs-brand) !important; box-shadow:0 0 0 3px var(--ccs-brand-soft) !important; }
+.ccs-redesign .ccs-slider .ccs-hours-unit{ font-size:12px; font-weight:700; color:var(--ccs-ink-3); flex-shrink:0; }
+
+/* Responsive: children step */
+@media (max-width:640px){
+  .ccs-redesign .ccs-field-grid{ grid-template-columns:1fr; }
+  .ccs-redesign .ccs-days{ grid-template-columns:1fr; }
+  .ccs-redesign .ccs-day .ccs-day-f{ display:none; }
+  .ccs-redesign .ccs-fee-field{ max-width:none; }
+  .ccs-redesign .ccs-slider .ccs-slider-cap{ display:none; }
+}
+
+/* =====================================================================
+   2025-26 vs 2026-27 comparison
+   ===================================================================== */
+.ccs-redesign .ccs-cmp{ margin-top:16px; border:1px solid var(--ccs-line); border-radius:var(--ccs-radius); overflow:hidden; background:var(--ccs-surface); }
+.ccs-redesign .ccs-cmp-head{ padding:15px 18px; background:var(--ccs-brand-soft); border-bottom:1px solid var(--ccs-line); }
+.ccs-redesign .ccs-cmp-head h4{ margin:0 0 3px; font-size:16px; font-weight:800; color:var(--ccs-brand-dark); }
+.ccs-redesign .ccs-cmp-head p{ margin:0; font-size:12.5px; color:var(--ccs-ink-2); }
+.ccs-redesign .ccs-cmp-cards{ display:grid; grid-template-columns:1fr auto 1fr; align-items:stretch; gap:12px; padding:18px; }
+.ccs-redesign .ccs-cmp-card{ border:1px solid var(--ccs-line); border-radius:12px; padding:14px 16px; background:#fbfcfe; }
+.ccs-redesign .ccs-cmp-card--new{ border-color:var(--ccs-brand); background:var(--ccs-brand-soft); box-shadow:0 4px 14px rgba(15,23,42,.06); }
+.ccs-redesign .ccs-cmp-year{ font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:var(--ccs-ink-3); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+.ccs-redesign .ccs-cmp-card--new .ccs-cmp-year{ color:var(--ccs-brand-dark); }
+.ccs-redesign .ccs-cmp-badge{ font-size:9px; background:var(--ccs-brand); color:#fff; padding:2px 7px; border-radius:20px; letter-spacing:.5px; }
+.ccs-redesign .ccs-cmp-metric{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:5px 0; }
+.ccs-redesign .ccs-cmp-metric span{ font-size:11px; color:var(--ccs-ink-3); font-weight:600; }
+.ccs-redesign .ccs-cmp-metric b{ font-size:14px; color:var(--ccs-ink); font-weight:700; }
+.ccs-redesign .ccs-cmp-metric--pay b{ font-size:19px; color:var(--ccs-brand-dark); font-weight:800; }
+.ccs-redesign .ccs-cmp-card--old .ccs-cmp-metric--pay b{ color:var(--ccs-ink-2); }
+.ccs-redesign .ccs-cmp-arrow{ align-self:center; font-size:20px; color:var(--ccs-ink-3); font-weight:700; }
+.ccs-redesign .ccs-cmp-impact{ margin:0 18px 16px; padding:12px 16px; border-radius:10px; font-size:13px; text-align:center; font-weight:600; }
+.ccs-redesign .ccs-cmp-impact b{ font-weight:800; }
+.ccs-redesign .ccs-cmp-impact--good{ background:var(--ccs-good-soft); color:#0f7a35; }
+.ccs-redesign .ccs-cmp-impact--bad{ background:#fef2f2; color:#dc2626; }
+.ccs-redesign .ccs-cmp-impact--same{ background:#f4f6fb; color:var(--ccs-ink-2); }
+.ccs-redesign .ccs-cmp-rules{ padding:0 18px 6px; }
+.ccs-redesign .ccs-cmp-rhead,
+.ccs-redesign .ccs-cmp-rrow{ display:grid; grid-template-columns:1fr 84px 84px; gap:10px; align-items:center; padding:9px 0; }
+.ccs-redesign .ccs-cmp-rhead{ font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--ccs-ink-3); font-weight:700; border-bottom:1px solid var(--ccs-line); }
+.ccs-redesign .ccs-cmp-rhead span:not(:first-child){ text-align:right; }
+.ccs-redesign .ccs-cmp-rrow{ border-bottom:1px solid var(--ccs-line); font-size:12.5px; }
+.ccs-redesign .ccs-cmp-rrow:last-child{ border-bottom:none; }
+.ccs-redesign .ccs-cmp-rlabel{ color:var(--ccs-ink-2); font-weight:600; }
+.ccs-redesign .ccs-cmp-rold{ text-align:right; color:var(--ccs-ink-3); text-decoration:line-through; }
+.ccs-redesign .ccs-cmp-rnew{ text-align:right; color:var(--ccs-ink); font-weight:700; }
+.ccs-redesign .ccs-cmp-rnew.is-up{ color:#0f7a35; }
+.ccs-redesign .ccs-cmp-note{ margin:0; padding:12px 18px 16px; font-size:10.5px; line-height:1.5; color:var(--ccs-ink-3); }
+@media (max-width:560px){
+  .ccs-redesign .ccs-cmp-cards{ grid-template-columns:1fr; }
+  .ccs-redesign .ccs-cmp-arrow{ transform:rotate(90deg); }
+}
