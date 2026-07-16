@@ -334,8 +334,8 @@ class Settings
         $out['ccs_hours_8_16'] = isset($out['ccs_hours_8_16']) ? absint($out['ccs_hours_8_16']) : 36;
         $out['ccs_hours_17_48'] = isset($out['ccs_hours_17_48']) ? absint($out['ccs_hours_17_48']) : 72;
         $out['ccs_hours_48_plus'] = isset($out['ccs_hours_48_plus']) ? absint($out['ccs_hours_48_plus']) : 100;
-        $out['low_income_threshold'] = isset($out['low_income_threshold']) ? floatval($out['low_income_threshold']) : 85279;
-        $out['higher_ccs_threshold'] = isset($out['higher_ccs_threshold']) ? floatval($out['higher_ccs_threshold']) : 367563;
+        $out['low_income_threshold'] = isset($out['low_income_threshold']) ? floatval($out['low_income_threshold']) : 88520;
+        $out['higher_ccs_threshold'] = isset($out['higher_ccs_threshold']) ? floatval($out['higher_ccs_threshold']) : 370727;
 
         $out['last_updated']    = sanitize_text_field($out['last_updated']);
         $out['disclaimer_text'] = sanitize_text_field($out['disclaimer_text']);

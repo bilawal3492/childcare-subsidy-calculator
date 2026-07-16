@@ -55,8 +55,8 @@ class CCSEngine
     {
         $income = (float) $income;
 
-        $zero             = $this->policy_float('income_zero_threshold', 535279);
-        $lowIncomeThresh  = $this->policy_float('low_income_threshold', 85279);
+        $zero             = $this->policy_float('income_zero_threshold', 538520);
+        $lowIncomeThresh  = $this->policy_float('low_income_threshold', 88520);
 
         if ($income <= $lowIncomeThresh) {
             $standard = 90;
@@ -101,7 +101,10 @@ class CCSEngine
             return ['higher' => $standard, 'eligible' => false];
         }
 
-        if ($ati >= 367563) {
+        // NOTE: only the upper cutoff below is confirmed for 2026-27. The
+        // intermediate band edges (143273 / 188273 / 267563 / 357563) are still
+        // 2025-26 figures and need confirming against Services Australia.
+        if ($ati >= 370727) {
             $higher = $standard;
             $eligible = false;
         } elseif ($ati <= 143273) {
@@ -264,7 +267,7 @@ class CCSEngine
         }
         $ccsHoursPerWeek = $ccsHoursPerFortnight / 2;
 
-        $higherCCSThreshold = $this->policy_float('higher_ccs_threshold', 367563);
+        $higherCCSThreshold = $this->policy_float('higher_ccs_threshold', 370727);
 
         $asOf = $input['as_of'] ?? null;
 

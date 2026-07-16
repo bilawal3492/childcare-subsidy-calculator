@@ -3,3 +3,9 @@
 node_modules/
 vendor/
 *.log
+
+# macOS AppleDouble sidecars. The repo lives on an exFAT volume, which can't
+# store extended attributes, so macOS writes them to ._<file> next to the real
+# file. They are filesystem artefacts, never source.
+._*
+**/._*

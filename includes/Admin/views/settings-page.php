@@ -2,15 +2,18 @@
 if (!defined('ABSPATH')) { exit; }
         if (!current_user_can('manage_options')) return;
 
+        // 2026-27 values, matching the activation defaults and the engine
+        // fallbacks. Keys mirror what the form saves.
         $defaults = [
-            'income_base_threshold' => 80000,
-            'income_zero_threshold' => 360000,
+            'income_base_threshold' => 88520,
+            'income_zero_threshold' => 538520,
             'hourly_caps' => [
-                'centre_based_day_care'   => 14.63,
-                'family_day_care_all'     => 13.56,
-                'oshc_below_school_age'   => 14.63,
-                'oshc_school_age'         => 12.81,
-                'in_home_family'          => 39.80
+                'centre_below_school_age' => 15.19,
+                'centre_school_age'       => 13.30,
+                'family_day_care_all'     => 14.08,
+                'oshc_below_school_age'   => 15.19,
+                'oshc_school_age'         => 13.30,
+                'in_home_family'          => 41.31
             ],
             'last_updated'          => date('Y-m-d'),
             'disclaimer_text'       => 'This is an estimate only. Final entitlements determined by Services Australia. From 5 January 2026, all CCS eligible families can get at least 72 hours (3 days) of subsidised child care per fortnight under the 3 Day Guarantee.',
@@ -104,6 +107,8 @@ if (!defined('ABSPATH')) { exit; }
                         
                         <?php 
                         $cap_labels = [
+                            'centre_below_school_age' => 'Centre Based Day Care (Below School Age)',
+                            'centre_school_age' => 'Centre Based Day Care (School Age)',
                             'centre_based_day_care' => 'Centre Based Day Care',
                             'family_day_care_all' => 'Family Day Care (All Ages)',
                             'oshc_below_school_age' => 'OSHC (Below School Age)',
@@ -258,7 +263,7 @@ if (!defined('ABSPATH')) { exit; }
                             <span style="position:absolute; left:12px; top:10px; color:#666;">$</span>
                             <input type="number" 
                                    name="childcare_ccs_policy[low_income_threshold]" 
-                                   value="<?php echo esc_attr($policy['low_income_threshold'] ?? 85279); ?>"
+                                   value="<?php echo esc_attr($policy['low_income_threshold'] ?? 88520); ?>"
                                    style="width:100%; padding:10px 10px 10px 25px; border:1px solid #ddd; border-radius:4px; font-size:14px;">
                         </div>
                         <p class="description" style="margin-top:5px; color:#666;">Families earning this amount or less get 24 hours subsidised care without activity test</p>
@@ -272,7 +277,7 @@ if (!defined('ABSPATH')) { exit; }
                             <span style="position:absolute; left:12px; top:10px; color:#666;">$</span>
                             <input type="number" 
                                    name="childcare_ccs_policy[higher_ccs_threshold]" 
-                                   value="<?php echo esc_attr($policy['higher_ccs_threshold'] ?? 367563); ?>"
+                                   value="<?php echo esc_attr($policy['higher_ccs_threshold'] ?? 370727); ?>"
                                    style="width:100%; padding:10px 10px 10px 25px; border:1px solid #ddd; border-radius:4px; font-size:14px;">
                         </div>
                         <p class="description" style="margin-top:5px; color:#666;">Maximum income for families to be eligible for Higher CCS (second child and younger)</p>

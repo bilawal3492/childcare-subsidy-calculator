@@ -37,16 +37,16 @@ function check($label, $got, $expected, $eps = 0.01) {
     }
 }
 
-$engine = new CCSEngine([]);   // empty policy -> use JS fallbacks (14.63 / 12.81 / 535279 / 85279 / 367563)
+$engine = new CCSEngine([]);   // empty policy -> 2026-27 fallbacks (15.19 / 13.30 / 538520 / 88520 / 370727)
 
 /* ============================================================= *
  *  1. Standard percentage from income (calculate_standard_pct)
  * ============================================================= */
 check('standard @ 50000 (<= low) = 90',      $engine->calculate_standard_pct(50000), 90.0);
-check('standard @ 85279 (= low) = 90',       $engine->calculate_standard_pct(85279), 90.0);
-check('standard @ 185279 = 70',              $engine->calculate_standard_pct(185279), 70.0);
-check('standard @ 285279 = 50',              $engine->calculate_standard_pct(285279), 50.0);
-check('standard @ 535279 (= zero) = 0',      $engine->calculate_standard_pct(535279), 0.0);
+check('standard @ 88520 (= low) = 90',       $engine->calculate_standard_pct(88520), 90.0);
+check('standard @ 188520 = 70',              $engine->calculate_standard_pct(188520), 70.0);
+check('standard @ 288520 = 50',              $engine->calculate_standard_pct(288520), 50.0);
+check('standard @ 538520 (= zero) = 0',      $engine->calculate_standard_pct(538520), 0.0);
 check('standard @ 600000 (> zero) = 0',      $engine->calculate_standard_pct(600000), 0.0);
 
 /* ============================================================= *
@@ -69,7 +69,7 @@ $h = $engine->calculate_higher_from_ati(360000, 40);
 check('higher ATI @ 360000 = 50',            $h['higher'], 50.0);
 
 $h = $engine->calculate_higher_from_ati(400000, 27.0558);
-check('higher ATI @ 400000 (>=367563) = standard (not eligible)', $h['higher'], 27.0558);
+check('higher ATI @ 400000 (>=370727) = standard (not eligible)', $h['higher'], 27.0558);
 check('higher ATI @ 400000 eligible=false', $h['eligible'], false);
 
 /* ============================================================= *
@@ -99,7 +99,7 @@ $c = $r['children'][0];
 check('A: ccs_hours_per_fortnight = 72',     $r['ccs_hours_per_fortnight'], 72);
 check('A: standard_pct = 0.90',              $r['standard_pct'], 0.90);
 check('A: child ccs_pct = 0.90',             $c['ccs_pct'], 0.90);
-check('A: hourlyCap = 14.63',                $c['hourlyCap'], 14.63);
+check('A: hourlyCap = 15.19',                $c['hourlyCap'], 15.19);
 check('A: fortnightFee = 1200',              $c['fortnightFee'], 1200.0);
 check('A: week1 sub-before-wh = 388.8',      $c['week1SubBeforeWithholding'], 388.8);
 check('A: fortnightSub = 738.72',            $c['fortnightSub'], 738.72);
@@ -156,8 +156,8 @@ $r = $engine->calculate([
 check('D: ATSI -> ccs_hours_per_fortnight = 100', $r['ccs_hours_per_fortnight'], 100);
 
 /* ============================================================= *
- *  8. School-age child uses OSHC cap (12.81), not centre (14.63)
- *     age8, $90/day over 6h => hourlyFee 15 > cap 12.81
+ *  8. School-age child uses OSHC cap (13.30), not centre (15.19)
+ *     age8, $90/day over 6h => hourlyFee 15 > cap 13.30
  * ============================================================= */
 $r = $engine->calculate([
     'income' => 50000, 'activity_hours' => 0, 'withholding_pct' => 0, 'is_atsi' => false,
@@ -166,12 +166,12 @@ $r = $engine->calculate([
         ['dob' => '2018-01-01', 'hours_per_day' => 6, 'fee_per_day' => 90, 'days_week1' => 5, 'days_week2' => 5],
     ],
 ]);
-check('E: school-age hourlyCap = 12.81',     $r['children'][0]['hourlyCap'], 12.81);
+check('E: school-age hourlyCap = 13.30',     $r['children'][0]['hourlyCap'], 13.30);
 check('E: hourlyFee = 15',                   $r['children'][0]['hourlyFee'], 15.0);
 
 /* ============================================================= *
  *  8b. Percentage round-trip parity (mirrors browser toFixed(2))
- *      income=131000 -> standard 80.8558 stored/used as 80.86
+ *      income=131000 -> standard 81.504 stored/used as 81.50
  * ============================================================= */
 $r = $engine->calculate([
     'income' => 131000, 'activity_hours' => 49, 'withholding_pct' => 0.05, 'is_atsi' => false,
@@ -180,7 +180,7 @@ $r = $engine->calculate([
         ['dob' => '2023-01-01', 'hours_per_day' => 10, 'fee_per_day' => 100, 'days_week1' => 5, 'days_week2' => 5],
     ],
 ]);
-check('G: standard_pct rounded to 0.8086', $r['standard_pct'], 0.8086, 0.00001);
+check('G: standard_pct rounded to 0.8150', $r['standard_pct'], 0.8150, 0.00001);
 check('G: higher_pct = 0.95',              $r['higher_pct'], 0.95, 0.00001);
 
 /* ============================================================= *
@@ -198,14 +198,14 @@ function cap_for($engine, $careType, $dob, $AS_OF) {
 }
 $YOUNG = '2023-01-01'; // age 3
 $SCHOOL = '2018-01-01'; // age 8
-check('cap: cbdc young = 14.63',  cap_for($engine, 'cbdc', $YOUNG, $AS_OF), 14.63);
-check('cap: cbdc school = 12.81', cap_for($engine, 'cbdc', $SCHOOL, $AS_OF), 12.81);
-check('cap: fdc young = 13.56',   cap_for($engine, 'fdc', $YOUNG, $AS_OF), 13.56);
-check('cap: fdc school = 13.56',  cap_for($engine, 'fdc', $SCHOOL, $AS_OF), 13.56);
-check('cap: oshc young = 14.63',  cap_for($engine, 'oshc', $YOUNG, $AS_OF), 14.63);
-check('cap: oshc school = 12.81', cap_for($engine, 'oshc', $SCHOOL, $AS_OF), 12.81);
-check('cap: ihc = 39.80',         cap_for($engine, 'ihc', $YOUNG, $AS_OF), 39.80);
-check('cap: default(no care_type) young = 14.63', cap_for($engine, '', $YOUNG, $AS_OF), 14.63);
+check('cap: cbdc young = 15.19',  cap_for($engine, 'cbdc', $YOUNG, $AS_OF), 15.19);
+check('cap: cbdc school = 13.30', cap_for($engine, 'cbdc', $SCHOOL, $AS_OF), 13.30);
+check('cap: fdc young = 14.08',   cap_for($engine, 'fdc', $YOUNG, $AS_OF), 14.08);
+check('cap: fdc school = 14.08',  cap_for($engine, 'fdc', $SCHOOL, $AS_OF), 14.08);
+check('cap: oshc young = 15.19',  cap_for($engine, 'oshc', $YOUNG, $AS_OF), 15.19);
+check('cap: oshc school = 13.30', cap_for($engine, 'oshc', $SCHOOL, $AS_OF), 13.30);
+check('cap: ihc = 41.31',         cap_for($engine, 'ihc', $YOUNG, $AS_OF), 41.31);
+check('cap: default(no care_type) young = 15.19', cap_for($engine, '', $YOUNG, $AS_OF), 15.19);
 
 /* ============================================================= *
  *  9. Period scaling (renderSummary multipliers)

@@ -2,6 +2,34 @@
 
 All notable changes to The Child Care Subsidy Calculator plugin will be documented in this file.
 
+## [2.4.0-dev23] - 2026-07-16
+
+### 🔴 Corrected CCS rates to 2026-27 (effective 6 July 2026)
+The calculator was still estimating on 2025-26 policy values. 2.3.3 refreshed the
+engine's hardcoded cap fallbacks to 2026-27, but those fallbacks only apply when a
+setting is blank — the activation hook seeded the database with 2025-26 caps, which
+took precedence. Every fresh install therefore calculated on last year's rates.
+Measured effect: roughly $33 per fortnight (~$867/year) understated for a family on
+$100k with one child in centre-based care above the cap.
+
+- **Hourly rate caps** now 2026-27 across activation defaults, the settings page and
+  both calculators: Centre Based Day Care $15.19 (below school age) / $13.30 (school
+  age), Family Day Care $14.08, OSHC $15.19 / $13.30, In Home Care $41.31 per family.
+- **Income thresholds** now 2026-27: 90% rate up to $88,520 (was $85,279), zero at
+  $538,520 (was $535,279), Higher CCS cut-off $370,727 (was $367,563).
+- **Seed the keys the engine actually reads.** Activation now also writes
+  `low_income_threshold` and `higher_ccs_threshold`. The engine reads those keys, so
+  omitting them silently pinned installs to the hardcoded fallbacks regardless of
+  what an admin entered.
+- **Settings page** cap labels now cover the `centre_below_school_age` /
+  `centre_school_age` keys the form actually saves, so both render with proper names.
+- **Disclaimer and tooltip copy** updated to the 2026-27 figures and FY2027 wording.
+- Engine unit tests updated to the 2026-27 values (59 passing).
+
+> **Note:** only the Higher CCS *upper cut-off* ($370,727) was confirmed for 2026-27.
+> The intermediate Higher CCS band edges (143273 / 188273 / 267563 / 357563) are still
+> 2025-26 figures and should be confirmed against Services Australia.
+
 ## [2.3.1] - 2026-06-26
 
 ### 💎 Premium PDF redesign

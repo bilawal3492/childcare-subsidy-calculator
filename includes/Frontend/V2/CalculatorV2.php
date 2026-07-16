@@ -406,10 +406,10 @@ class CalculatorV2
                             <strong>Standard Child Care Subsidy Percentage</strong><br><br>
                             Subsidy per cent of the actual fee charged (up to relevant percentage of the hourly fee cap).<br><br>
                             The maximum hourly fee cap by service type is list below:<br><br>
-                            Centre Based Day Care: $14.63^;<br><br>
-                            Family Day Care: $13.56^;<br><br>
-                            Outside School Hours Care: $12.81^.<br><br>
-                            ^ These amounts are correct for 2025-2026 (FY2026) and may be subject to adjustment through indexation in subsequent years.
+                            Centre Based Day Care: $15.19^;<br><br>
+                            Family Day Care: $14.08^;<br><br>
+                            Outside School Hours Care: $13.30^.<br><br>
+                            ^ These amounts are correct for 2026-2027 (FY2027) and may be subject to adjustment through indexation in subsequent years.
                         </div>
                     </div>
                     <br>
@@ -425,11 +425,11 @@ class CalculatorV2
                             <strong>Higher Child Care Subsidy Percentage</strong><br><br>
                             Subsidy per cent of the actual fee charged (up to relevant percentage of the hourly fee cap).<br><br>
                             The maximum hourly fee cap by service type is list below:<br><br>
-                            Centre Based Day Care: $14.63^;<br><br>
-                            Family Day Care: $13.56^;<br><br>
-                            Outside School Hours Care: $12.81^.<br><br>
-                            Families with more than one child aged 5 or under, with income less than $367,563 will get a higher rate for their second and younger children.<br><br>
-                            ^ These amounts are correct for 2025-2026 (FY2026) and may be subject to adjustment through indexation in subsequent years.
+                            Centre Based Day Care: $15.19^;<br><br>
+                            Family Day Care: $14.08^;<br><br>
+                            Outside School Hours Care: $13.30^.<br><br>
+                            Families with more than one child aged 5 or under, with income less than $370,727 will get a higher rate for their second and younger children.<br><br>
+                            ^ These amounts are correct for 2026-2027 (FY2027) and may be subject to adjustment through indexation in subsequent years.
                         </div>
                     </div>
                     <br>
@@ -446,8 +446,8 @@ class CalculatorV2
                     <br>
                     <select style="line-height: 20px; border-style: solid; margin-top: 10px !important; width: 100%;" id="ati_range_known">
                         <option value="">Select</option>
-                        <option value="less">Less than $367,563</option>
-                        <option value="more">$367,563 or more</option>
+                        <option value="less">Less than $370,727</option>
+                        <option value="more">$370,727 or more</option>
                     </select>
                 </label>
             </div>
@@ -498,10 +498,10 @@ class CalculatorV2
                             <strong>Standard Child Care Subsidy Percentage</strong><br><br>
                             Subsidy per cent of the actual fee charged (up to relevant percentage of the hourly fee cap).<br><br>
                             The maximum hourly fee cap by service type is list below:<br><br>
-                            Centre Based Day Care: $14.63^;<br><br>
-                            Family Day Care: $13.56^;<br><br>
-                            Outside School Hours Care: $12.81^.<br><br>
-                            ^ These amounts are correct for 2025-2026 (FY2026) and may be subject to adjustment through indexation in subsequent years.
+                            Centre Based Day Care: $15.19^;<br><br>
+                            Family Day Care: $14.08^;<br><br>
+                            Outside School Hours Care: $13.30^.<br><br>
+                            ^ These amounts are correct for 2026-2027 (FY2027) and may be subject to adjustment through indexation in subsequent years.
                         </div>
                     </div>
                     <br>
@@ -521,11 +521,11 @@ class CalculatorV2
                             <strong>Higher Child Care Subsidy Percentage</strong><br><br>
                             Subsidy per cent of the actual fee charged (up to relevant percentage of the hourly fee cap).<br><br>
                             The maximum hourly fee cap by service type is list below:<br><br>
-                            Centre Based Day Care: $14.63^;<br><br>
-                            Family Day Care: $13.56^;<br><br>
-                            Outside School Hours Care: $12.81^.<br><br>
-                            Families with more than one child aged 5 or under, with income less than $367,563 will get a higher rate for their second and younger children.<br><br>
-                            ^ These amounts are correct for 2025-2026 (FY2026) and may be subject to adjustment through indexation in subsequent years.
+                            Centre Based Day Care: $15.19^;<br><br>
+                            Family Day Care: $14.08^;<br><br>
+                            Outside School Hours Care: $13.30^.<br><br>
+                            Families with more than one child aged 5 or under, with income less than $370,727 will get a higher rate for their second and younger children.<br><br>
+                            ^ These amounts are correct for 2026-2027 (FY2027) and may be subject to adjustment through indexation in subsequent years.
                         </div>
                     </div>
                     <br>
@@ -1726,7 +1726,7 @@ jQuery(document).ready(function($){
             return { higher: standard, eligible: false };
         }
 
-        if (ati >= 367563) {
+        if (ati >= 370727) {
             higher = standard;
             eligible = false;
         } else if (ati <= 143273) {
@@ -1818,11 +1818,11 @@ jQuery(document).ready(function($){
         
         if (standardCCS === 33.54) {
             if (atiRange === 'less') {
-                // Less than $367,563 - eligible for 50% Higher CCS
+                // Less than $370,727 - eligible for 50% Higher CCS
                 $higherField.val('50.00');
                 $('#eligibility_status_known').hide();
             } else if (atiRange === 'more') {
-                // $367,563 or more - not eligible, Higher CCS = Standard CCS
+                // $370,727 or more - not eligible, Higher CCS = Standard CCS
                 $higherField.val(standardCCS.toFixed(2));
                 $('#eligibility_status_known').show();
             }
@@ -1876,10 +1876,10 @@ jQuery(document).ready(function($){
     // Function to calculate CCS percentages based on income
     function calculateCCSPercentages(income) {
         const base = parseFloat(policy.income_base_threshold) || 0;
-        const zero = parseFloat(policy.income_zero_threshold) || 535279;
+        const zero = parseFloat(policy.income_zero_threshold) || 538520;
         const step = parseFloat(policy.income_step) || 1;
         const max_pct = parseFloat(policy.max_pct) || 0;
-        const lowIncomeThreshold = parseFloat(policy.low_income_threshold) || 85279;
+        const lowIncomeThreshold = parseFloat(policy.low_income_threshold) || 88520;
         
         let standardCCS = 0;
         
@@ -2300,7 +2300,7 @@ jQuery(document).ready(function($){
             
             // Determine if child is eligible for higher CCS (2nd child or younger, aged 5 or under)
             const age = getAge(dob);
-            const higherCCSThreshold = parseFloat(policy.higher_ccs_threshold) || 367563;
+            const higherCCSThreshold = parseFloat(policy.higher_ccs_threshold) || 370727;
             const isEligibleForHigherCCS = (childIndex >= 1 && age <= 5 && income < higherCCSThreshold);
             const ccs_pct = isEligibleForHigherCCS ? higherCCSPct : standardCCSPct;
             

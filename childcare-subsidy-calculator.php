@@ -2,7 +2,7 @@
 /**
  * Plugin Name: The Child Care Subsidy Calculator
  * Description: Calculate Australian Child Care Subsidy (CCS) with multi-child support, age-based caps, and professional email delivery.
- * Version: 2.4.0-dev22
+ * Version: 2.4.0-dev23
  * Author: i9 Education
  * Author URI: https://i9.edu.au/
  * License: GPLv2 or later
@@ -100,18 +100,24 @@ require_once CCS_CALCULATOR_PLUGIN_DIR . 'includes/Privacy/Privacy.php';
 
 // Activation hook
 register_activation_hook(__FILE__, function() {
+    // 2026-27 CCS policy values, effective 6 July 2026.
+    // `low_income_threshold` and `higher_ccs_threshold` MUST be seeded here: the
+    // engine reads those keys, so leaving them out silently pins a fresh install
+    // to the hardcoded fallbacks.
     $defaults = [
-        'income_base_threshold' => 85279,
-        'income_zero_threshold' => 535279,
+        'income_base_threshold' => 88520,
+        'income_zero_threshold' => 538520,
+        'low_income_threshold'  => 88520,
+        'higher_ccs_threshold'  => 370727,
         'income_step'           => 5000,
         'max_pct'               => 0.90,
         'hourly_caps' => [
-            'centre_below_school_age' => 14.63,
-            'centre_school_age'       => 12.81,
-            'family_day_care_all'     => 13.56,
-            'oshc_below_school_age'   => 14.63,
-            'oshc_school_age'         => 12.81,
-            'in_home_family'          => 39.80
+            'centre_below_school_age' => 15.19,
+            'centre_school_age'       => 13.30,
+            'family_day_care_all'     => 14.08,
+            'oshc_below_school_age'   => 15.19,
+            'oshc_school_age'         => 13.30,
+            'in_home_family'          => 41.31
         ],
         'last_updated'          => date('Y-m-d'),
         'disclaimer_text'       => 'This is an estimate only. Final entitlements determined by Services Australia. From 5 January 2026, all CCS eligible families can get at least 72 hours (3 days) of subsidised child care per fortnight under the 3 Day Guarantee.',
